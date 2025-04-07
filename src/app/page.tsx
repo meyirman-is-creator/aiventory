@@ -26,7 +26,9 @@ import {
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
-import { Bar, Line, Pie } from "@nivo/core";
+import { Line } from "@nivo/line";
+import { Bar } from "@nivo/bar";
+import { Pie } from "@nivo/pie";
 import MainLayout from "@/src/components/layout/MainLayout";
 import apiClient from "@/src/lib/api/apiClient";
 import styles from "./dashboard.module.scss";
@@ -407,6 +409,8 @@ export default function DashboardPage() {
               <div className={styles.chartContainer}>
                 <Line
                   data={revenueChartData}
+                  width={500}  // Add explicit width
+                  height={300} // Add explicit height
                   margin={{ top: 50, right: 50, bottom: 50, left: 60 }}
                   xScale={{ type: "point" }}
                   yScale={{

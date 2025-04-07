@@ -1,18 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Check authentication
     const session = await getServerSession();
     if (!session) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // In a real app, you would call your backend API
-    // For now, we simulate a successful response
-
-    // Sample data
     const stats = {
       totalItems: 345,
       categoriesCount: 12,
@@ -25,7 +20,6 @@ export async function GET(request: NextRequest) {
         { itemId: 4, name: "Chicken", category: "Meat", quantity: 20 },
         { itemId: 5, name: "Rice", category: "Grains", quantity: 40 },
         { itemId: 6, name: "Pasta", category: "Grains", quantity: 35 },
-        // Add more sample items as needed
       ],
     };
 

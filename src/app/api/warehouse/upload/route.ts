@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
-    // Check authentication
     const session = await getServerSession();
     if (!session) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

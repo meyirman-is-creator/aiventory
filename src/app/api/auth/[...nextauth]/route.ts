@@ -1,14 +1,15 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { login } from "@/src/lib/api/auth";
+import type { NextAuthOptions } from "next-auth";
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -16,13 +17,12 @@ const handler = NextAuth({
         }
 
         try {
-          const response = await login(credentials.email, credentials.password);
+          const response = await login(credentials.email as string, credentials.password as string);
           if (response.data && response.data.token) {
-            // Return user data and token to be stored in session
             return {
               id: response.data.id || "user_id",
-              email: credentials.email,
-              name: response.data.name || credentials.email,
+              email: credentials.email as string,
+              name: response.data.name || credentials.email as string,
               role: response.data.role || "user",
               token: response.data.token,
             };
@@ -32,13 +32,12 @@ const handler = NextAuth({
           console.error("Authentication error:", error);
           return null;
         }
-      },
-    }),
+      }
+    })
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
-      // Initial sign in
-      if (user && account) {
+    async jwt({ token, user }) {
+      if (user) {
         return {
           ...token,
           accessToken: user.token,
@@ -54,17 +53,18 @@ const handler = NextAuth({
       };
       session.accessToken = token.accessToken as string;
       return session;
-    },
+    }
   },
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   pages: {
-    signIn: "/login",
-    signOut: "/login",
-    error: "/login",
-  },
-});
+    signIn: '/login',
+    signOut: '/login',
+    error: '/login',
+  }
+};
 
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

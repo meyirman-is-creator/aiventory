@@ -247,7 +247,7 @@ export default function StorePage() {
     {
       title: "Actions",
       key: "actions",
-      render: (_, record: any) => (
+      render: (_: any, record: any) => (
         <Space>
           <Button
             type="primary"
@@ -308,7 +308,7 @@ export default function StorePage() {
     {
       title: "Actions",
       key: "actions",
-      render: (_, record: any) => (
+      render: (_: any, record: any) => (
         <Button
           type="primary"
           size="small"
@@ -487,7 +487,9 @@ export default function StorePage() {
                 onChange={(value) => setNewDiscount(value || 0)}
                 style={{ width: "100%" }}
                 formatter={(value) => `${value}%`}
-                parser={(value) => (value ? value.replace("%", "") : "0")}
+                parser={(value) =>
+                  value ? parseFloat(value.replace("%", "")) : 0
+                }
               />
             </Form.Item>
           </Form>

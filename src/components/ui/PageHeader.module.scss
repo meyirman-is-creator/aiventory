@@ -1,5 +1,7 @@
+@use "sass:color";
 @import "@/src/styles/variables.scss";
 @import "@/src/styles/mixins.scss";
+
 
 .pageHeader {
   margin-bottom: 24px;
@@ -30,6 +32,6 @@
   border: none;
 
   &:hover {
-    background-color: darken($secondary-color, 10%);
+    background-color: color.adjust($secondary-color, $lightness: -10%);
   }
 }

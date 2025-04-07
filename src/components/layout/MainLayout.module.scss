@@ -1,5 +1,7 @@
+@use "sass:color";
 @import "@/src/styles/variables.scss";
 @import "@/src/styles/mixins.scss";
+
 
 .layout {
   min-height: 100vh;

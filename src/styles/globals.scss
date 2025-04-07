@@ -1,6 +1,6 @@
+@use "sass:color";
 @import "variables";
 @import "mixins";
-
 * {
   box-sizing: border-box;
   margin: 0;
@@ -59,7 +59,7 @@ a {
     color: white;
 
     &:hover {
-      background-color: lighten($primary-color, 10%);
+      background-color: color.adjust($primary-color, $lightness: 10%);
     }
   }
 
@@ -68,7 +68,7 @@ a {
     color: $primary-color;
 
     &:hover {
-      background-color: darken($secondary-color, 10%);
+      background-color: color.adjust($secondary-color, $lightness: -10%);
     }
   }
 }

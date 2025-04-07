@@ -16,6 +16,7 @@ import {
   Typography,
   Tag,
   DatePicker,
+  message,
 } from "antd";
 import {
   LineChartOutlined,
@@ -25,16 +26,10 @@ import {
   DownloadOutlined,
   FileExcelOutlined,
 } from "@ant-design/icons";
-import {
-  ResponsiveLine,
-  ResponsiveBar,
-  ResponsivePie,
-  ResponsiveHeatMap,
-} from "@nivo/core";
-import { Line } from "@nivo/line";
-import { Bar } from "@nivo/bar";
-import { Pie } from "@nivo/pie";
-import { HeatMap } from "@nivo/heatmap";
+import { Line, ResponsiveLine } from "@nivo/line";
+import { Bar, ResponsiveBar } from "@nivo/bar";
+import { Pie, ResponsivePie } from "@nivo/pie";
+import { HeatMap, ResponsiveHeatMap } from "@nivo/heatmap";
 import { usePredictionStore } from "@/src/lib/store/usePredictionStore";
 import {
   getPrediction,
@@ -254,14 +249,23 @@ export default function PredictionPage() {
       );
     }
 
-    const chartData = generateChartData();
-
+    const chartData = selectedPrediction.forecast.map((point: any) => ({
+      date: dayjs(point.date).format("YYYY-MM-DD"),
+      value: point.value,
+      color: dayjs(point.date).isAfter(dayjs()) ? "#FFCC00" : "#000",
+    }));
+    const barChartData = selectedPrediction.forecast.map((point: any) => ({
+      date: dayjs(point.date).format("YYYY-MM-DD"),
+      value: point.value,
+    }));
     switch (chartType) {
       case "line":
         return (
           <div className={styles.chartContainer}>
             <Line
               data={chartData}
+              width={800} // Добавлено явное указание ширины
+              height={400} // Добавлено явное указание высоты
               margin={{ top: 50, right: 50, bottom: 70, left: 60 }}
               xScale={{ type: "point" }}
               yScale={{
@@ -321,7 +325,7 @@ export default function PredictionPage() {
         return (
           <div className={styles.chartContainer}>
             <Line
-              data={chartData}
+              data={barChartData}
               margin={{ top: 50, right: 50, bottom: 70, left: 60 }}
               xScale={{ type: "point" }}
               yScale={{

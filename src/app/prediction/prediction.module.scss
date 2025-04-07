@@ -1,5 +1,7 @@
+@use "sass:color";
 @import "@/src/styles/variables.scss";
 @import "@/src/styles/mixins.scss";
+
 
 .predictionPage {
   padding: 1rem;
@@ -53,7 +55,7 @@
     }
 
     &.selectedItem {
-      background-color: lighten($secondary-color, 25%);
+      background-color: color.adjust($secondary-color, $lightness: 25%);
     }
   }
 

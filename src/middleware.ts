@@ -6,24 +6,23 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const authPaths = ["/login", "/register", "/verify"];
-  const isAuthPath = authPaths.some((path) => pathname.startsWith(path));
-
   const protectedPaths = ["/warehouse", "/store", "/prediction"];
-  const isProtectedPath = protectedPaths.some((path) =>
-    pathname.startsWith(path)
-  );
+  
+  const isAuth = authPaths.some((path) => pathname.startsWith(path));
+  const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path));
 
-  const token = await getToken({
+  const session = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  if (isProtectedPath && !token) {
-    const url = new URL("/login", request.url);
-    url.searchParams.set("callbackUrl", encodeURI(request.url));
-    return NextResponse.redirect(url);
-  }
-  if (isAuthPath && token) {
+//   if (isProtectedPath && !session) {
+//     const url = new URL("/login", request.url);
+//     url.searchParams.set("callbackUrl", encodeURI(request.url));
+//     return NextResponse.redirect(url);
+//   }
+  
+  if (isAuth && session) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

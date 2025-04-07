@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Form, Input, Button, Card, Typography, Alert, Divider } from "antd";
-import { MailOutlined, LockOutlined, UserOutlined } from "@ant-design/icons";
+import { MailOutlined, LockOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { register } from "@/src/lib/api/auth";
@@ -16,20 +16,32 @@ interface RegisterFormValues {
   confirmPassword: string;
 }
 
+interface APIError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const onFinish = async (values: RegisterFormValues) => {
     setLoading(true);
-    setError(null);
+    setErrorMessage(null);
 
     try {
-      const response = await register(values.email, values.password);
+      await register(values.email, values.password);
       router.push(`/verify?email=${encodeURIComponent(values.email)}`);
-    } catch (error: any) {
-      setError(error.response?.data?.message || "Registration failed");
+    } catch (error) {
+      const apiError = error as APIError;
+      setErrorMessage(
+        apiError.response?.data?.message || "Registration failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -48,10 +60,10 @@ export default function RegisterPage() {
           Create an account
         </Title>
 
-        {error && (
+        {errorMessage && (
           <Alert
             message="Registration Error"
-            description={error}
+            description={errorMessage}
             type="error"
             showIcon
             className={styles.errorAlert}

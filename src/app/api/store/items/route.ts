@@ -1,18 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Check authentication
     const session = await getServerSession();
     if (!session) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // In a real app, you would call your backend API to get store items
-    // For now, we simulate a successful response
-
-    // Sample data
     const items = [
       {
         storeItemId: 1,
@@ -58,7 +53,6 @@ export async function GET(request: NextRequest) {
         expireDate: "2025-04-01",
         isExpired: true,
       },
-      // Add more sample items as needed
     ];
 
     return NextResponse.json(items, { status: 200 });

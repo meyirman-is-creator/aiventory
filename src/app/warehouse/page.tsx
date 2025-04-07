@@ -24,16 +24,16 @@ import {
   QrcodeOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
-import { useWarehouseStore } from "@/lib/store/useWarehouseStore";
+import { useWarehouseStore } from "@/src/lib/store/useWarehouseStore";
 import {
   uploadFile,
   getFiles,
   getItems,
   moveToStore,
-} from "@/lib/api/warehouse";
-import QRCodeScanner from "@/components/scanner/QRCodeScanner";
-import PageHeader from "@/components/ui/PageHeader";
-import MainLayout from "@/components/layout/MainLayout";
+} from "@/src/lib/api/warehouse";
+import QRCodeScanner from "@/src/components/scanner/QRCodeScanner";
+import PageHeader from "@/src/components/ui/PageHeader";
+import MainLayout from "@/src/components/layout/MainLayout";
 import type { RcFile } from "antd/lib/upload/interface";
 import dayjs from "dayjs";
 import styles from "./warehouse.module.scss";
@@ -273,7 +273,7 @@ export default function WarehousePage() {
     {
       title: "Actions",
       key: "actions",
-      render: (_, record: any) => (
+      render: (_:any, record: any) => (
         <Space>
           <Button
             type="primary"

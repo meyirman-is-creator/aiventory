@@ -20,11 +20,11 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const onFinish = async (values: LoginFormValues) => {
     setLoading(true);
-    setError(null);
+    setErrorMessage(null);
 
     try {
       const result = await signIn("credentials", {
@@ -35,12 +35,12 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        setErrorMessage("Invalid email or password");
       } else if (result?.url) {
         router.push(result.url);
       }
     } catch (error) {
-      setError("An error occurred during sign in");
+      setErrorMessage("An error occurred during sign in");
     } finally {
       setLoading(false);
     }
@@ -59,10 +59,10 @@ export default function LoginPage() {
           Login to your account
         </Title>
 
-        {error && (
+        {errorMessage && (
           <Alert
             message="Login Error"
-            description={error}
+            description={errorMessage}
             type="error"
             showIcon
             className={styles.errorAlert}
@@ -113,7 +113,9 @@ export default function LoginPage() {
           </Form.Item>
         </Form>
 
-        <Divider className={styles.divider}>Don't have an account?</Divider>
+        <Divider className={styles.divider}>
+          Don&apos;t have an account?
+        </Divider>
 
         <Link href="/register">
           <Button block size="large" className={styles.registerButton}>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Typography, Space, Button } from "antd";
+import { Typography, Button } from "antd";
 import styles from "./PageHeader.module.scss";
 
 const { Title } = Typography;

@@ -13,12 +13,21 @@ interface VerifyFormValues {
   code: string;
 }
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 export default function VerifyPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(60);
   const [resendDisabled, setResendDisabled] = useState(true);
 
@@ -44,13 +53,16 @@ export default function VerifyPage() {
 
   const onFinish = async (values: VerifyFormValues) => {
     setLoading(true);
-    setError(null);
+    setErrorMessage(null);
 
     try {
       await verifyEmail(email, values.code);
       router.push("/login");
-    } catch (error: any) {
-      setError(error.response?.data?.message || "Verification failed");
+    } catch (error) {
+      const apiError = error as ApiError;
+      setErrorMessage(
+        apiError.response?.data?.message || "Verification failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -61,13 +73,9 @@ export default function VerifyPage() {
     setCountdown(60);
 
     try {
-      // Implement the actual resend code API call here
-      // For now, we're just simulating it
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Display success message or handle accordingly
-    } catch (error) {
-      setError("Failed to resend verification code");
+    } catch (err) {
+      setErrorMessage("Failed to resend verification code");
     }
   };
 
@@ -85,13 +93,13 @@ export default function VerifyPage() {
         </Title>
 
         <Text className={styles.emailText}>
-          We've sent a verification code to <strong>{email}</strong>
+          We&apos;ve sent a verification code to <strong>{email}</strong>
         </Text>
 
-        {error && (
+        {errorMessage && (
           <Alert
             message="Verification Error"
-            description={error}
+            description={errorMessage}
             type="error"
             showIcon
             className={styles.errorAlert}
@@ -137,7 +145,9 @@ export default function VerifyPage() {
           </Form.Item>
         </Form>
 
-        <Divider className={styles.divider}>Didn't receive the code?</Divider>
+        <Divider className={styles.divider}>
+          Didn&apos;t receive the code?
+        </Divider>
 
         <Button
           icon={<ReloadOutlined />}
