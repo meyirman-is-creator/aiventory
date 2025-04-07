@@ -1,0 +1,124 @@
+@import "@/src/styles/variables.scss";
+@import "@/src/styles/mixins.scss";
+
+.predictionPage {
+  padding: 1rem;
+
+  @include respond-to(md) {
+    padding: 2rem;
+  }
+}
+
+.filterCard {
+  margin-bottom: 1.5rem;
+}
+
+.filter {
+  margin-bottom: 1rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  .datePicker,
+  .select {
+    width: 100%;
+  }
+
+  .chartButtons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+
+    button {
+      margin-bottom: 0.5rem;
+    }
+  }
+}
+
+.itemsCard {
+  .spinContainer {
+    padding: 2rem 0;
+    text-align: center;
+  }
+
+  .itemListItem {
+    cursor: pointer;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: $light-gray;
+    }
+
+    &.selectedItem {
+      background-color: lighten($secondary-color, 25%);
+    }
+  }
+
+  .itemInfo {
+    width: 100%;
+
+    .itemName {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .itemMeta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+.tabs {
+  .chartCard {
+    margin-bottom: 1.5rem;
+
+    .chartHeader {
+      margin-bottom: 1rem;
+    }
+
+    .spinContainer {
+      min-height: 400px;
+      @include flex(column, center, center);
+    }
+
+    .chartContainer {
+      height: 400px;
+    }
+
+    .emptyChart {
+      min-height: 400px;
+      @include flex(column, center, center);
+    }
+  }
+
+  .analysisCard {
+    .recommendation {
+      margin-top: 1.5rem;
+    }
+  }
+
+  .overallCard {
+    .statsRow {
+      margin: 1.5rem 0;
+    }
+
+    .recommendationsTitle {
+      margin: 1.5rem 0 1rem;
+    }
+
+    .recommendationPriority {
+      margin-left: 1rem;
+    }
+
+    .exportSection {
+      margin-top: 2rem;
+      text-align: right;
+    }
+  }
+}

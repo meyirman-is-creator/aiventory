@@ -1,0 +1,31 @@
+@import "@/src/styles/variables.scss";
+@import "@/src/styles/mixins.scss";
+
+.scannerContainer {
+  @include card;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.qrReader {
+  width: 100%;
+  min-height: 300px;
+  margin: 20px 0;
+  position: relative;
+
+  video {
+    width: 100%;
+    height: 100%;
+    border-radius: $border-radius;
+  }
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.error {
+  margin-bottom: 20px;
+}

@@ -1,0 +1,35 @@
+@import "@/src/styles/variables.scss";
+@import "@/src/styles/mixins.scss";
+
+.pageHeader {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  @include respond-to(md) {
+    align-items: center;
+  }
+}
+
+.titleSection {
+  .title {
+    margin-bottom: 0;
+    color: $primary-color;
+  }
+
+  .subtitle {
+    margin-top: 4px;
+    color: $gray-color;
+  }
+}
+
+.actionButton {
+  background-color: $secondary-color;
+  color: $primary-color;
+  border: none;
+
+  &:hover {
+    background-color: darken($secondary-color, 10%);
+  }
+}

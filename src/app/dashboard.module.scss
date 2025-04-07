@@ -1,0 +1,115 @@
+@import "@/src/styles/variables.scss";
+@import "@/src/styles/mixins.scss";
+
+.dashboardPage {
+  padding: 1rem;
+
+  @include respond-to(md) {
+    padding: 2rem;
+  }
+}
+
+.loadingContainer {
+  @include flex(column, center, center);
+  min-height: 60vh;
+
+  .spinner {
+    border: 4px solid $light-gray;
+    border-top: 4px solid $primary-color;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+.welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+
+  @include respond-to(md) {
+    flex-wrap: nowrap;
+  }
+}
+
+.statsCards {
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  height: 100%;
+
+  .cardFooter {
+    margin-top: 1rem;
+  }
+}
+
+.alertsCard,
+.chartCard {
+  height: 100%;
+  margin-bottom: 2rem;
+
+  .alertBanner {
+    margin-bottom: 1rem;
+  }
+
+  .divider {
+    margin: 1rem 0;
+  }
+
+  .noAlerts {
+    @include flex(column, center, center);
+    padding: 3rem 0;
+
+    .noAlertsIcon {
+      font-size: 2rem;
+      color: $gray-color;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      color: $gray-color;
+    }
+  }
+}
+
+.chartContainer {
+  height: 300px;
+}
+
+.chartInfo {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.actionsCard {
+  margin-bottom: 2rem;
+
+  .actionButton {
+    height: 60px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      border-color: $primary-color;
+      color: $primary-color;
+    }
+  }
+}

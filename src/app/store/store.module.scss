@@ -1,0 +1,49 @@
+@import "@/src/styles/variables.scss";
+@import "@/src/styles/mixins.scss";
+
+.storePage {
+  padding: 1rem;
+
+  @include respond-to(md) {
+    padding: 2rem;
+  }
+}
+
+.dashboard {
+  margin-bottom: 1.5rem;
+}
+
+.expiryAlert {
+  margin-bottom: 1.5rem;
+}
+
+.storeTabs {
+  background-color: white;
+  padding: 1rem;
+  box-shadow: $box-shadow;
+  border-radius: $border-radius;
+}
+
+.itemsTable {
+  margin-top: 1rem;
+}
+
+.itemName {
+  font-weight: 500;
+}
+
+.expiredItemName {
+  font-weight: 500;
+  text-decoration: line-through;
+  color: $gray-color;
+}
+
+.price {
+  font-weight: 500;
+  color: $primary-color;
+}
+
+.originalPrice {
+  color: $gray-color;
+  text-decoration: line-through;
+}

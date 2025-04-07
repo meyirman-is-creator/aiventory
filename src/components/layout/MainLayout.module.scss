@@ -1,0 +1,53 @@
+@import "@/src/styles/variables.scss";
+@import "@/src/styles/mixins.scss";
+
+.layout {
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: $primary-color;
+  padding: 0 20px;
+}
+
+.logo {
+  color: $secondary-color;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  color: white;
+
+  .userName {
+    margin-right: 1rem;
+  }
+
+  .logoutIcon {
+    cursor: pointer;
+    font-size: 1.2rem;
+
+    &:hover {
+      color: $secondary-color;
+    }
+  }
+}
+
+.sider {
+  background-color: white;
+}
+
+.contentLayout {
+  padding: 24px;
+}
+
+.content {
+  padding: 24px;
+  background-color: white;
+  min-height: 280px;
+}
