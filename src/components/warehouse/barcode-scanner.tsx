@@ -90,7 +90,7 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
     <div className="space-y-4">
       {isCapturing ? (
         <div className="space-y-4">
-          <div className="relative rounded-lg overflow-hidden bg-black">
+          <div className="relative rounded-lg overflow-hidden !bg-white">
             <Webcam
               audio={false}
               ref={webcamRef}

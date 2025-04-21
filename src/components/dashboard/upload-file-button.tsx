@@ -77,26 +77,27 @@ const UploadFileButton = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-brand-purple hover:bg-brand-purple/90">
-          <Upload className="mr-2 h-4 w-4" />
+        <Button className="bg-brand-purple hover:bg-brand-purple/90 ">
+          <Upload className="mr-2 h-4 w-4 " />
           Upload Inventory
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload Inventory</DialogTitle>
+          <DialogTitle className='text-black'>Upload Inventory</DialogTitle>
           <DialogDescription>
             Upload a CSV or Excel file containing your inventory data.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="file">File</Label>
+            <Label htmlFor="file" className='text-black'>File</Label>
             <Input
               id="file"
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
+              className='text-gray-500'
               accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
             />
             <p className="text-xs text-muted-foreground">
@@ -105,8 +106,8 @@ const UploadFileButton = () => {
           </div>
           
           {file && (
-            <div className="text-sm">
-              Selected file: <span className="font-medium">{file.name}</span> ({(file.size / 1024).toFixed(2)} KB)
+            <div className="text-sm text-gray-500">
+              Selected file: <span className="font-medium ">{file.name}</span> ({(file.size / 1024).toFixed(2)} KB)
             </div>
           )}
         </div>
@@ -116,6 +117,7 @@ const UploadFileButton = () => {
             variant="outline"
             onClick={() => setIsOpen(false)}
             disabled={isUploading}
+            className='border-gray-400 text-gray-400'
           >
             Cancel
           </Button>

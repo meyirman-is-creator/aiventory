@@ -27,9 +27,9 @@ const MoveToStoreButton = () => {
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md !bg-white">
           <DialogHeader>
-            <DialogTitle>Scan Barcode</DialogTitle>
+            <DialogTitle className="text-black">Scan Barcode</DialogTitle>
             <DialogDescription>
               Scan a product barcode to move it from warehouse to store
             </DialogDescription>

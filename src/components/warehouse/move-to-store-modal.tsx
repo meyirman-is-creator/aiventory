@@ -104,7 +104,7 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md !bg-white">
         <DialogHeader>
           <DialogTitle>Move to Store</DialogTitle>
           <DialogDescription>
