@@ -18,18 +18,17 @@ import { useStoreItemsStore } from '@/store/store-items-store';
 import { formatCurrency } from '@/lib/utils';
 import UploadFileButton from '@/components/dashboard/upload-file-button';
 
-// Defining colors directly in the component
 const colors = {
   brandPurple: '#6322FE',
   brandPurpleHover: '#5719d8',
   brandGreen: '#26E989',
-  textDark: '#1f2937',  // Dark text for good contrast
-  textMuted: '#4b5563', // Medium gray for muted text
-  bgLight: '#ffffff',   // White background
-  bgWarning: '#fffbeb', // Amber light background
-  warningText: '#92400e', // Amber dark for text
-  warningAccent: '#f59e0b', // Amber accent color
-  borderColor: '#e5e7eb',  // Light gray border
+  textDark: '#1f2937',
+  textMuted: '#4b5563',
+  bgLight: '#ffffff',
+  bgWarning: '#fffbeb',
+  warningText: '#92400e',
+  warningAccent: '#f59e0b',
+  borderColor: '#e5e7eb',
 };
 
 export default function Dashboard() {
@@ -55,9 +54,9 @@ export default function Dashboard() {
   }
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-2 sm:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-bold tracking-tight text-gray-900">Welcome to your Dashboard</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-gray-900">Добро пожаловать в Панель управления</h2>
         <div className="mt-2 sm:mt-0">
           <UploadFileButton />
         </div>
@@ -66,52 +65,52 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card style={{backgroundColor: colors.bgLight, borderColor: colors.borderColor}}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900">Total Products</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900">Всего продуктов</CardTitle>
             <Package className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats?.total_products || 0}</div>
             <p className="text-xs text-gray-600">
-              Products in your inventory
+              Продуктов в вашем инвентаре
             </p>
           </CardContent>
         </Card>
         
         <Card style={{backgroundColor: colors.bgLight, borderColor: colors.borderColor}}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900">Products in Warehouse</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900">Продукты на складе</CardTitle>
             <Package className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats?.products_in_warehouse || 0}</div>
             <p className="text-xs text-gray-600">
-              Products available in warehouse
+              Продукты, доступные на складе
             </p>
           </CardContent>
         </Card>
         
         <Card style={{backgroundColor: colors.bgLight, borderColor: colors.borderColor}}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900">Products in Store</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900">Продукты в магазине</CardTitle>
             <Store className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats?.products_in_store || 0}</div>
             <p className="text-xs text-gray-600">
-              Products available for sale
+              Продукты, доступные для продажи
             </p>
           </CardContent>
         </Card>
         
         <Card style={{backgroundColor: colors.bgWarning, borderColor: '#fcd34d'}}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-amber-700">Expiring Soon</CardTitle>
+            <CardTitle className="text-sm font-medium text-amber-700">Истекает срок</CardTitle>
             <AlertCircle className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-amber-800">{stats?.products_expiring_soon || 0}</div>
             <p className="text-xs text-amber-700">
-              Products expiring in next 7 days
+              Продукты, истекающие в ближайшие 7 дней
             </p>
             {stats?.products_expiring_soon ? (
               <Button 
@@ -119,7 +118,7 @@ export default function Dashboard() {
                 className="p-0 h-auto text-amber-600"
                 onClick={() => router.push('/store')}
               >
-                View expiring items →
+                Показать истекающие товары →
               </Button>
             ) : null}
           </CardContent>
@@ -127,7 +126,7 @@ export default function Dashboard() {
         
         <Card style={{backgroundColor: colors.bgLight, borderColor: colors.borderColor}}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900">Revenue (30 days)</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900">Выручка (30 дней)</CardTitle>
             <TrendingUp className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
@@ -135,20 +134,20 @@ export default function Dashboard() {
               {formatCurrency(stats?.total_revenue_last_30_days || 0)}
             </div>
             <p className="text-xs text-gray-600">
-              Total revenue in last 30 days
+              Общая выручка за последние 30 дней
             </p>
           </CardContent>
         </Card>
         
         <Card style={{backgroundColor: colors.bgLight, borderColor: colors.borderColor}}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-900">Sales (30 days)</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-900">Продажи (30 дней)</CardTitle>
             <ShoppingCart className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">{stats?.total_sales_last_30_days || 0}</div>
             <p className="text-xs text-gray-600">
-              Total items sold in last 30 days
+              Всего товаров продано за последние 30 дней
             </p>
           </CardContent>
         </Card>
@@ -157,14 +156,14 @@ export default function Dashboard() {
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <Card style={{backgroundColor: colors.bgLight, borderColor: colors.borderColor}}>
           <CardHeader>
-            <CardTitle className="text-gray-900">Recent Activity</CardTitle>
+            <CardTitle className="text-gray-900">Последняя активность</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center py-8 text-gray-600">
               {isLoading ? (
-                "Loading activity data..."
+                "Загрузка данных активности..."
               ) : (
-                "No recent activity"
+                "Нет последней активности"
               )}
             </div>
           </CardContent>
@@ -172,7 +171,7 @@ export default function Dashboard() {
         
         <Card style={{backgroundColor: colors.bgLight, borderColor: colors.borderColor}}>
           <CardHeader>
-            <CardTitle className="text-gray-900">Quick Actions</CardTitle>
+            <CardTitle className="text-gray-900">Быстрые действия</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button 
@@ -180,7 +179,7 @@ export default function Dashboard() {
               className="w-full justify-between border-gray-300 text-gray-800"
               onClick={() => router.push('/warehouse')}
             >
-              Upload New Inventory <Upload className="h-4 w-4 ml-2" />
+              Загрузить новый инвентарь <Upload className="h-4 w-4 ml-2" />
             </Button>
             
             <Button 
@@ -188,7 +187,7 @@ export default function Dashboard() {
               className="w-full justify-between border-gray-300 text-gray-800"
               onClick={() => router.push('/store')}
             >
-              Manage Store Items <Store className="h-4 w-4 ml-2" />
+              Управление товарами магазина <Store className="h-4 w-4 ml-2" />
             </Button>
             
             <Button 
@@ -196,7 +195,7 @@ export default function Dashboard() {
               style={{backgroundColor: colors.brandPurple}}
               onClick={() => router.push('/store')}
             >
-              Sell Products <ShoppingCart className="h-4 w-4 ml-2" />
+              Продать товары <ShoppingCart className="h-4 w-4 ml-2" />
             </Button>
           </CardContent>
         </Card>

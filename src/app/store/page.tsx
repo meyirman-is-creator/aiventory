@@ -10,7 +10,6 @@ import ActiveItemsTable from '@/components/store/active-items-table';
 import ExpiredItemsTable from '@/components/store/expired-items-table';
 import StoreStats from '@/components/store/store-stats';
 
-// Define explicit colors
 const colors = {
   purple: '#6322FE',
   purpleLight: '#EBE3FF',
@@ -55,9 +54,9 @@ export default function StorePage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight text-gray-900">Store Management</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-gray-900">Управление магазином</h2>
         <p className="text-gray-600">
-          Manage your store inventory, view expiring items, and record sales
+          Управляйте запасами магазина, просматривайте товары с истекающим сроком и регистрируйте продажи
         </p>
       </div>
       
@@ -66,7 +65,7 @@ export default function StorePage() {
       <Tabs defaultValue="active" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-gray-100">
           <TabsTrigger value="active" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">
-            Active Items 
+            Активные товары 
             <span 
               className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
               style={{backgroundColor: colors.purpleLight, color: colors.purple}}
@@ -75,7 +74,7 @@ export default function StorePage() {
             </span>
           </TabsTrigger>
           <TabsTrigger value="expired" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">
-            Expired Items
+            Истекшие товары
             <span 
               className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
               style={{backgroundColor: colors.redLight, color: colors.red}}
@@ -87,12 +86,12 @@ export default function StorePage() {
         <TabsContent value="active" className="space-y-4 mt-4">
           <Card style={{borderColor: colors.border, backgroundColor: colors.white}}>
             <CardHeader>
-              <CardTitle className="text-gray-900">Active Store Items</CardTitle>
+              <CardTitle className="text-gray-900">Товары в магазине</CardTitle>
               <CardDescription className="text-gray-600">
-                All items currently available for sale in your store
+                Все товары, доступные в данный момент для продажи в вашем магазине
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
               <ActiveItemsTable items={activeItems} isLoading={isLoadingItems} />
             </CardContent>
           </Card>
@@ -100,12 +99,12 @@ export default function StorePage() {
         <TabsContent value="expired" className="space-y-4 mt-4">
           <Card style={{borderColor: colors.border, backgroundColor: colors.white}}>
             <CardHeader>
-              <CardTitle className="text-gray-900">Expired & Removed Items</CardTitle>
+              <CardTitle className="text-gray-900">Истекшие и удаленные товары</CardTitle>
               <CardDescription className="text-gray-600">
-                Items that have expired or been removed from the store
+                Товары, которые истекли или были удалены из магазина
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
               <ExpiredItemsTable items={expiredItems} isLoading={isLoadingItems} />
             </CardContent>
           </Card>

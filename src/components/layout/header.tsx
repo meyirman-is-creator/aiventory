@@ -10,7 +10,7 @@ const Header = () => {
   const pathname = usePathname();
   const { user } = useUserStore();
   const [email, setEmail] = useState<string>('');
-  const [pageTitle, setPageTitle] = useState<string>('Dashboard');
+  const [pageTitle, setPageTitle] = useState<string>('Панель управления');
   
   // Check if on auth pages
   const isAuthPage = pathname?.startsWith('/auth');
@@ -19,19 +19,19 @@ const Header = () => {
     // Set page title based on path
     switch (pathname) {
       case '/':
-        setPageTitle('Dashboard');
+        setPageTitle('Панель управления');
         break;
       case '/store':
-        setPageTitle('Store Management');
+        setPageTitle('Управление магазином');
         break;
       case '/warehouse':
-        setPageTitle('Warehouse Management');
+        setPageTitle('Управление складом');
         break;
       case '/prediction':
-        setPageTitle('Prediction & Analytics');
+        setPageTitle('Прогнозирование и аналитика');
         break;
       default:
-        setPageTitle('Dashboard');
+        setPageTitle('Панель управления');
     }
     
     // Try to get user from localStorage if not in store
@@ -58,7 +58,7 @@ const Header = () => {
   }
   
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-8 bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 sm:px-8 bg-white border-b border-gray-200">
       <div className="flex items-center">
         <h1 className="text-xl font-semibold text-gray-800">{pageTitle}</h1>
       </div>

@@ -16,7 +16,7 @@ const SalesAnalytics = ({ stats, isLoading }: SalesAnalyticsProps) => {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <p className="text-muted-foreground">Loading sales data...</p>
+        <p className="text-muted-foreground">Загрузка данных о продажах...</p>
       </div>
     );
   }
@@ -24,9 +24,9 @@ const SalesAnalytics = ({ stats, isLoading }: SalesAnalyticsProps) => {
   if (!stats || stats.dates.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center border rounded-md">
-        <p className="text-muted-foreground">No sales data available</p>
+        <p className="text-muted-foreground">Нет данных о продажах</p>
         <p className="text-sm text-muted-foreground mt-1">
-          Start selling products to generate analytics
+          Начните продавать товары для генерации аналитики
         </p>
       </div>
     );
@@ -62,8 +62,8 @@ const SalesAnalytics = ({ stats, isLoading }: SalesAnalyticsProps) => {
         className="h-full flex flex-col"
       >
         <TabsList className="self-start">
-          <TabsTrigger value="quantity">Quantity</TabsTrigger>
-          <TabsTrigger value="revenue">Revenue</TabsTrigger>
+          <TabsTrigger value="quantity">Количество</TabsTrigger>
+          <TabsTrigger value="revenue">Выручка</TabsTrigger>
         </TabsList>
 
         <TabsContent value="quantity" className="flex-grow">
@@ -86,7 +86,7 @@ const SalesAnalytics = ({ stats, isLoading }: SalesAnalyticsProps) => {
                 tickSize: 5,
                 tickPadding: 5,
                 tickRotation: -45,
-                legend: "Date",
+                legend: "Дата",
                 legendOffset: 45,
                 legendPosition: "middle",
               }}
@@ -94,7 +94,7 @@ const SalesAnalytics = ({ stats, isLoading }: SalesAnalyticsProps) => {
                 tickSize: 5,
                 tickPadding: 5,
                 tickRotation: 0,
-                legend: "Quantity Sold",
+                legend: "Проданное количество",
                 legendOffset: -40,
                 legendPosition: "middle",
               }}
@@ -181,7 +181,7 @@ const SalesAnalytics = ({ stats, isLoading }: SalesAnalyticsProps) => {
                 tickSize: 5,
                 tickPadding: 5,
                 tickRotation: -45,
-                legend: "Date",
+                legend: "Дата",
                 legendOffset: 45,
                 legendPosition: "middle",
               }}
@@ -189,7 +189,7 @@ const SalesAnalytics = ({ stats, isLoading }: SalesAnalyticsProps) => {
                 tickSize: 5,
                 tickPadding: 5,
                 tickRotation: 0,
-                legend: "Revenue ($)",
+                legend: "Выручка ($)",
                 legendOffset: -40,
                 legendPosition: "middle",
                 format: (value) => `$${value}`,

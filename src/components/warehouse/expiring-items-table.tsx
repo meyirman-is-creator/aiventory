@@ -38,7 +38,7 @@ const ExpiringItemsTable = ({ items, isLoading }: ExpiringItemsTableProps) => {
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">Loading expiring items...</p>
+        <p className="text-muted-foreground">Загрузка товаров с истекающим сроком...</p>
       </div>
     );
   }
@@ -46,9 +46,9 @@ const ExpiringItemsTable = ({ items, isLoading }: ExpiringItemsTableProps) => {
   if (items.length === 0) {
     return (
       <div className="text-center py-8 border rounded-md">
-        <p className="text-muted-foreground">No expiring items</p>
+        <p className="text-muted-foreground">Нет товаров с истекающим сроком</p>
         <p className="text-sm text-muted-foreground mt-1">
-          All your warehouse items have good expiration dates
+          У всех ваших товаров хорошие сроки годности
         </p>
       </div>
     );
@@ -70,8 +70,7 @@ const ExpiringItemsTable = ({ items, isLoading }: ExpiringItemsTableProps) => {
           <div className="flex items-center text-amber-800">
             <AlertTriangle className="h-5 w-5 mr-2" />
             <p className="text-sm font-medium">
-              These items will expire within the next 7 days. Consider moving
-              them to the store and applying discounts.
+              Эти товары истекут в течение ближайших 7 дней. Рассмотрите возможность перемещения их в магазин и применения скидок.
             </p>
           </div>
         </div>
@@ -79,13 +78,13 @@ const ExpiringItemsTable = ({ items, isLoading }: ExpiringItemsTableProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Batch Code</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Expires In</TableHead>
-                <TableHead>Received At</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="font-semibold text-gray-900">Товар</TableHead>
+                <TableHead className="font-semibold text-gray-900">Статус</TableHead>
+                <TableHead className="font-semibold text-gray-900">Код партии</TableHead>
+                <TableHead className="font-semibold text-gray-900">Количество</TableHead>
+                <TableHead className="font-semibold text-gray-900">Истекает через</TableHead>
+                <TableHead className="font-semibold text-gray-900">Дата получения</TableHead>
+                <TableHead className="font-semibold text-gray-900">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -120,30 +119,33 @@ const ExpiringItemsTable = ({ items, isLoading }: ExpiringItemsTableProps) => {
 
                 return (
                   <TableRow key={item.sid}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-gray-800">
                       {item.product.name}
                     </TableCell>
                     <TableCell>
                       <Badge className={statusClass}>
-                        {getStatusDisplayName(item.status)}
+                        {getStatusDisplayName(item.status) === 'In Stock' ? 'На складе' : 
+                         getStatusDisplayName(item.status) === 'Moved to Store' ? 'Перемещен в магазин' :
+                         getStatusDisplayName(item.status) === 'Discarded' ? 'Списан' : 
+                         getStatusDisplayName(item.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{item.batch_code || "N/A"}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell className="text-gray-700">{item.batch_code || "Н/Д"}</TableCell>
+                    <TableCell className="text-gray-700">{item.quantity}</TableCell>
                     <TableCell>
                       {daysUntilExpiration !== null ? (
                         <span className={urgencyClass}>
                           {daysUntilExpiration <= 0
-                            ? "Expired"
+                            ? "Истек"
                             : daysUntilExpiration === 1
-                            ? "1 day"
-                            : `${daysUntilExpiration} days`}
+                            ? "1 день"
+                            : `${daysUntilExpiration} дней`}
                         </span>
                       ) : (
-                        "N/A"
+                        "Н/Д"
                       )}
                     </TableCell>
-                    <TableCell>{formatDate(item.received_at)}</TableCell>
+                    <TableCell className="text-gray-700">{formatDate(item.received_at)}</TableCell>
                     <TableCell>
                       {item.status === "in_stock" && item.quantity > 0 ? (
                         <Button
@@ -152,11 +154,11 @@ const ExpiringItemsTable = ({ items, isLoading }: ExpiringItemsTableProps) => {
                           onClick={() => handleMoveToStore(item)}
                         >
                           <ExternalLink size={16} className="mr-1" />
-                          Move to Store
+                          Переместить в магазин
                         </Button>
                       ) : (
                         <Button size="sm" variant="outline" disabled>
-                          {item.status === "moved" ? "Moved" : "Unavailable"}
+                          {item.status === "moved" ? "Перемещен" : "Недоступен"}
                         </Button>
                       )}
                     </TableCell>

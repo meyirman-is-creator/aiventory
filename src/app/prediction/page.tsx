@@ -66,13 +66,13 @@ export default function PredictionPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-2 sm:px-0">
       <div>
         <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-          Prediction & Analytics
+          Прогнозирование и аналитика
         </h2>
         <p className="text-gray-600">
-          Analyze sales data and predict future demand
+          Анализируйте данные о продажах и прогнозируйте будущий спрос
         </p>
       </div>
 
@@ -82,9 +82,9 @@ export default function PredictionPage() {
           style={{borderColor: colors.border, backgroundColor: colors.white}}
         >
           <CardHeader>
-            <CardTitle className="text-gray-900">Sales Analysis</CardTitle>
+            <CardTitle className="text-gray-900">Анализ продаж</CardTitle>
             <CardDescription className="text-gray-600">
-              Historical sales data for the last 30 days
+              Исторические данные о продажах за последние 30 дней
             </CardDescription>
           </CardHeader>
           <CardContent className="h-80">
@@ -97,9 +97,9 @@ export default function PredictionPage() {
           style={{borderColor: colors.border, backgroundColor: colors.white}}
         >
           <CardHeader>
-            <CardTitle className="text-gray-900">Product Selection</CardTitle>
+            <CardTitle className="text-gray-900">Выбор продукта</CardTitle>
             <CardDescription className="text-gray-600">
-              Select a product to view forecast
+              Выберите продукт для просмотра прогноза
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -113,9 +113,9 @@ export default function PredictionPage() {
         >
           <CardHeader className="flex flex-row items-start justify-between">
             <div>
-              <CardTitle className="text-gray-900">Demand Forecast</CardTitle>
+              <CardTitle className="text-gray-900">Прогноз спроса</CardTitle>
               <CardDescription className="text-gray-600">
-                Predicted demand for the selected product
+                Прогнозируемый спрос на выбранный продукт
               </CardDescription>
             </div>
             <ForecastSettings />

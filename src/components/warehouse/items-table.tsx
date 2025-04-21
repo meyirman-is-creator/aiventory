@@ -34,7 +34,7 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">Loading warehouse items...</p>
+        <p className="text-muted-foreground">Загрузка товаров на складе...</p>
       </div>
     );
   }
@@ -42,9 +42,9 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
   if (items.length === 0) {
     return (
       <div className="text-center py-8 border rounded-md">
-        <p className="text-muted-foreground">No items in warehouse</p>
+        <p className="text-muted-foreground">Нет товаров на складе</p>
         <p className="text-sm text-muted-foreground mt-1">
-          Upload inventory files to add items
+          Загрузите файлы инвентаря для добавления товаров
         </p>
       </div>
     );
@@ -60,14 +60,14 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Batch Code</TableHead>
-                <TableHead>Quantity</TableHead>
-                {hasAnyExpiration && <TableHead>Expires At</TableHead>}
-                <TableHead>Received At</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="font-semibold text-gray-900">Товар</TableHead>
+                <TableHead className="font-semibold text-gray-900">Категория</TableHead>
+                <TableHead className="font-semibold text-gray-900">Статус</TableHead>
+                <TableHead className="font-semibold text-gray-900">Код партии</TableHead>
+                <TableHead className="font-semibold text-gray-900">Количество</TableHead>
+                {hasAnyExpiration && <TableHead className="font-semibold text-gray-900">Срок годности</TableHead>}
+                <TableHead className="font-semibold text-gray-900">Дата получения</TableHead>
+                <TableHead className="font-semibold text-gray-900">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -77,19 +77,22 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
                 
                 return (
                   <TableRow key={item.sid}>
-                    <TableCell className="font-medium">{item.product.name}</TableCell>
-                    <TableCell>
-                      {item.product.category_sid ? item.product.category_sid : 'N/A'}
+                    <TableCell className="font-medium text-gray-800">{item.product.name}</TableCell>
+                    <TableCell className="text-gray-700">
+                      {item.product.category_sid ? item.product.category_sid : 'Н/Д'}
                     </TableCell>
                     <TableCell>
                       <Badge className={statusClass}>
-                        {getStatusDisplayName(item.status)}
+                        {getStatusDisplayName(item.status) === 'In Stock' ? 'На складе' : 
+                         getStatusDisplayName(item.status) === 'Moved to Store' ? 'Перемещен в магазин' :
+                         getStatusDisplayName(item.status) === 'Discarded' ? 'Списан' : 
+                         getStatusDisplayName(item.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{item.batch_code || 'N/A'}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
+                    <TableCell className="text-gray-700">{item.batch_code || 'Н/Д'}</TableCell>
+                    <TableCell className="text-gray-700">{item.quantity}</TableCell>
                     {hasAnyExpiration && (
-                      <TableCell>
+                      <TableCell className="text-gray-700">
                         {item.expire_date ? (
                           <div className="flex items-center">
                             {formatDate(item.expire_date)}
@@ -97,16 +100,15 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
                               <AlertTriangle
                                 size={16}
                                 className="ml-2 text-amber-500"
-                                title="Expiring soon"
                               />
                             )}
                           </div>
                         ) : (
-                          'N/A'
+                          'Н/Д'
                         )}
                       </TableCell>
                     )}
-                    <TableCell>{formatDate(item.received_at)}</TableCell>
+                    <TableCell className="text-gray-700">{formatDate(item.received_at)}</TableCell>
                     <TableCell>
                       {item.status === 'in_stock' && item.quantity > 0 ? (
                         <Button
@@ -116,11 +118,11 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
                           onClick={() => handleMoveToStore(item)}
                         >
                           <ExternalLink size={16} className="mr-1" />
-                          Move to Store
+                          Переместить в магазин
                         </Button>
                       ) : (
                         <Button size="sm" variant="outline" disabled>
-                          {item.status === 'moved' ? 'Moved' : 'Unavailable'}
+                          {item.status === 'moved' ? 'Перемещен' : 'Недоступен'}
                         </Button>
                       )}
                     </TableCell>

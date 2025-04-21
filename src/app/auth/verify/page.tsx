@@ -14,7 +14,6 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 
-// Определение цветов для консистентности дизайна
 const colors = {
   purple: '#6322FE',
   purpleHover: '#5719d8',
@@ -34,7 +33,6 @@ export default function VerifyPage() {
   const router = useRouter();
   
   useEffect(() => {
-    // Получаем email из URL параметров или из sessionStorage
     const urlEmail = searchParams.get('email');
     const storedEmail = sessionStorage.getItem('verificationEmail');
     
@@ -72,7 +70,6 @@ export default function VerifyPage() {
         description: 'Ваша электронная почта подтверждена. Теперь вы можете войти в систему.',
       });
       
-      // Очищаем sessionStorage после успешной верификации
       sessionStorage.removeItem('verificationEmail');
       
       router.push('/auth/login');
@@ -116,7 +113,7 @@ export default function VerifyPage() {
                         <InputOTPSlot
                           key={index}
                           {...slot}
-                          className="w-10 h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+                          className="w-10 h-12 text-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500 bg-white"
                         />
                       ))}
                     </InputOTPGroup>

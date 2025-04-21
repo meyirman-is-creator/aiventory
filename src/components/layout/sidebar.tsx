@@ -26,6 +26,13 @@ const Sidebar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { logout, isAuthenticated, checkAuth } = useUserStore();
   const { fetchActiveItems, activeItems } = useStoreItemsStore();
+  // Добавляем состояние для отслеживания клиентского рендеринга
+  const [isClient, setIsClient] = useState(false);
+  
+  // Устанавливаем флаг клиентского рендеринга после монтирования
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   // Check if on auth pages
   const isAuthPage = pathname?.startsWith('/auth');
@@ -52,22 +59,22 @@ const Sidebar = () => {
   
   const navItems = [
     {
-      name: 'Dashboard',
+      name: 'Панель управления',
       href: '/',
       icon: <LayoutDashboard size={20} />,
     },
     {
-      name: 'Store',
+      name: 'Магазин',
       href: '/store',
       icon: <Store size={20} />,
     },
     {
-      name: 'Warehouse',
+      name: 'Склад',
       href: '/warehouse',
       icon: <PackageOpen size={20} />,
     },
     {
-      name: 'Prediction',
+      name: 'Прогнозирование',
       href: '/prediction',
       icon: <BarChart3 size={20} />,
     },
@@ -78,6 +85,11 @@ const Sidebar = () => {
     window.location.href = '/auth/login';
   };
   
+  // Рендерим упрощенную версию для сервера, полную только на клиенте
+  if (!isClient) {
+    return null; // Или можно вернуть упрощенный плейсхолдер без интерактивных элементов
+  }
+  
   return (
     <>
       {/* Mobile menu button */}
@@ -85,7 +97,7 @@ const Sidebar = () => {
         <Button
           variant="outline"
           size="icon"
-          aria-label="Toggle Menu"
+          aria-label="Меню"
           className="rounded-full"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
@@ -110,7 +122,7 @@ const Sidebar = () => {
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-center h-16 px-4 border-b">
-            <h1 className="text-xl font-bold text-brand-purple">Inventory System</h1>
+            <h1 className="text-xl font-bold text-brand-purple">aiventory</h1>
           </div>
           
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -138,7 +150,7 @@ const Sidebar = () => {
               <Link href="/store" onClick={() => setIsMobileMenuOpen(false)}>
                 <div className="flex items-center px-4 py-3 mt-4 text-sm font-medium text-white bg-brand-purple rounded-md">
                   <ShoppingCart size={20} />
-                  <span className="ml-3">Sell Products</span>
+                  <span className="ml-3">Продажа товаров</span>
                 </div>
               </Link>
             )}
@@ -152,7 +164,7 @@ const Sidebar = () => {
               className="flex items-center w-full px-4 py-3 mt-4 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100"
             >
               <LogOut size={20} />
-              <span className="ml-3">Logout</span>
+              <span className="ml-3">Выйти</span>
             </button>
           </nav>
         </div>

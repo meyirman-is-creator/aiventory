@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useUserStore } from '@/store/user-store';
 
-// Определение цветов для консистентности дизайна
 const colors = {
   purple: '#6322FE',
   purpleHover: '#5719d8',
@@ -75,7 +74,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500 placeholder-gray-400"
               />
             </div>
             <div className="space-y-2">
@@ -85,10 +84,11 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500 placeholder-gray-400"
               />
             </div>
           </CardContent>
