@@ -10,6 +10,16 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useUserStore } from '@/store/user-store';
 
+// Определение цветов для консистентности дизайна
+const colors = {
+  purple: '#6322FE',
+  purpleHover: '#5719d8',
+  textDark: '#1f2937',
+  textMuted: '#4b5563',
+  white: '#ffffff',
+  border: '#e5e7eb',
+};
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,8 +33,8 @@ export default function LoginPage() {
     
     if (!email || !password) {
       toast({
-        title: 'Error',
-        description: 'Please fill in all fields',
+        title: 'Ошибка',
+        description: 'Пожалуйста, заполните все поля',
         variant: 'destructive',
       });
       return;
@@ -37,8 +47,8 @@ export default function LoginPage() {
       router.push('/');
     } catch (error: any) {
       toast({
-        title: 'Login Failed',
-        description: error.response?.data?.detail || 'An error occurred during login',
+        title: 'Ошибка входа',
+        description: error.response?.data?.detail || 'Произошла ошибка при входе',
         variant: 'destructive',
       });
       setIsLoading(false);
@@ -46,58 +56,64 @@ export default function LoginPage() {
   };
   
   return (
-    <Card className="shadow-lg">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
-        <CardDescription className="text-center">
-          Enter your credentials to access your account
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+    <div className="w-full max-w-md mx-auto">
+      <Card style={{borderColor: colors.border, backgroundColor: colors.white}} className="shadow-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center text-gray-900">Вход в систему</CardTitle>
+          <CardDescription className="text-center text-gray-600">
+            Введите свои данные для доступа к аккаунту
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-700">Электронная почта</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="mail@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+              />
             </div>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <Button
-            type="submit"
-            className="w-full bg-brand-purple hover:bg-brand-purple/90"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Logging in...' : 'Login'}
-          </Button>
-          <div className="text-center text-sm">
-            Don't have an account?{' '}
-            <Link
-              href="/auth/register"
-              className="text-brand-purple hover:underline"
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-gray-700">Пароль</Label>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <Button
+              type="submit"
+              style={{backgroundColor: isLoading ? colors.purpleHover : colors.purple}}
+              className="w-full text-white hover:opacity-90 transition-opacity"
+              disabled={isLoading}
             >
-              Register
-            </Link>
-          </div>
-        </CardFooter>
-      </form>
-    </Card>
+              {isLoading ? 'Выполняется вход...' : 'Войти'}
+            </Button>
+            <div className="text-center text-sm text-gray-600">
+              Нет аккаунта?{' '}
+              <Link
+                href="/auth/register"
+                style={{color: colors.purple}}
+                className="font-medium hover:underline"
+              >
+                Зарегистрироваться
+              </Link>
+            </div>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
   );
 }

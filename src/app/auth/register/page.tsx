@@ -10,6 +10,16 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useUserStore } from '@/store/user-store';
 
+// Определение цветов для консистентности дизайна
+const colors = {
+  purple: '#6322FE',
+  purpleHover: '#5719d8',
+  textDark: '#1f2937',
+  textMuted: '#4b5563',
+  white: '#ffffff',
+  border: '#e5e7eb',
+};
+
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,8 +34,8 @@ export default function RegisterPage() {
     
     if (!email || !password || !confirmPassword) {
       toast({
-        title: 'Error',
-        description: 'Please fill in all fields',
+        title: 'Ошибка',
+        description: 'Пожалуйста, заполните все поля',
         variant: 'destructive',
       });
       return;
@@ -33,8 +43,8 @@ export default function RegisterPage() {
     
     if (password !== confirmPassword) {
       toast({
-        title: 'Error',
-        description: 'Passwords do not match',
+        title: 'Ошибка',
+        description: 'Пароли не совпадают',
         variant: 'destructive',
       });
       return;
@@ -42,8 +52,8 @@ export default function RegisterPage() {
     
     if (password.length < 8) {
       toast({
-        title: 'Error',
-        description: 'Password must be at least 8 characters',
+        title: 'Ошибка',
+        description: 'Пароль должен содержать не менее 8 символов',
         variant: 'destructive',
       });
       return;
@@ -53,15 +63,19 @@ export default function RegisterPage() {
     
     try {
       const user = await register(email, password);
+      
+      // Сохраняем email в sessionStorage для страницы верификации
+      sessionStorage.setItem('verificationEmail', email);
+      
       toast({
-        title: 'Registration Successful',
-        description: 'Please verify your email with the verification code sent to your email address.',
+        title: 'Регистрация успешна',
+        description: 'Пожалуйста, проверьте вашу почту и введите код подтверждения.',
       });
       router.push(`/auth/verify?email=${encodeURIComponent(email)}`);
     } catch (error: any) {
       toast({
-        title: 'Registration Failed',
-        description: error.response?.data?.detail || 'An error occurred during registration',
+        title: 'Ошибка регистрации',
+        description: error.response?.data?.detail || 'Произошла ошибка при регистрации',
         variant: 'destructive',
       });
       setIsLoading(false);
@@ -69,67 +83,74 @@ export default function RegisterPage() {
   };
   
   return (
-    <Card className="shadow-lg">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
-        <CardDescription className="text-center">
-          Enter your details to create your account
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="m@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <p className="text-xs text-gray-500">Must be at least 8 characters</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <Button
-            type="submit"
-            className="w-full bg-brand-purple hover:bg-brand-purple/90"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Creating account...' : 'Create account'}
-          </Button>
-          <div className="text-center text-sm">
-            Already have an account?{' '}
-            <Link
-              href="/auth/login"
-              className="text-brand-purple hover:underline"
+    <div className="w-full max-w-md mx-auto">
+      <Card style={{borderColor: colors.border, backgroundColor: colors.white}} className="shadow-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center text-gray-900">Создание аккаунта</CardTitle>
+          <CardDescription className="text-center text-gray-600">
+            Заполните форму для создания нового аккаунта
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-700">Электронная почта</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="mail@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-700">Пароль</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+              />
+              <p className="text-xs text-gray-500">Минимум 8 символов</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-gray-700">Подтверждение пароля</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <Button
+              type="submit"
+              style={{backgroundColor: isLoading ? colors.purpleHover : colors.purple}}
+              className="w-full text-white hover:opacity-90 transition-opacity"
+              disabled={isLoading}
             >
-              Login
-            </Link>
-          </div>
-        </CardFooter>
-      </form>
-    </Card>
+              {isLoading ? 'Создание аккаунта...' : 'Создать аккаунт'}
+            </Button>
+            <div className="text-center text-sm text-gray-600">
+              Уже есть аккаунт?{' '}
+              <Link
+                href="/auth/login"
+                style={{color: colors.purple}}
+                className="font-medium hover:underline"
+              >
+                Войти
+              </Link>
+            </div>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
   );
 }

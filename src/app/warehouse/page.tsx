@@ -11,12 +11,24 @@ import ExpiringItemsTable from '@/components/warehouse/expiring-items-table';
 import UploadFileButton from '@/components/dashboard/upload-file-button';
 import MoveToStoreButton from '@/components/warehouse/move-to-store-button';
 
+// Define explicit colors
+const colors = {
+  purple: '#6322FE',
+  purpleLight: '#EBE3FF',
+  textDark: '#1f2937',
+  textMuted: '#4b5563',
+  amber: '#f59e0b',
+  amberLight: '#FEF3C7',
+  white: '#ffffff',
+  border: '#e5e7eb',
+};
+
 export default function WarehousePage() {
   const router = useRouter();
   const { isAuthenticated, checkAuth } = useUserStore();
-  const { 
-    fetchItems, 
-    fetchExpiringItems, 
+  const {
+    fetchItems,
+    fetchExpiringItems,
     items,
     expiringItems,
     isLoadingItems,
@@ -42,8 +54,8 @@ export default function WarehousePage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Warehouse Management</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900">Warehouse Management</h2>
+          <p className="text-gray-600">
             Manage your warehouse inventory and move items to store
           </p>
         </div>
@@ -54,25 +66,31 @@ export default function WarehousePage() {
       </div>
       
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="all">
+        <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+          <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">
             All Items
-            <span className="ml-2 inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+            <span 
+              className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+              style={{backgroundColor: colors.purpleLight, color: colors.purple}}
+            >
               {items.length}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="expiring">
+          <TabsTrigger value="expiring" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">
             Expiring Soon
-            <span className="ml-2 inline-flex items-center justify-center rounded-full bg-amber-400/10 px-2.5 py-0.5 text-xs font-semibold text-amber-500">
+            <span 
+              className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+              style={{backgroundColor: colors.amberLight, color: colors.amber}}
+            >
               {expiringItems.length}
             </span>
           </TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="space-y-4 mt-4">
-          <Card>
+          <Card style={{borderColor: colors.border, backgroundColor: colors.white}}>
             <CardHeader>
-              <CardTitle>Warehouse Items</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900">Warehouse Items</CardTitle>
+              <CardDescription className="text-gray-600">
                 All items currently stored in your warehouse
               </CardDescription>
             </CardHeader>
@@ -82,10 +100,10 @@ export default function WarehousePage() {
           </Card>
         </TabsContent>
         <TabsContent value="expiring" className="space-y-4 mt-4">
-          <Card>
+          <Card style={{borderColor: colors.border, backgroundColor: colors.white}}>
             <CardHeader>
-              <CardTitle>Expiring Items</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900">Expiring Items</CardTitle>
+              <CardDescription className="text-gray-600">
                 Warehouse items that will expire within the next 7 days
               </CardDescription>
             </CardHeader>

@@ -9,7 +9,6 @@ import { useToast } from '@/components/ui/use-toast';
 import { Upload, Loader2 } from 'lucide-react';
 import { useWarehouseStore } from '@/store/warehouse-store';
 import { useDashboardStore } from '@/store/dashboard-store';
-
 const UploadFileButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);

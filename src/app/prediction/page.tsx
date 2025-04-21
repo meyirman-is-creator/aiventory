@@ -17,6 +17,17 @@ import ProductSelector from "@/components/prediction/product-selector";
 import ForecastChart from "@/components/prediction/forecast-chart";
 import ForecastSettings from "@/components/prediction/forecast-settings";
 
+// Define explicit colors
+const colors = {
+  purple: '#6322FE',
+  purpleLight: '#EBE3FF',
+  textDark: '#1f2937',
+  textMuted: '#4b5563',
+  white: '#ffffff',
+  border: '#e5e7eb',
+  bgLight: '#f9fafb',
+};
+
 export default function PredictionPage() {
   const router = useRouter();
   const { isAuthenticated, checkAuth } = useUserStore();
@@ -57,19 +68,22 @@ export default function PredictionPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">
+        <h2 className="text-2xl font-bold tracking-tight text-gray-900">
           Prediction & Analytics
         </h2>
-        <p className="text-muted-foreground">
+        <p className="text-gray-600">
           Analyze sales data and predict future demand
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="col-span-full lg:col-span-2">
+        <Card 
+          className="col-span-full lg:col-span-2"
+          style={{borderColor: colors.border, backgroundColor: colors.white}}
+        >
           <CardHeader>
-            <CardTitle>Sales Analysis</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-gray-900">Sales Analysis</CardTitle>
+            <CardDescription className="text-gray-600">
               Historical sales data for the last 30 days
             </CardDescription>
           </CardHeader>
@@ -78,21 +92,29 @@ export default function PredictionPage() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-full lg:col-span-1">
+        <Card 
+          className="col-span-full lg:col-span-1"
+          style={{borderColor: colors.border, backgroundColor: colors.white}}
+        >
           <CardHeader>
-            <CardTitle>Product Selection</CardTitle>
-            <CardDescription>Select a product to view forecast</CardDescription>
+            <CardTitle className="text-gray-900">Product Selection</CardTitle>
+            <CardDescription className="text-gray-600">
+              Select a product to view forecast
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ProductSelector />
           </CardContent>
         </Card>
 
-        <Card className="col-span-full">
+        <Card 
+          className="col-span-full"
+          style={{borderColor: colors.border, backgroundColor: colors.white}}
+        >
           <CardHeader className="flex flex-row items-start justify-between">
             <div>
-              <CardTitle>Demand Forecast</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-gray-900">Demand Forecast</CardTitle>
+              <CardDescription className="text-gray-600">
                 Predicted demand for the selected product
               </CardDescription>
             </div>
