@@ -1,22 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { StoreItem } from '@/lib/types';
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { StoreItem } from "@/lib/types";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
-import { useStoreItemsStore } from '@/store/store-items-store';
-import { formatCurrency } from '@/lib/utils';
-import { Minus, Plus } from 'lucide-react';
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
+import { recordSale } from "@/redux/slices/storeSlice";
+import { formatCurrency } from "@/lib/utils";
+import { Minus, Plus } from "lucide-react";
+import { AppDispatch } from "@/redux/store";
 
 interface SellItemModalProps {
   item: StoreItem;
@@ -25,20 +27,22 @@ interface SellItemModalProps {
 }
 
 const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
+  const dispatch = useDispatch<AppDispatch>();
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const { recordSale } = useStoreItemsStore();
   const { toast } = useToast();
-  
-  // Calculate price with any discounts
-  const hasDiscount = item.current_discounts && item.current_discounts.length > 0;
-  const discountPercentage = hasDiscount ? item.current_discounts[0].percentage : 0;
+
+  const hasDiscount =
+    item.current_discounts && item.current_discounts.length > 0;
+  const discountPercentage = hasDiscount
+    ? item.current_discounts[0].percentage
+    : 0;
   const pricePerUnit = hasDiscount
     ? item.price * (1 - discountPercentage / 100)
     : item.price;
-  
+
   const totalPrice = pricePerUnit * quantity;
-  
+
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (isNaN(value) || value < 1) {
@@ -49,49 +53,56 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
       setQuantity(value);
     }
   };
-  
+
   const incrementQuantity = () => {
     if (quantity < item.quantity) {
       setQuantity(quantity + 1);
     }
   };
-  
+
   const decrementQuantity = () => {
     if (quantity > 1) {
       setQuantity(quantity - 1);
     }
   };
-  
+
   const handleSubmit = async () => {
     if (quantity < 1 || quantity > item.quantity) {
       toast({
-        title: 'Invalid quantity',
+        title: "Invalid quantity",
         description: `Please enter a quantity between 1 and ${item.quantity}`,
-        variant: 'destructive',
+        variant: "destructive",
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
-      await recordSale(item.sid, quantity, pricePerUnit);
+      await dispatch(
+        recordSale({
+          storeItemSid: item.sid,
+          soldQty: quantity,
+          soldPrice: pricePerUnit,
+        })
+      ).unwrap();
+
       toast({
-        title: 'Sale recorded',
+        title: "Sale recorded",
         description: `Successfully sold ${quantity} ${item.product.name}`,
       });
       onClose();
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to record sale',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to record sale",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -101,13 +112,13 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
             Record a sale for {item.product.name}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Product</Label>
             <div className="text-sm font-medium">{item.product.name}</div>
           </div>
-          
+
           <div className="space-y-2">
             <Label>Price per unit</Label>
             <div className="flex items-center">
@@ -126,9 +137,11 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
               )}
             </div>
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="quantity">Quantity (Available: {item.quantity})</Label>
+            <Label htmlFor="quantity">
+              Quantity (Available: {item.quantity})
+            </Label>
             <div className="flex items-center">
               <Button
                 type="button"
@@ -161,13 +174,15 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
               </Button>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label>Total Price</Label>
-            <div className="text-lg font-bold">{formatCurrency(totalPrice)}</div>
+            <div className="text-lg font-bold">
+              {formatCurrency(totalPrice)}
+            </div>
           </div>
         </div>
-        
+
         <DialogFooter>
           <Button
             type="button"
@@ -183,7 +198,7 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
             onClick={handleSubmit}
             disabled={isLoading}
           >
-            {isLoading ? 'Processing...' : 'Complete Sale'}
+            {isLoading ? "Processing..." : "Complete Sale"}
           </Button>
         </DialogFooter>
       </DialogContent>

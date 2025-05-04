@@ -1,25 +1,31 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { StoreItem } from '@/lib/types';
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { StoreItem } from "@/lib/types";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
-import { useStoreItemsStore } from '@/store/store-items-store';
-import { formatCurrency, calculateDiscountPrice } from '@/lib/utils';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format, addDays } from 'date-fns';
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
+import { createDiscount } from "@/redux/slices/storeSlice";
+import { formatCurrency, calculateDiscountPrice } from "@/lib/utils";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format, addDays } from "date-fns";
+import { AppDispatch } from "@/redux/store";
 
 interface DiscountModalProps {
   item: StoreItem;
@@ -28,18 +34,18 @@ interface DiscountModalProps {
 }
 
 const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
+  const dispatch = useDispatch<AppDispatch>();
   const [percentage, setPercentage] = useState(10);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(addDays(new Date(), 7));
   const [isStartDateOpen, setIsStartDateOpen] = useState(false);
   const [isEndDateOpen, setIsEndDateOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { createDiscount } = useStoreItemsStore();
   const { toast } = useToast();
-  
+
   const originalPrice = item.price;
   const discountedPrice = calculateDiscountPrice(originalPrice, percentage);
-  
+
   const handlePercentageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     if (isNaN(value) || value < 0) {
@@ -50,46 +56,54 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
       setPercentage(value);
     }
   };
-  
+
   const handleSubmit = async () => {
     if (percentage <= 0 || percentage > 100) {
       toast({
-        title: 'Invalid discount',
-        description: 'Please enter a discount percentage between 1 and 100',
-        variant: 'destructive',
+        title: "Invalid discount",
+        description: "Please enter a discount percentage between 1 and 100",
+        variant: "destructive",
       });
       return;
     }
-    
+
     if (endDate < startDate) {
       toast({
-        title: 'Invalid date range',
-        description: 'End date must be after start date',
-        variant: 'destructive',
+        title: "Invalid date range",
+        description: "End date must be after start date",
+        variant: "destructive",
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
-      await createDiscount(item.sid, percentage, startDate, endDate);
+      await dispatch(
+        createDiscount({
+          storeItemSid: item.sid,
+          percentage,
+          startsAt: startDate,
+          endsAt: endDate,
+        })
+      ).unwrap();
+
       toast({
-        title: 'Discount created',
+        title: "Discount created",
         description: `${percentage}% discount added to ${item.product.name}`,
       });
       onClose();
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create discount',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Failed to create discount",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -99,18 +113,20 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
             Create a discount for {item.product.name}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Product</Label>
             <div className="text-sm font-medium">{item.product.name}</div>
           </div>
-          
+
           <div className="space-y-2">
             <Label>Original Price</Label>
-            <div className="text-sm font-medium">{formatCurrency(originalPrice)}</div>
+            <div className="text-sm font-medium">
+              {formatCurrency(originalPrice)}
+            </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="percentage">Discount Percentage</Label>
             <div className="flex items-center">
@@ -126,15 +142,18 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
               <span>%</span>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label>Discounted Price</Label>
-            <div className="text-lg font-bold text-primary">{formatCurrency(discountedPrice)}</div>
+            <div className="text-lg font-bold text-primary">
+              {formatCurrency(discountedPrice)}
+            </div>
             <div className="text-xs text-muted-foreground">
-              Customer saves {formatCurrency(originalPrice - discountedPrice)} per unit
+              Customer saves {formatCurrency(originalPrice - discountedPrice)}{" "}
+              per unit
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDate">Start Date</Label>
@@ -163,7 +182,7 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
                 </PopoverContent>
               </Popover>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="endDate">End Date</Label>
               <Popover open={isEndDateOpen} onOpenChange={setIsEndDateOpen}>
@@ -193,7 +212,7 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
             </div>
           </div>
         </div>
-        
+
         <DialogFooter>
           <Button
             type="button"
@@ -209,7 +228,7 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
             onClick={handleSubmit}
             disabled={isLoading}
           >
-            {isLoading ? 'Creating...' : 'Create Discount'}
+            {isLoading ? "Creating..." : "Create Discount"}
           </Button>
         </DialogFooter>
       </DialogContent>

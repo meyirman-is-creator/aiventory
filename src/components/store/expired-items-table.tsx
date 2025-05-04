@@ -1,5 +1,8 @@
+// src/components/store/expired-items-table.tsx
+
 'use client';
 
+import { useDispatch } from 'react-redux';
 import { StoreItem } from '@/lib/types';
 import {
   Table,
@@ -14,8 +17,9 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDate, getStatusDisplayName, getStatusBadgeColor } from '@/lib/utils';
 import { Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { useStoreItemsStore } from '@/store/store-items-store';
+import { removeFromStore } from '@/redux/slices/storeSlice';
 import { cn } from '@/lib/utils';
+import { AppDispatch } from '@/redux/store';
 
 interface ExpiredItemsTableProps {
   items: StoreItem[];
@@ -23,17 +27,17 @@ interface ExpiredItemsTableProps {
 }
 
 const ExpiredItemsTable = ({ items, isLoading }: ExpiredItemsTableProps) => {
-  const { removeFromStore } = useStoreItemsStore();
+  const dispatch = useDispatch<AppDispatch>();
   const { toast } = useToast();
   
   const handleRemoveItem = async (item: StoreItem) => {
     try {
-      await removeFromStore(item.sid);
+      await dispatch(removeFromStore(item.sid)).unwrap();
       toast({
         title: 'Item removed',
         description: `${item.product.name} has been removed from the store.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
         description: 'Failed to remove item.',
