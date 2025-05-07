@@ -178,25 +178,25 @@ export const warehouseApi = {
   },
 
   moveToStoreByBarcode: async (
-    barcodeImage: string,
+    barcode: string,
     quantity: number,
     price: number
   ): Promise<{ store_item_sid: string; message: string }> => {
     const formData = new FormData();
-    formData.append("barcode_image", barcodeImage);
+    formData.append("barcode", barcode);
     formData.append("quantity", quantity.toString());
     formData.append("price", price.toString());
-
+  
     const response = await api.post<{
       store_item_sid: string;
       message: string;
-    }>("/warehouse/to-store", formData, {
+    }>("/warehouse/to-store-by-barcode", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
     return response.data;
-  },
+  }
 };
 
 // Store endpoints

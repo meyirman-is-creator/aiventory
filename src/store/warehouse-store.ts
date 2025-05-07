@@ -162,21 +162,27 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
   },
 
   moveToStoreByBarcode: async (
-    barcodeImage: string,
+    barcode: string,
     quantity: number,
     price: number
   ) => {
     set({ isMoving: true, error: null });
     try {
+      const formData = new FormData();
+      formData.append("barcode", barcode);
+      formData.append("quantity", quantity.toString());
+      formData.append("price", price.toString());
+  
+      // In your real API, this would be sending the barcode value rather than an image
       const result = await warehouseApi.moveToStoreByBarcode(
-        barcodeImage,
+        barcode,
         quantity,
         price
       );
-
+  
       // Refresh warehouse items
       await get().fetchItems();
-
+  
       set({ isMoving: false });
       return result;
     } catch (error: any) {

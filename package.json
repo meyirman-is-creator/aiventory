@@ -42,6 +42,7 @@
     "react-hook-form": "^7.56.0",
     "react-redux": "^9.2.0",
     "react-webcam": "^7.2.0",
+    "react-zxing": "^2.1.0",
     "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.24.3",

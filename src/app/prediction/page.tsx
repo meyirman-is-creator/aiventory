@@ -1,3 +1,5 @@
+// src/app/prediction/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -16,81 +18,24 @@ import SalesAnalytics from "@/components/prediction/sales-analytics";
 import ProductSelector from "@/components/prediction/product-selector";
 import ForecastChart from "@/components/prediction/forecast-chart";
 import ForecastSettings from "@/components/prediction/forecast-settings";
-import { PredictionStats, TimeFrame, Prediction } from "@/lib/types";
+import { TimeFrame, ProductCategory } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 const colors = {
-  purple: '#6322FE',
-  purpleLight: '#EBE3FF',
-  textDark: '#1f2937',
-  textMuted: '#4b5563',
-  white: '#ffffff',
-  border: '#e5e7eb',
-  bgLight: '#f9fafb',
-};
-
-const mockPredictionStats: PredictionStats = {
-  dates: [
-    "2025-04-05",
-    "2025-04-12",
-    "2025-04-19",
-    "2025-04-26",
-    "2025-05-03"
-  ],
-  products: [
-    { product_sid: "100000000002", product_name: "Молоко 3.2%" },
-    { product_sid: "100000000003", product_name: "Йогурт натуральный" },
-    { product_sid: "100000000004", product_name: "Сметана 20%" },
-    { product_sid: "100000000006", product_name: "Сыр Российский" }
-  ],
-  quantity_data: [
-    { "100000000002": 25, "100000000003": 18, "100000000004": 15, "100000000006": 10 },
-    { "100000000002": 22, "100000000003": 20, "100000000004": 14, "100000000006": 12 },
-    { "100000000002": 28, "100000000003": 19, "100000000004": 16, "100000000006": 9 },
-    { "100000000002": 24, "100000000003": 21, "100000000004": 18, "100000000006": 11 },
-    { "100000000002": 26, "100000000003": 22, "100000000004": 17, "100000000006": 13 }
-  ],
-  revenue_data: [
-    { "100000000002": 950, "100000000003": 504, "100000000004": 480, "100000000006": 3200 },
-    { "100000000002": 836, "100000000003": 560, "100000000004": 448, "100000000006": 3840 },
-    { "100000000002": 1064, "100000000003": 532, "100000000004": 512, "100000000006": 2880 },
-    { "100000000002": 912, "100000000003": 588, "100000000004": 576, "100000000006": 3520 },
-    { "100000000002": 988, "100000000003": 616, "100000000004": 544, "100000000006": 4160 }
-  ]
-};
-
-const generateMockPredictions = (
-  productSid: string, 
-  productName: string
-): Prediction[] => {
-  const today = new Date();
-  const result: Prediction[] = [];
-  
-  for (let i = 0; i < 6; i++) {
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() + i * 7);
-    
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 6);
-    
-    result.push({
-      sid: `mock-prediction-${i}`,
-      product_sid: productSid,
-      timeframe: TimeFrame.WEEK,
-      period_start: startDate.toISOString(),
-      period_end: endDate.toISOString(),
-      forecast_qty: Math.floor(Math.random() * 30) + 15,
-      generated_at: new Date().toISOString(),
-      model_version: "mock-v1.0",
-      product: {
-        sid: productSid,
-        name: productName,
-        category_sid: "dairy",
-        default_price: 10
-      }
-    });
-  }
-  
-  return result;
+  purple: "#6322FE",
+  purpleLight: "#EBE3FF",
+  textDark: "#1f2937",
+  textMuted: "#4b5563",
+  white: "#ffffff",
+  border: "#e5e7eb",
+  bgLight: "#f9fafb",
 };
 
 export default function PredictionPage() {
@@ -108,11 +53,12 @@ export default function PredictionPage() {
     predictions,
     isLoadingPredictions,
     setSelectedTimeframe,
-    setSelectedPeriods
+    setSelectedPeriods,
   } = usePredictionStore();
   const { fetchActiveItems, activeItems } = useStoreItemsStore();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [mockPredictionsData, setMockPredictionsData] = useState<Record<string, Prediction[]>>({});
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
 
   useEffect(() => {
     const isLoggedIn = checkAuth();
@@ -125,10 +71,8 @@ export default function PredictionPage() {
     const loadInitialData = async () => {
       setIsInitialLoading(true);
       try {
-        await Promise.all([
-          fetchStats(),
-          fetchActiveItems()
-        ]);
+        // Load data in parallel
+        await Promise.all([fetchStats(), fetchActiveItems()]);
       } finally {
         setIsInitialLoading(false);
       }
@@ -137,57 +81,86 @@ export default function PredictionPage() {
     loadInitialData();
   }, [checkAuth, fetchStats, fetchActiveItems, router]);
 
+  // Extract unique categories from active items
   useEffect(() => {
     if (activeItems.length > 0) {
-      const mockData: Record<string, Prediction[]> = {};
-      
-      activeItems.forEach(item => {
-        mockData[item.product.sid] = generateMockPredictions(
-          item.product.sid, 
-          item.product.name
+      const uniqueCategories = Array.from(
+        new Set(
+          activeItems
+            .filter((item) => item.product.category)
+            .map((item) => ({
+              sid: item.product.category?.sid || "",
+              name: item.product.category?.name || "",
+            }))
+        )
+      ).filter((category) => category.sid && category.name);
+
+      setCategories(uniqueCategories as ProductCategory[]);
+    }
+  }, [activeItems]);
+
+  // Automatically select first product after data loading
+  useEffect(() => {
+    if (!selectedProductSid && !isInitialLoading && activeItems.length > 0) {
+      // If we have a category filter, select the first product from that category
+      if (selectedCategory) {
+        const filteredItems = activeItems.filter(
+          (item) => item.product.category?.sid === selectedCategory
         );
-      });
-      
-      setMockPredictionsData(mockData);
-      
-      if (!selectedProductSid && !isInitialLoading) {
+
+        if (filteredItems.length > 0) {
+          setSelectedProduct(filteredItems[0].product.sid);
+        }
+      } else {
+        // Otherwise select the first product
         setSelectedProduct(activeItems[0].product.sid);
       }
     }
-  }, [activeItems, selectedProductSid, setSelectedProduct, isInitialLoading]);
+  }, [
+    selectedProductSid,
+    activeItems,
+    isInitialLoading,
+    setSelectedProduct,
+    selectedCategory,
+  ]);
 
+  // Fetch predictions when product, timeframe, or periods change
   useEffect(() => {
     if (selectedProductSid && !isInitialLoading) {
-      fetchPredictions(selectedProductSid, false, selectedTimeframe, selectedPeriods);
+      fetchPredictions(
+        selectedProductSid,
+        false,
+        selectedTimeframe,
+        selectedPeriods
+      );
     }
   }, [
-    selectedProductSid, 
-    fetchPredictions, 
-    isInitialLoading, 
-    selectedTimeframe, 
-    selectedPeriods
+    selectedProductSid,
+    fetchPredictions,
+    isInitialLoading,
+    selectedTimeframe,
+    selectedPeriods,
   ]);
 
   if (!isAuthenticated) {
     return null;
   }
 
-  const displayStats = stats || mockPredictionStats;
-  
+  const handleCategoryChange = (categorySid: string) => {
+    setSelectedCategory(categorySid === "all" ? null : categorySid);
+
+    // Reset selected product when category changes
+    setSelectedProduct(null);
+  };
+
   const getProductName = (productSid: string): string => {
-    const item = activeItems.find(item => item.product.sid === productSid);
+    const item = activeItems.find((item) => item.product.sid === productSid);
     return item ? item.product.name : "Выбранный продукт";
   };
-  
-  const getProductPredictions = (): Prediction[] => {
+
+  const getCurrentPredictions = (): any[] => {
     if (!selectedProductSid) return [];
-    
-    const realPredictions = predictions[selectedProductSid];
-    if (realPredictions && realPredictions.length > 0) {
-      return realPredictions;
-    }
-    
-    return mockPredictionsData[selectedProductSid] || [];
+    return predictions[selectedProductSid] || [];
   };
 
   return (
@@ -197,14 +170,14 @@ export default function PredictionPage() {
           Прогнозирование и аналитика
         </h2>
         <p className="text-gray-600">
-          Анализируйте данные о продажах и прогнозируйте будущий спрос
+          Анализируйте данные о продажах и прогнозируйте будущий спрос на товары
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card 
+        <Card
           className="col-span-full lg:col-span-2"
-          style={{borderColor: colors.border, backgroundColor: colors.white}}
+          style={{ borderColor: colors.border, backgroundColor: colors.white }}
         >
           <CardHeader>
             <CardTitle className="text-gray-900">Анализ продаж</CardTitle>
@@ -213,46 +186,75 @@ export default function PredictionPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            <SalesAnalytics 
-              stats={displayStats} 
-              isLoading={isLoadingStats || isInitialLoading} 
+            <SalesAnalytics
+              stats={stats}
+              isLoading={isLoadingStats || isInitialLoading}
             />
           </CardContent>
         </Card>
 
-        <Card 
+        <Card
           className="col-span-full lg:col-span-1"
-          style={{borderColor: colors.border, backgroundColor: colors.white}}
+          style={{ borderColor: colors.border, backgroundColor: colors.white }}
         >
           <CardHeader>
-            <CardTitle className="text-gray-900">Выбор продукта</CardTitle>
-            <CardDescription className="text-gray-600">
-              Выберите продукт для просмотра прогноза
-            </CardDescription>
+            <div className="flex flex-col space-y-2">
+              <CardTitle className="text-gray-900">Выбор продукта</CardTitle>
+              <CardDescription className="text-gray-600">
+                Выберите продукт для просмотра прогноза
+              </CardDescription>
+
+              <div className="pt-2">
+                <Label htmlFor="category-filter" className="mb-1 block text-sm">
+                  Категория
+                </Label>
+                <Select
+                  value={selectedCategory || "all"}
+                  onValueChange={handleCategoryChange}
+                >
+                  <SelectTrigger id="category-filter" className="w-full">
+                    <SelectValue placeholder="Все категории" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все категории</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.sid} value={category.sid}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <ProductSelector />
+            <ProductSelector
+              selectedCategory={selectedCategory}
+              isLoading={isInitialLoading}
+            />
           </CardContent>
         </Card>
 
-        <Card 
+        <Card
           className="col-span-full"
-          style={{borderColor: colors.border, backgroundColor: colors.white}}
+          style={{ borderColor: colors.border, backgroundColor: colors.white }}
         >
           <CardHeader className="flex flex-row items-start justify-between">
             <div>
               <CardTitle className="text-gray-900">Прогноз спроса</CardTitle>
               <CardDescription className="text-gray-600">
-                Прогнозируемый спрос на выбранный продукт
+                Прогнозируемый спрос на выбранный продукт на последующие периоды
               </CardDescription>
             </div>
             <ForecastSettings />
           </CardHeader>
           <CardContent className="h-96">
-            <ForecastChart 
-              predictions={getProductPredictions()}
-              productName={selectedProductSid ? getProductName(selectedProductSid) : ""}
-              timeframe={selectedTimeframe} 
+            <ForecastChart
+              predictions={getCurrentPredictions()}
+              productName={
+                selectedProductSid ? getProductName(selectedProductSid) : ""
+              }
+              timeframe={selectedTimeframe}
               isLoading={isLoadingPredictions || isInitialLoading}
             />
           </CardContent>

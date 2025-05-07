@@ -170,3 +170,7 @@ export interface StoreReports {
     total_discount_savings: number;
   };
 }
+export interface ProductCategory {
+  sid: string;
+  name: string;
+}

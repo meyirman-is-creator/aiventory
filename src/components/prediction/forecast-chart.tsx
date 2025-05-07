@@ -1,10 +1,12 @@
+// src/components/prediction/forecast-chart.tsx
+
 "use client";
 
 import { useState } from "react";
 import { formatDate } from "@/lib/utils";
 import { ResponsiveBar } from "@nivo/bar";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Loader2 } from "lucide-react";
 import { Prediction, TimeFrame } from "@/lib/types";
 import { usePredictionStore } from "@/store/prediction-store";
 
@@ -22,18 +24,14 @@ const ForecastChart = ({
   isLoading = false
 }: ForecastChartProps) => {
   const [refreshLoading, setRefreshLoading] = useState(false);
-  const { fetchPredictions } = usePredictionStore();
+  const { fetchPredictions, selectedProductSid } = usePredictionStore();
 
   const handleRefresh = async () => {
-    if (!productName || refreshLoading) return;
+    if (!selectedProductSid || refreshLoading) return;
     
-    // Find product sid from the first prediction
-    const productSid = predictions.length > 0 ? predictions[0].product_sid : "";
-    if (!productSid) return;
-
     setRefreshLoading(true);
     try {
-      await fetchPredictions(productSid, true);
+      await fetchPredictions(selectedProductSid, true);
     } finally {
       setRefreshLoading(false);
     }
@@ -47,6 +45,17 @@ const ForecastChart = ({
   }));
 
   const loadingState = isLoading || refreshLoading;
+
+  if (loadingState) {
+    return (
+      <div className="h-full flex items-center justify-center border rounded-md bg-gray-50">
+        <div className="flex flex-col items-center text-gray-500">
+          <Loader2 className="h-10 w-10 animate-spin mb-2" />
+          <p>Загрузка прогноза...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!productName) {
     return (
@@ -67,11 +76,8 @@ const ForecastChart = ({
         <Button
           onClick={handleRefresh}
           className="bg-brand-purple hover:bg-brand-purple/90"
-          disabled={loadingState}
         >
-          <RefreshCw
-            className={`mr-2 h-4 w-4 ${loadingState ? "animate-spin" : ""}`}
-          />
+          <RefreshCw className="mr-2 h-4 w-4" />
           Сгенерировать прогноз
         </Button>
       </div>
@@ -92,11 +98,8 @@ const ForecastChart = ({
           size="sm"
           variant="outline"
           onClick={handleRefresh}
-          disabled={loadingState}
         >
-          <RefreshCw
-            className={`mr-1 h-4 w-4 ${loadingState ? "animate-spin" : ""}`}
-          />
+          <RefreshCw className="mr-1 h-4 w-4" />
           Обновить
         </Button>
       </div>
