@@ -23,15 +23,18 @@ const MoveToStoreButton = () => {
         className="bg-brand-green hover:bg-brand-green/90 text-white"
       >
         <ExternalLink className="mr-2 h-4 w-4" />
-        Move by Barcode
+        Переместить по штрих-коду
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-md !bg-white">
           <DialogHeader>
-            <DialogTitle className="text-black">Scan Barcode</DialogTitle>
+            <DialogTitle className="text-black">
+              Сканировать штрих-код
+            </DialogTitle>
             <DialogDescription>
-              Scan a product barcode to move it from warehouse to store
+              Сканируйте штрих-код товара, чтобы переместить его со склада в
+              магазин
             </DialogDescription>
           </DialogHeader>
 

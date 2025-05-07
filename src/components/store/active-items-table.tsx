@@ -53,13 +53,13 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
     try {
       await dispatch(removeFromStore(item.sid)).unwrap();
       toast({
-        title: "Item removed",
-        description: `${item.product.name} has been removed from the store.`,
+        title: "Товар удален",
+        description: `${item.product.name} был удален из магазина.`,
       });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to remove item.",
+        title: "Ошибка",
+        description: "Не удалось удалить товар.",
         variant: "destructive",
       });
     }
@@ -68,7 +68,7 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">Loading active items...</p>
+        <p className="text-muted-foreground">Загрузка активных товаров...</p>
       </div>
     );
   }
@@ -76,9 +76,9 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
   if (items.length === 0) {
     return (
       <div className="text-center py-8 border rounded-md">
-        <p className="text-muted-foreground">No active items</p>
+        <p className="text-muted-foreground">Нет активных товаров</p>
         <p className="text-sm text-muted-foreground mt-1">
-          Move items from warehouse to store
+          Переместите товары со склада в магазин
         </p>
       </div>
     );
@@ -91,13 +91,13 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Expiry Date</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Товар</TableHead>
+                <TableHead>Категория</TableHead>
+                <TableHead>Статус</TableHead>
+                <TableHead>Количество</TableHead>
+                <TableHead>Цена</TableHead>
+                <TableHead>Срок годности</TableHead>
+                <TableHead>Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,16 +118,22 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                       {item.product.name}
                     </TableCell>
                     <TableCell className="text-[#000]">
-                      {item.product.category_sid
-                        ? item.product.category_sid
-                        : "N/A"}
+                      {item.product.category?.name || "Н/Д"}
                     </TableCell>
                     <TableCell className="text-[#000]">
                       <Badge className={statusClass}>
-                        {getStatusDisplayName(item.status)}
+                        {getStatusDisplayName(item.status) === "Active"
+                          ? "Активен"
+                          : getStatusDisplayName(item.status) === "Expired"
+                          ? "Истек"
+                          : getStatusDisplayName(item.status) === "Removed"
+                          ? "Удален"
+                          : getStatusDisplayName(item.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-[#000]">{item.quantity}</TableCell>
+                    <TableCell className="text-[#000]">
+                      {item.quantity}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center text-[#000]">
                         {hasDiscount && (
@@ -144,7 +150,7 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                         </span>
                         {hasDiscount && (
                           <span className="ml-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs bg-green-100 text-green-800">
-                            {discountPercentage}% off
+                            {discountPercentage}% скидка
                           </span>
                         )}
                       </div>
@@ -153,7 +159,7 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                       <div className="flex items-center text-[#000]">
                         {item.expire_date
                           ? formatDate(item.expire_date)
-                          : "N/A"}
+                          : "Н/Д"}
                         {isExpiring && (
                           <AlertCircle className="ml-2 h-4 w-4 text-amber-500" />
                         )}
@@ -167,7 +173,7 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                           onClick={() => handleSellItem(item)}
                         >
                           <ShoppingCart size={16} className="mr-1" />
-                          Sell
+                          Продать
                         </Button>
                         <Button
                           size="sm"
@@ -176,7 +182,7 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                           onClick={() => handleAddDiscount(item)}
                         >
                           <PercentIcon size={16} className="mr-1" />
-                          Discount
+                          Скидка
                         </Button>
                         <Button
                           size="sm"
@@ -184,7 +190,7 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                           className="border-red-200 text-red-600 hover:bg-red-50"
                           onClick={() => handleRemoveItem(item)}
                         >
-                          Remove
+                          Удалить
                         </Button>
                       </div>
                     </TableCell>

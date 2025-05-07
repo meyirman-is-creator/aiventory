@@ -69,8 +69,8 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
   const handleSubmit = async () => {
     if (quantity < 1 || quantity > item.quantity) {
       toast({
-        title: "Invalid quantity",
-        description: `Please enter a quantity between 1 and ${item.quantity}`,
+        title: "Неверное количество",
+        description: `Пожалуйста, введите количество от 1 до ${item.quantity}`,
         variant: "destructive",
       });
       return;
@@ -88,14 +88,14 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
       ).unwrap();
 
       toast({
-        title: "Sale recorded",
-        description: `Successfully sold ${quantity} ${item.product.name}`,
+        title: "Продажа зарегистрирована",
+        description: `Успешно продано ${quantity} ${item.product.name}`,
       });
       onClose();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to record sale",
+        title: "Ошибка",
+        description: error.message || "Не удалось зарегистрировать продажу",
         variant: "destructive",
       });
     } finally {
@@ -107,20 +107,20 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Sell Item</DialogTitle>
+          <DialogTitle>Продажа товара</DialogTitle>
           <DialogDescription>
-            Record a sale for {item.product.name}
+            Зарегистрировать продажу для {item.product.name}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Product</Label>
+            <Label>Товар</Label>
             <div className="text-sm font-medium">{item.product.name}</div>
           </div>
 
           <div className="space-y-2">
-            <Label>Price per unit</Label>
+            <Label>Цена за единицу</Label>
             <div className="flex items-center">
               <div className="text-sm font-medium">
                 {hasDiscount && (
@@ -132,7 +132,7 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
               </div>
               {hasDiscount && (
                 <div className="ml-2 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800">
-                  {discountPercentage}% off
+                  {discountPercentage}% скидка
                 </div>
               )}
             </div>
@@ -140,7 +140,7 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="quantity">
-              Quantity (Available: {item.quantity})
+              Количество (Доступно: {item.quantity})
             </Label>
             <div className="flex items-center">
               <Button
@@ -176,7 +176,7 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label>Total Price</Label>
+            <Label>Итоговая цена</Label>
             <div className="text-lg font-bold">
               {formatCurrency(totalPrice)}
             </div>
@@ -190,7 +190,7 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
             onClick={onClose}
             disabled={isLoading}
           >
-            Cancel
+            Отмена
           </Button>
           <Button
             type="button"
@@ -198,7 +198,7 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
             onClick={handleSubmit}
             disabled={isLoading}
           >
-            {isLoading ? "Processing..." : "Complete Sale"}
+            {isLoading ? "Обработка..." : "Завершить продажу"}
           </Button>
         </DialogFooter>
       </DialogContent>

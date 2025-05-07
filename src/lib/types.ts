@@ -17,12 +17,29 @@ export interface ProductResponse {
   barcode?: string;
   default_unit?: string;
   default_price?: number;
+  category?: {
+    name: string;
+    sid: string;
+  };
 }
 
 export enum WarehouseItemStatus {
   IN_STOCK = "in_stock",
   MOVED = "moved",
   DISCARDED = "discarded",
+}
+
+export interface DiscountSuggestion {
+  discount_percent: number;
+  discounted_price: number;
+  days_until_expiry: number;
+}
+
+export interface WarehouseAction {
+  action: string;
+  urgency: string;
+  discount_suggestion?: number;
+  reason: string;
 }
 
 export interface WarehouseItem {
@@ -35,6 +52,9 @@ export interface WarehouseItem {
   received_at: string;
   status: WarehouseItemStatus;
   product: ProductResponse;
+  suggested_price?: number;
+  discount_suggestion?: DiscountSuggestion;
+  warehouse_action?: WarehouseAction;
 }
 
 export enum StoreItemStatus {

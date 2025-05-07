@@ -60,8 +60,8 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
   const handleSubmit = async () => {
     if (percentage <= 0 || percentage > 100) {
       toast({
-        title: "Invalid discount",
-        description: "Please enter a discount percentage between 1 and 100",
+        title: "Неверная скидка",
+        description: "Пожалуйста, введите процент скидки от 1 до 100",
         variant: "destructive",
       });
       return;
@@ -69,8 +69,8 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
 
     if (endDate < startDate) {
       toast({
-        title: "Invalid date range",
-        description: "End date must be after start date",
+        title: "Неверный период",
+        description: "Дата окончания должна быть после даты начала",
         variant: "destructive",
       });
       return;
@@ -89,14 +89,14 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
       ).unwrap();
 
       toast({
-        title: "Discount created",
-        description: `${percentage}% discount added to ${item.product.name}`,
+        title: "Скидка создана",
+        description: `Скидка ${percentage}% добавлена к ${item.product.name}`,
       });
       onClose();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to create discount",
+        title: "Ошибка",
+        description: error.message || "Не удалось создать скидку",
         variant: "destructive",
       });
     } finally {
@@ -108,27 +108,27 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Discount</DialogTitle>
+          <DialogTitle>Добавить скидку</DialogTitle>
           <DialogDescription>
-            Create a discount for {item.product.name}
+            Создать скидку для {item.product.name}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Product</Label>
+            <Label>Товар</Label>
             <div className="text-sm font-medium">{item.product.name}</div>
           </div>
 
           <div className="space-y-2">
-            <Label>Original Price</Label>
+            <Label>Исходная цена</Label>
             <div className="text-sm font-medium">
               {formatCurrency(originalPrice)}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="percentage">Discount Percentage</Label>
+            <Label htmlFor="percentage">Процент скидки</Label>
             <div className="flex items-center">
               <Input
                 id="percentage"
@@ -144,19 +144,19 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label>Discounted Price</Label>
+            <Label>Цена со скидкой</Label>
             <div className="text-lg font-bold text-primary">
               {formatCurrency(discountedPrice)}
             </div>
             <div className="text-xs text-muted-foreground">
-              Customer saves {formatCurrency(originalPrice - discountedPrice)}{" "}
-              per unit
+              Клиент экономит {formatCurrency(originalPrice - discountedPrice)}{" "}
+              за единицу
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
+              <Label htmlFor="startDate">Дата начала</Label>
               <Popover open={isStartDateOpen} onOpenChange={setIsStartDateOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -184,7 +184,7 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
+              <Label htmlFor="endDate">Дата окончания</Label>
               <Popover open={isEndDateOpen} onOpenChange={setIsEndDateOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -220,7 +220,7 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
             onClick={onClose}
             disabled={isLoading}
           >
-            Cancel
+            Отмена
           </Button>
           <Button
             type="button"
@@ -228,7 +228,7 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
             onClick={handleSubmit}
             disabled={isLoading}
           >
-            {isLoading ? "Creating..." : "Create Discount"}
+            {isLoading ? "Создание..." : "Создать скидку"}
           </Button>
         </DialogFooter>
       </DialogContent>

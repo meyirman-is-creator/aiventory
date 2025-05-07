@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Webcam from "react-webcam";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,10 +18,22 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState(0);
+  const [suggestedPrice, setSuggestedPrice] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const { moveToStoreByBarcode } = useWarehouseStore();
   const { toast } = useToast();
   const webcamRef = useRef<Webcam>(null);
+
+  // Устанавливаем рекомендованную цену из данных после сканирования (демо функционал)
+  useEffect(() => {
+    if (capturedImage) {
+      // В реальном приложении здесь бы был запрос к API для получения данных товара по баркоду
+      // Для демонстрации просто устанавливаем случайную рекомендуемую цену
+      const randomSuggestedPrice = Math.round(Math.random() * 1000 + 300);
+      setSuggestedPrice(randomSuggestedPrice);
+      setPrice(randomSuggestedPrice);
+    }
+  }, [capturedImage]);
 
   const captureImage = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
@@ -33,13 +45,14 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
 
   const resetImage = () => {
     setCapturedImage(null);
+    setSuggestedPrice(0);
   };
 
   const handleScanBarcode = async () => {
     if (!capturedImage) {
       toast({
-        title: "No image captured",
-        description: "Please capture an image first",
+        title: "Изображение не захвачено",
+        description: "Пожалуйста, сделайте снимок штрих-кода",
         variant: "destructive",
       });
       return;
@@ -47,8 +60,8 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
 
     if (quantity < 1) {
       toast({
-        title: "Invalid quantity",
-        description: "Please enter a quantity greater than 0",
+        title: "Неверное количество",
+        description: "Пожалуйста, введите количество больше 0",
         variant: "destructive",
       });
       return;
@@ -56,8 +69,8 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
 
     if (price <= 0) {
       toast({
-        title: "Invalid price",
-        description: "Please enter a price greater than 0",
+        title: "Неверная цена",
+        description: "Пожалуйста, введите цену больше 0",
         variant: "destructive",
       });
       return;
@@ -68,17 +81,18 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
     try {
       await moveToStoreByBarcode(capturedImage, quantity, price);
       toast({
-        title: "Success",
-        description: "Item has been moved to store successfully",
+        title: "Успех",
+        description: "Товар успешно перемещен в магазин",
       });
       if (onSuccess) {
         onSuccess();
       }
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Ошибка",
         description:
-          error.response?.data?.detail || "Failed to move item to store",
+          error.response?.data?.detail ||
+          "Не удалось переместить товар в магазин",
         variant: "destructive",
       });
     } finally {
@@ -108,7 +122,7 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
               className="bg-brand-purple hover:bg-brand-purple/90"
             >
               <Camera className="mr-2 h-4 w-4" />
-              Capture Barcode
+              Сделать снимок штрих-кода
             </Button>
           </div>
         </div>
@@ -132,7 +146,7 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
 
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity</Label>
+              <Label htmlFor="quantity">Количество</Label>
               <Input
                 id="quantity"
                 type="number"
@@ -145,9 +159,9 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price">Price per unit</Label>
+              <Label htmlFor="price">Цена за единицу</Label>
               <div className="flex items-center">
-                <span className="text-sm mr-2">$</span>
+                <span className="text-sm mr-2">₸</span>
                 <Input
                   id="price"
                   type="number"
@@ -159,6 +173,11 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
                   step={0.01}
                 />
               </div>
+              {suggestedPrice > 0 && (
+                <p className="text-xs text-green-600 font-medium">
+                  Рекомендуемая цена: ₸{suggestedPrice.toFixed(2)}
+                </p>
+              )}
             </div>
           </div>
 
@@ -169,7 +188,7 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
               onClick={resetImage}
               disabled={isLoading}
             >
-              Retake
+              Сделать новый снимок
             </Button>
             <Button
               type="button"
@@ -180,10 +199,10 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
+                  Обработка...
                 </>
               ) : (
-                "Move to Store"
+                "Переместить в магазин"
               )}
             </Button>
           </div>
@@ -193,14 +212,14 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center">
             <Camera className="h-10 w-10 text-gray-400 mb-4" />
             <p className="text-sm text-muted-foreground mb-2">
-              Capture a barcode image using your camera
+              Сделайте снимок штрих-кода товара с помощью камеры
             </p>
             <Button
               type="button"
               onClick={() => setIsCapturing(true)}
               className="bg-brand-purple hover:bg-brand-purple/90"
             >
-              Start Camera
+              Включить камеру
             </Button>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WarehouseItem } from "@/lib/types";
 import {
   Dialog,
@@ -29,6 +29,15 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { moveToStore } = useWarehouseStore();
   const { toast } = useToast();
+
+  // Установим рекомендуемую цену, если она есть
+  useEffect(() => {
+    if (item.suggested_price && item.suggested_price > 0) {
+      setPrice(item.suggested_price);
+    } else if (item.product.default_price) {
+      setPrice(item.product.default_price);
+    }
+  }, [item]);
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
@@ -65,8 +74,8 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
   const handleSubmit = async () => {
     if (quantity < 1 || quantity > item.quantity) {
       toast({
-        title: "Invalid quantity",
-        description: `Please enter a quantity between 1 and ${item.quantity}`,
+        title: "Неверное количество",
+        description: `Пожалуйста, введите количество от 1 до ${item.quantity}`,
         variant: "destructive",
       });
       return;
@@ -74,8 +83,8 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
 
     if (price <= 0) {
       toast({
-        title: "Invalid price",
-        description: "Please enter a price greater than 0",
+        title: "Неверная цена",
+        description: "Пожалуйста, введите цену больше 0",
         variant: "destructive",
       });
       return;
@@ -86,15 +95,16 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
     try {
       await moveToStore(item.sid, quantity, price);
       toast({
-        title: "Item moved to store",
-        description: `Successfully moved ${quantity} ${item.product.name} to store`,
+        title: "Товар перемещен в магазин",
+        description: `Успешно перемещено ${quantity} ${item.product.name} в магазин`,
       });
       onClose();
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Ошибка",
         description:
-          error.response?.data?.detail || "Failed to move item to store",
+          error.response?.data?.detail ||
+          "Не удалось переместить товар в магазин",
         variant: "destructive",
       });
     } finally {
@@ -106,21 +116,21 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md !bg-white">
         <DialogHeader>
-          <DialogTitle>Move to Store</DialogTitle>
+          <DialogTitle>Переместить в магазин</DialogTitle>
           <DialogDescription>
-            Move {item.product.name} from warehouse to store
+            Переместить {item.product.name} со склада в магазин
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Product</Label>
+            <Label>Товар</Label>
             <div className="text-sm font-medium">{item.product.name}</div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="quantity">
-              Quantity (Available: {item.quantity})
+              Количество (Доступно: {item.quantity})
             </Label>
             <div className="flex items-center">
               <Button
@@ -156,9 +166,9 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="price">Price per unit</Label>
+            <Label htmlFor="price">Цена за единицу</Label>
             <div className="flex items-center">
-              <span className="text-sm mr-2">$</span>
+              <span className="text-sm mr-2">₸</span>
               <Input
                 id="price"
                 type="number"
@@ -169,9 +179,21 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
-            {item.product.default_price && (
+            {item.suggested_price !== undefined && item.suggested_price > 0 && (
+              <p className="text-xs text-green-600 font-medium">
+                Рекомендуемая цена: ₸{item.suggested_price.toFixed(2)}
+              </p>
+            )}
+            {!item.suggested_price && item.product.default_price && (
               <p className="text-xs text-muted-foreground">
-                Default price: ${item.product.default_price.toFixed(2)}
+                Стандартная цена: ₸{item.product.default_price.toFixed(2)}
+              </p>
+            )}
+            {item.discount_suggestion && (
+              <p className="text-xs text-amber-600 font-medium">
+                Рекомендуемая скидка:{" "}
+                {item.discount_suggestion.discount_percent}% (₸
+                {item.discount_suggestion.discounted_price.toFixed(2)})
               </p>
             )}
           </div>
@@ -184,7 +206,7 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
             onClick={onClose}
             disabled={isLoading}
           >
-            Cancel
+            Отмена
           </Button>
           <Button
             type="button"
@@ -192,7 +214,7 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
             onClick={handleSubmit}
             disabled={isLoading}
           >
-            {isLoading ? "Moving..." : "Move to Store"}
+            {isLoading ? "Перемещение..." : "Переместить в магазин"}
           </Button>
         </DialogFooter>
       </DialogContent>

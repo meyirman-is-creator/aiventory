@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { WarehouseItem } from '@/lib/types';
+import { useState } from "react";
+import { WarehouseItem } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -9,28 +9,35 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { formatDate, getStatusDisplayName, getStatusBadgeColor } from '@/lib/utils';
-import { ExternalLink, AlertTriangle } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import MoveToStoreModal from '@/components/warehouse/move-to-store-modal';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  formatDate,
+  getStatusDisplayName,
+  getStatusBadgeColor,
+} from "@/lib/utils";
+import { ExternalLink, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import MoveToStoreModal from "@/components/warehouse/move-to-store-modal";
 
 interface WarehouseItemsTableProps {
   items: WarehouseItem[];
   isLoading: boolean;
 }
 
-const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => {
+const WarehouseItemsTable = ({
+  items,
+  isLoading,
+}: WarehouseItemsTableProps) => {
   const [selectedItem, setSelectedItem] = useState<WarehouseItem | null>(null);
   const [isMoveModalOpen, setMoveModalOpen] = useState(false);
-  
+
   const handleMoveToStore = (item: WarehouseItem) => {
     setSelectedItem(item);
     setMoveModalOpen(true);
   };
-  
+
   if (isLoading) {
     return (
       <div className="text-center py-8">
@@ -38,7 +45,7 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
       </div>
     );
   }
-  
+
   if (items.length === 0) {
     return (
       <div className="text-center py-8 border rounded-md">
@@ -49,10 +56,10 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
       </div>
     );
   }
-  
+
   // Check if any item has expiration date
-  const hasAnyExpiration = items.some(item => item.expire_date);
-  
+  const hasAnyExpiration = items.some((item) => item.expire_date);
+
   return (
     <>
       <div className="rounded-md border overflow-hidden">
@@ -60,37 +67,68 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="font-semibold text-gray-900">Товар</TableHead>
-                <TableHead className="font-semibold text-gray-900">Категория</TableHead>
-                <TableHead className="font-semibold text-gray-900">Статус</TableHead>
-                <TableHead className="font-semibold text-gray-900">Код партии</TableHead>
-                <TableHead className="font-semibold text-gray-900">Количество</TableHead>
-                {hasAnyExpiration && <TableHead className="font-semibold text-gray-900">Срок годности</TableHead>}
-                <TableHead className="font-semibold text-gray-900">Дата получения</TableHead>
-                <TableHead className="font-semibold text-gray-900">Действия</TableHead>
+                <TableHead className="font-semibold text-gray-900">
+                  Товар
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900">
+                  Категория
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900">
+                  Статус
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900">
+                  Код партии
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900">
+                  Количество
+                </TableHead>
+                {hasAnyExpiration && (
+                  <TableHead className="font-semibold text-gray-900">
+                    Срок годности
+                  </TableHead>
+                )}
+                <TableHead className="font-semibold text-gray-900">
+                  Дата получения
+                </TableHead>
+                <TableHead className="font-semibold text-gray-900">
+                  Действия
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {items.map((item) => {
                 const statusClass = cn(getStatusBadgeColor(item.status));
-                const isExpiring = item.expire_date && new Date(item.expire_date) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-                
+                const isExpiring =
+                  item.expire_date &&
+                  new Date(item.expire_date) <
+                    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
                 return (
                   <TableRow key={item.sid}>
-                    <TableCell className="font-medium text-gray-800">{item.product.name}</TableCell>
+                    <TableCell className="font-medium text-gray-800">
+                      {item.product.name}
+                    </TableCell>
                     <TableCell className="text-gray-700">
-                      {item.product.category_sid ? item.product.category_sid : 'Н/Д'}
+                      {item.product.category?.name || "Н/Д"}
                     </TableCell>
                     <TableCell>
                       <Badge className={statusClass}>
-                        {getStatusDisplayName(item.status) === 'In Stock' ? 'На складе' : 
-                         getStatusDisplayName(item.status) === 'Moved to Store' ? 'Перемещен в магазин' :
-                         getStatusDisplayName(item.status) === 'Discarded' ? 'Списан' : 
-                         getStatusDisplayName(item.status)}
+                        {getStatusDisplayName(item.status) === "In Stock"
+                          ? "На складе"
+                          : getStatusDisplayName(item.status) ===
+                            "Moved to Store"
+                          ? "Перемещен в магазин"
+                          : getStatusDisplayName(item.status) === "Discarded"
+                          ? "Списан"
+                          : getStatusDisplayName(item.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-700">{item.batch_code || 'Н/Д'}</TableCell>
-                    <TableCell className="text-gray-700">{item.quantity}</TableCell>
+                    <TableCell className="text-gray-700">
+                      {item.batch_code || "Н/Д"}
+                    </TableCell>
+                    <TableCell className="text-gray-700">
+                      {item.quantity}
+                    </TableCell>
                     {hasAnyExpiration && (
                       <TableCell className="text-gray-700">
                         {item.expire_date ? (
@@ -104,13 +142,15 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
                             )}
                           </div>
                         ) : (
-                          'Н/Д'
+                          "Н/Д"
                         )}
                       </TableCell>
                     )}
-                    <TableCell className="text-gray-700">{formatDate(item.received_at)}</TableCell>
+                    <TableCell className="text-gray-700">
+                      {formatDate(item.received_at)}
+                    </TableCell>
                     <TableCell>
-                      {item.status === 'in_stock' && item.quantity > 0 ? (
+                      {item.status === "in_stock" && item.quantity > 0 ? (
                         <Button
                           size="sm"
                           variant="outline"
@@ -122,7 +162,7 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
                         </Button>
                       ) : (
                         <Button size="sm" variant="outline" disabled>
-                          {item.status === 'moved' ? 'Перемещен' : 'Недоступен'}
+                          {item.status === "moved" ? "Перемещен" : "Недоступен"}
                         </Button>
                       )}
                     </TableCell>
@@ -133,7 +173,7 @@ const WarehouseItemsTable = ({ items, isLoading }: WarehouseItemsTableProps) => 
           </Table>
         </div>
       </div>
-      
+
       {selectedItem && (
         <MoveToStoreModal
           item={selectedItem}
