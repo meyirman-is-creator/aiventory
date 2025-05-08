@@ -108,7 +108,7 @@ const Sidebar = () => {
       {/* Overlay for mobile menu */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-[#00000080] z-40 md:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
@@ -116,13 +116,13 @@ const Sidebar = () => {
       {/* Sidebar for desktop */}
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-[#ffffff] border-r border-[#e5e7eb] transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-center h-16 px-4 border-b">
-            <h1 className="text-xl font-bold text-brand-purple">aiventory</h1>
+          <div className="flex items-center justify-center h-16 px-4 border-b border-[#e5e7eb]">
+            <h1 className="text-xl font-bold text-[#6322FE]">aiventory</h1>
           </div>
           
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -134,10 +134,10 @@ const Sidebar = () => {
               >
                 <div
                   className={cn(
-                    "flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-gray-100",
+                    "flex items-center px-4 py-3 text-sm font-medium rounded-md",
                     pathname === item.href
-                      ? "bg-brand-purple/10 text-brand-purple"
-                      : "text-gray-700"
+                      ? "bg-[#EBE3FF] text-[#6322FE]"
+                      : "text-[#4b5563] hover:bg-[#f3f4f6]"
                   )}
                 >
                   {item.icon}
@@ -148,7 +148,7 @@ const Sidebar = () => {
             
             {activeItems.length > 0 && (
               <Link href="/store" onClick={() => setIsMobileMenuOpen(false)}>
-                <div className="flex items-center px-4 py-3 mt-4 text-sm font-medium text-white bg-brand-purple rounded-md">
+                <div className="flex items-center px-4 py-3 mt-4 text-sm font-medium text-[#ffffff] bg-[#6322FE] rounded-md">
                   <ShoppingCart size={20} />
                   <span className="ml-3">Продажа товаров</span>
                 </div>
@@ -156,12 +156,12 @@ const Sidebar = () => {
             )}
             
             <div className="mt-4">
-              <Separator />
+              <Separator className="bg-[#e5e7eb]" />
             </div>
             
             <button
               onClick={handleLogout}
-              className="flex items-center w-full px-4 py-3 mt-4 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100"
+              className="flex items-center w-full px-4 py-3 mt-4 text-sm font-medium text-[#4b5563] rounded-md hover:bg-[#f3f4f6]"
             >
               <LogOut size={20} />
               <span className="ml-3">Выйти</span>

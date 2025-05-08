@@ -28,16 +28,6 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-const colors = {
-  purple: "#6322FE",
-  purpleLight: "#EBE3FF",
-  textDark: "#1f2937",
-  textMuted: "#4b5563",
-  white: "#ffffff",
-  border: "#e5e7eb",
-  bgLight: "#f9fafb",
-};
-
 export default function PredictionPage() {
   const router = useRouter();
   const { isAuthenticated, checkAuth } = useUserStore();
@@ -166,22 +156,19 @@ export default function PredictionPage() {
   return (
     <div className="space-y-6 px-2 sm:px-0">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+        <h2 className="text-2xl font-bold tracking-tight text-[#1f2937]">
           Прогнозирование и аналитика
         </h2>
-        <p className="text-gray-600">
+        <p className="text-[#4b5563]">
           Анализируйте данные о продажах и прогнозируйте будущий спрос на товары
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card
-          className="col-span-full lg:col-span-2"
-          style={{ borderColor: colors.border, backgroundColor: colors.white }}
-        >
+        <Card className="col-span-full lg:col-span-2 border-[#e5e7eb] bg-[#ffffff]">
           <CardHeader>
-            <CardTitle className="text-gray-900">Анализ продаж</CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardTitle className="text-[#1f2937]">Анализ продаж</CardTitle>
+            <CardDescription className="text-[#4b5563]">
               Исторические данные о продажах за последние 30 дней
             </CardDescription>
           </CardHeader>
@@ -193,26 +180,29 @@ export default function PredictionPage() {
           </CardContent>
         </Card>
 
-        <Card
-          className="col-span-full lg:col-span-1"
-          style={{ borderColor: colors.border, backgroundColor: colors.white }}
-        >
+        <Card className="col-span-full lg:col-span-1 border-[#e5e7eb] bg-[#ffffff]">
           <CardHeader>
             <div className="flex flex-col space-y-2">
-              <CardTitle className="text-gray-900">Выбор продукта</CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardTitle className="text-[#1f2937]">Выбор продукта</CardTitle>
+              <CardDescription className="text-[#4b5563]">
                 Выберите продукт для просмотра прогноза
               </CardDescription>
 
               <div className="pt-2">
-                <Label htmlFor="category-filter" className="mb-1 block text-sm">
+                <Label
+                  htmlFor="category-filter"
+                  className="mb-1 block text-sm text-[#4b5563]"
+                >
                   Категория
                 </Label>
                 <Select
                   value={selectedCategory || "all"}
                   onValueChange={handleCategoryChange}
                 >
-                  <SelectTrigger id="category-filter" className="w-full">
+                  <SelectTrigger
+                    id="category-filter"
+                    className="w-full border-[#d1d5db]"
+                  >
                     <SelectValue placeholder="Все категории" />
                   </SelectTrigger>
                   <SelectContent>
@@ -235,14 +225,11 @@ export default function PredictionPage() {
           </CardContent>
         </Card>
 
-        <Card
-          className="col-span-full"
-          style={{ borderColor: colors.border, backgroundColor: colors.white }}
-        >
+        <Card className="col-span-full border-[#e5e7eb] bg-[#ffffff]">
           <CardHeader className="flex flex-row items-start justify-between">
             <div>
-              <CardTitle className="text-gray-900">Прогноз спроса</CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardTitle className="text-[#1f2937]">Прогноз спроса</CardTitle>
+              <CardDescription className="text-[#4b5563]">
                 Прогнозируемый спрос на выбранный продукт на последующие периоды
               </CardDescription>
             </div>

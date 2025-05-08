@@ -10,10 +10,12 @@ import {
   StoreReports,
   Upload,
   Sale,
+  ProductCategory,
+  ProductResponse,
 } from "./types";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+  process.env.NEXT_PUBLIC_API_URL || "https://aiventory-backend-production.up.railway.app/api/v1";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -291,6 +293,19 @@ export const predictionApi = {
     const response = await api.get<PredictionStats>("/prediction/stats", {
       params,
     });
+    return response.data;
+  },
+  getCategories: async (): Promise<ProductCategory[]> => {
+    const response = await api.get<ProductCategory[]>("/prediction/categories");
+    return response.data;
+  },
+  
+  getProducts: async (category_sid?: string, search?: string): Promise<ProductResponse[]> => {
+    const params: Record<string, string> = {};
+    if (category_sid) params.category_sid = category_sid;
+    if (search) params.search = search;
+  
+    const response = await api.get<ProductResponse[]>("/prediction/products", { params });
     return response.data;
   },
 };

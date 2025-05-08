@@ -10,19 +10,6 @@ export interface AuthResponse {
   token_type: string;
 }
 
-export interface ProductResponse {
-  sid: string;
-  name: string;
-  category_sid: string;
-  barcode?: string;
-  default_unit?: string;
-  default_price?: number;
-  category?: {
-    name: string;
-    sid: string;
-  };
-}
-
 export enum WarehouseItemStatus {
   IN_STOCK = "in_stock",
   MOVED = "moved",
@@ -126,14 +113,6 @@ export interface DashboardStats {
   total_revenue_last_30_days: number;
   total_sales_last_30_days: number;
 }
-
-export interface PredictionStats {
-  dates: string[];
-  products: Array<{ product_sid: string; product_name: string }>;
-  quantity_data: any[];
-  revenue_data: any[];
-}
-
 export interface StoreReports {
   period: {
     start_date: string;
@@ -170,7 +149,32 @@ export interface StoreReports {
     total_discount_savings: number;
   };
 }
+export interface ProductResponse {
+  sid: string;
+  name: string;
+  category_sid: string;
+  barcode?: string;
+  default_unit?: string;
+  default_price?: number;
+  currency?: string;
+  storage_duration?: number;
+  storage_duration_type?: string;
+  category?: {
+    name: string;
+    sid: string;
+  };
+}
+
 export interface ProductCategory {
   sid: string;
   name: string;
+}
+export interface PredictionStats {
+  dates: string[];
+  products: Array<{ product_sid: string; product_name: string }>;
+  categories?: Array<{ category_sid: string; category_name: string }>;
+  quantity_data: any[];
+  revenue_data: any[];
+  category_quantity_data?: any[];
+  category_revenue_data?: any[];
 }

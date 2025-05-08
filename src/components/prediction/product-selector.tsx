@@ -1,36 +1,29 @@
 // src/components/prediction/product-selector.tsx
-
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Loader2 } from "lucide-react";
-import { useStoreItemsStore } from "@/store/store-items-store";
-import { usePredictionStore } from "@/store/prediction-store";
+import { ProductResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface ProductSelectorProps {
-  selectedCategory: string | null;
-  isLoading?: boolean;
+  products: ProductResponse[];
+  selectedProductSid: string | null;
+  setSelectedProduct: (sid: string | null) => void;
+  isLoading: boolean;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }
 
-const ProductSelector = ({ selectedCategory, isLoading = false }: ProductSelectorProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const { activeItems } = useStoreItemsStore();
-  const { selectedProductSid, setSelectedProduct } = usePredictionStore();
-
-  // Filter items based on search term and selected category
-  const filteredItems = activeItems.filter((item) => {
-    const matchesSearch = item.product.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory 
-      ? item.product.category?.sid === selectedCategory 
-      : true;
-    
-    return matchesSearch && matchesCategory;
-  });
-
+const ProductSelector = ({
+  products,
+  selectedProductSid,
+  setSelectedProduct,
+  isLoading,
+  searchTerm,
+  setSearchTerm,
+}: ProductSelectorProps) => {
   const handleProductSelect = (productSid: string) => {
     setSelectedProduct(productSid);
   };
@@ -59,7 +52,7 @@ const ProductSelector = ({ selectedCategory, isLoading = false }: ProductSelecto
       </div>
 
       <div className="h-[300px] overflow-y-auto border rounded-md">
-        {filteredItems.length === 0 ? (
+        {products.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground text-sm">
               {searchTerm
@@ -69,21 +62,21 @@ const ProductSelector = ({ selectedCategory, isLoading = false }: ProductSelecto
           </div>
         ) : (
           <div className="space-y-1 p-1">
-            {filteredItems.map((item) => (
+            {products.map((product) => (
               <Button
-                key={item.product.sid}
+                key={product.sid}
                 variant="ghost"
                 className={cn(
                   "w-full justify-start font-normal h-auto py-3 px-4",
-                  selectedProductSid === item.product.sid &&
+                  selectedProductSid === product.sid &&
                     "bg-primary/10 text-primary font-medium"
                 )}
-                onClick={() => handleProductSelect(item.product.sid)}
+                onClick={() => handleProductSelect(product.sid)}
               >
                 <div className="flex flex-col items-start text-left">
-                  <span className="text-sm">{item.product.name}</span>
+                  <span className="text-sm">{product.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {item.product.category?.name || "Без категории"} | Кол-во: {item.quantity}
+                    {product.category?.name || "Без категории"}
                   </span>
                 </div>
               </Button>

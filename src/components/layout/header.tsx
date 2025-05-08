@@ -58,18 +58,18 @@ const Header = () => {
   }
   
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 sm:px-8 bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 sm:px-8 bg-[#ffffff] border-b border-[#e5e7eb]">
       <div className="flex items-center">
-        <h1 className="text-xl font-semibold text-gray-800">{pageTitle}</h1>
+        <h1 className="text-xl font-semibold text-[#1f2937]">{pageTitle}</h1>
       </div>
       
       <div className="flex items-center space-x-4">
         <div className="hidden md:flex items-center">
-          <span className="text-sm text-gray-600 mr-2">
+          <span className="text-sm text-[#4b5563] mr-2">
             {email}
           </span>
         </div>
-        <Avatar className="h-8 w-8 bg-brand-purple text-white">
+        <Avatar className="h-8 w-8 bg-[#6322FE] text-[#ffffff]">
           <AvatarFallback>
             {getInitials(email)}
           </AvatarFallback>

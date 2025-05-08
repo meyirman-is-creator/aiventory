@@ -14,15 +14,6 @@ import {
   InputOTPSlot,
 } from '@/components/ui/input-otp';
 
-const colors = {
-  purple: '#6322FE',
-  purpleHover: '#5719d8',
-  textDark: '#1f2937',
-  textMuted: '#4b5563',
-  white: '#ffffff',
-  border: '#e5e7eb',
-};
-
 export default function VerifyPage() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
@@ -85,23 +76,23 @@ export default function VerifyPage() {
   
   return (
     <div className="w-full max-w-md mx-auto">
-      <Card style={{borderColor: colors.border, backgroundColor: colors.white}} className="shadow-md">
+      <Card className="shadow-md border-[#e5e7eb] bg-[#ffffff]">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center text-gray-900">Подтверждение почты</CardTitle>
-          <CardDescription className="text-center text-gray-600">
+          <CardTitle className="text-2xl font-bold text-center text-[#1f2937]">Подтверждение почты</CardTitle>
+          <CardDescription className="text-center text-[#4b5563]">
             Введите код подтверждения, отправленный на вашу почту
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700">Электронная почта</Label>
-              <div className="p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 font-medium">
+              <Label htmlFor="email" className="text-[#374151]">Электронная почта</Label>
+              <div className="p-2 bg-[#f9fafb] border border-[#e5e7eb] rounded-md text-[#374151] font-medium">
                 {email}
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="code" className="text-gray-700">Код подтверждения</Label>
+              <Label htmlFor="code" className="text-[#374151]">Код подтверждения</Label>
               <div className="flex justify-center py-2">
                 <InputOTP
                   maxLength={6}
@@ -113,7 +104,7 @@ export default function VerifyPage() {
                         <InputOTPSlot
                           key={index}
                           {...slot}
-                          className="w-10 h-12 text-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500 bg-white"
+                          className="w-10 h-12 text-xl border-[#d1d5db] focus:border-[#6322FE] focus:ring-[#6322FE] bg-[#ffffff]"
                         />
                       ))}
                     </InputOTPGroup>
@@ -125,18 +116,16 @@ export default function VerifyPage() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              style={{backgroundColor: isLoading ? colors.purpleHover : colors.purple}}
-              className="w-full text-white hover:opacity-90 transition-opacity"
+              className={`w-full text-[#ffffff] hover:opacity-90 transition-opacity ${isLoading ? 'bg-[#5719d8]' : 'bg-[#6322FE]'}`}
               disabled={isLoading}
             >
               {isLoading ? 'Проверка...' : 'Подтвердить'}
             </Button>
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm text-[#4b5563]">
               Не получили код?{' '}
               <Link
                 href="/auth/register"
-                style={{color: colors.purple}}
-                className="font-medium hover:underline"
+                className="font-medium hover:underline text-[#6322FE]"
               >
                 Отправить повторно
               </Link>
@@ -144,7 +133,7 @@ export default function VerifyPage() {
             <div className="text-center text-sm">
               <Link
                 href="/auth/login"
-                className="text-gray-500 hover:underline font-medium"
+                className="text-[#6b7280] hover:underline font-medium"
               >
                 Вернуться к входу
               </Link>
