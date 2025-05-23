@@ -22,7 +22,7 @@ interface BarcodeScannerProps {
 const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [productInfo, setProductInfo] = useState<WarehouseItem | null>(null);
@@ -35,20 +35,20 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
   const { ref } = useZxing({
     onDecodeResult(result) {
       const barcodeValue = result.getText();
-      
+
       if (barcodeValue && barcodeValue !== lastScannedCode) {
         setLastScannedCode(barcodeValue);
         setScannedBarcode(barcodeValue);
         setIsScanning(false);
-        
+
         const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
-        audio.play().catch(() => {});
-        
+        audio.play().catch(() => { });
+
         toast({
           title: "Штрих-код обнаружен",
           description: `Штрих-код: ${barcodeValue}`,
         });
-        
+
         fetchProductByBarcode(barcodeValue);
       }
     },
@@ -71,12 +71,18 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
     }
   }, [isScanning]);
 
+  useEffect(() => {
+    if (productInfo) {
+      setQuantity("1");
+    }
+  }, [productInfo]);
+
   const fetchProductByBarcode = async (barcode: string) => {
     setIsLoadingProduct(true);
     try {
       const items = await warehouseApi.getItems();
       const matchingItem = items.find(item => item.product.barcode === barcode);
-      
+
       if (matchingItem) {
         setProductInfo(matchingItem);
         setPrice(matchingItem.suggested_price || matchingItem.product.default_price || 0);
@@ -102,13 +108,13 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    const maxQty = productInfo?.quantity || 999;
-    if (isNaN(value) || value < 1) {
-      setQuantity(1);
-    } else if (value > maxQty) {
-      setQuantity(maxQty);
-    } else {
+    const value = e.target.value;
+    if (value === "") {
+      setQuantity("");
+      return;
+    }
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue >= 0 && productInfo && numValue <= productInfo.quantity) {
       setQuantity(value);
     }
   };
@@ -132,7 +138,9 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
       return;
     }
 
-    if (quantity < 1 || quantity > productInfo.quantity) {
+    const numQuantity = parseInt(quantity) || 0;
+
+    if (numQuantity < 1 || numQuantity > productInfo.quantity) {
       toast({
         title: "Неверное количество",
         description: `Пожалуйста, введите количество от 1 до ${productInfo.quantity}`,
@@ -153,7 +161,7 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
     setIsLoading(true);
 
     try {
-      await moveToStoreByBarcode(scannedBarcode, quantity, price);
+      await moveToStoreByBarcode(scannedBarcode, numQuantity, price);
       await fetchItems();
       toast({
         title: "Успех",
@@ -181,7 +189,7 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
     if (!isScanning) {
       setScannedBarcode(null);
       setProductInfo(null);
-      setQuantity(1);
+      setQuantity("");
       setPrice(0);
     }
   };
@@ -219,20 +227,20 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
                 </defs>
                 <rect x="0" y="0" width="100" height="100" fill="black" fillOpacity="0.6" mask="url(#scanMask)" />
               </svg>
-              
+
               <div className="absolute left-[20%] top-[40%] w-[60%] h-[20%]">
                 <div className="absolute inset-0 border-2 border-[#6322FE] rounded-lg"></div>
                 <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-[#6322FE] rounded-tl-lg"></div>
                 <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-[#6322FE] rounded-tr-lg"></div>
                 <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-[#6322FE] rounded-bl-lg"></div>
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-[#6322FE] rounded-br-lg"></div>
-                
+
                 <div className="absolute inset-0 overflow-hidden rounded-lg">
                   <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-b from-[#6322FE] to-transparent animate-pulse"></div>
                   <div className="absolute inset-x-0 top-0 h-0.5 bg-[#6322FE] animate-scan"></div>
                 </div>
               </div>
-              
+
               <div className="absolute top-4 right-4">
                 <Button
                   type="button"
@@ -244,9 +252,9 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
                   <SwitchCamera className="h-5 w-5" />
                 </Button>
               </div>
-              
+
               <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-                <div className="bg-black/80 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-full border border-white/20">
+                <div className="bg-black/80 backdrop-blur-sm text-white text-xs sm:text-sm px-4 py-2 rounded-full border border-white/20">
                   Поместите штрих-код в рамку
                 </div>
               </div>
@@ -258,7 +266,7 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex justify-center">
             <Button
               type="button"
@@ -275,39 +283,39 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
         <div className="space-y-4">
           <Card className="border-[#10b981] bg-[#d1fae5]/20">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center text-[#065f46]">
-                <Package className="h-5 w-5 mr-2" />
+              <CardTitle className="text-base sm:text-lg flex items-center text-[#065f46]">
+                <Package className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Информация о товаре
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-sm text-[#6b7280]">Название</p>
-                  <p className="font-medium text-[#1f2937]">{productInfo.product.name}</p>
+                  <p className="text-xs sm:text-sm text-[#6b7280]">Название</p>
+                  <p className="font-medium text-[#1f2937] text-sm sm:text-base">{productInfo.product.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-[#6b7280]">Категория</p>
-                  <p className="font-medium text-[#1f2937]">{productInfo.product.category?.name || "Н/Д"}</p>
+                  <p className="text-xs sm:text-sm text-[#6b7280]">Категория</p>
+                  <p className="font-medium text-[#1f2937] text-sm sm:text-base">{productInfo.product.category?.name || "Н/Д"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-[#6b7280]">Штрих-код</p>
-                  <p className="font-medium text-[#1f2937] font-mono">{productInfo.product.barcode || scannedBarcode}</p>
+                  <p className="text-xs sm:text-sm text-[#6b7280]">Штрих-код</p>
+                  <p className="font-medium text-[#1f2937] font-mono text-sm sm:text-base">{productInfo.product.barcode || scannedBarcode}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-[#6b7280]">Доступно на складе</p>
-                  <p className="font-medium text-[#1f2937]">{productInfo.quantity} {productInfo.product.default_unit || "шт"}</p>
+                  <p className="text-xs sm:text-sm text-[#6b7280]">Доступно на складе</p>
+                  <p className="font-medium text-[#1f2937] text-sm sm:text-base">{productInfo.quantity} {productInfo.product.default_unit || "шт"}</p>
                 </div>
                 {productInfo.batch_code && (
                   <div>
-                    <p className="text-sm text-[#6b7280]">Код партии</p>
-                    <p className="font-medium text-[#1f2937]">{productInfo.batch_code}</p>
+                    <p className="text-xs sm:text-sm text-[#6b7280]">Код партии</p>
+                    <p className="font-medium text-[#1f2937] text-sm sm:text-base">{productInfo.batch_code}</p>
                   </div>
                 )}
                 {productInfo.expire_date && (
                   <div>
-                    <p className="text-sm text-[#6b7280]">Срок годности</p>
-                    <p className="font-medium text-[#1f2937]">{formatDate(productInfo.expire_date)}</p>
+                    <p className="text-xs sm:text-sm text-[#6b7280]">Срок годности</p>
+                    <p className="font-medium text-[#1f2937] text-sm sm:text-base">{formatDate(productInfo.expire_date)}</p>
                     {getDaysUntilExpiry() !== null && getDaysUntilExpiry()! <= 7 && (
                       <p className="text-xs text-[#ef4444] font-medium">
                         Осталось {getDaysUntilExpiry()} дней
@@ -320,15 +328,15 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
               {productInfo.warehouse_action && (
                 <>
                   <Separator />
-                  <div className="bg-[#fef3c7] border border-[#fcd34d] rounded-md p-3">
+                  <div className="bg-[#fef3c7] border border-[#fcd34d] rounded-md p-2 sm:p-3">
                     <div className="flex items-start">
-                      <AlertTriangle className="h-4 w-4 text-[#f59e0b] mr-2 mt-0.5 flex-shrink-0" />
+                      <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-[#f59e0b] mr-2 mt-0.5 flex-shrink-0" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-[#92400e]">
+                        <p className="text-xs sm:text-sm font-medium text-[#92400e]">
                           {productInfo.warehouse_action.reason}
                         </p>
                         {productInfo.warehouse_action.urgency === "critical" && (
-                          <Badge className="mt-2 bg-[#ef4444] text-white">
+                          <Badge className="mt-2 bg-[#ef4444] text-white text-xs">
                             Критический уровень
                           </Badge>
                         )}
@@ -342,23 +350,24 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="quantity" className="text-[#374151]">Количество для перемещения</Label>
+              <Label htmlFor="quantity" className="text-[#374151] text-sm sm:text-base">Количество для перемещения</Label>
               <Input
                 id="quantity"
                 type="number"
                 value={quantity}
                 onChange={handleQuantityChange}
-                min={1}
+                placeholder="0"
+                min={0}
                 max={productInfo.quantity}
-                className="border-[#e5e7eb] text-[#1f2937]"
+                className="border-[#e5e7eb] text-[#1f2937] text-sm sm:text-base placeholder:text-[#9ca3af] focus:ring-2 focus:ring-[#6322FE] focus:border-[#6322FE]"
               />
               <p className="text-xs text-[#6b7280]">Максимум: {productInfo.quantity} {productInfo.product.default_unit || "шт"}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price" className="text-[#374151]">Цена за единицу</Label>
+              <Label htmlFor="price" className="text-[#374151] text-sm sm:text-base">Цена за единицу</Label>
               <div className="flex items-center">
-                <span className="text-sm mr-2 text-[#6b7280]">₸</span>
+                <span className="text-xs sm:text-sm mr-2 text-[#6b7280]">₸</span>
                 <Input
                   id="price"
                   type="number"
@@ -366,7 +375,7 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
                   onChange={handlePriceChange}
                   min={0}
                   step={0.01}
-                  className="border-[#e5e7eb] text-[#1f2937]"
+                  className="border-[#e5e7eb] text-[#1f2937] text-sm sm:text-base"
                 />
               </div>
               {productInfo.suggested_price && (
@@ -382,20 +391,20 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
             </div>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={toggleScanner}
               disabled={isLoading}
-              className="border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
+              className="w-full sm:w-auto border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
             >
               <Camera className="mr-2 h-4 w-4" />
               Сканировать новый код
             </Button>
             <Button
               type="button"
-              className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
+              className="w-full sm:w-auto bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
               onClick={handleScanBarcode}
               disabled={isLoading}
             >
@@ -412,9 +421,9 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
         </div>
       ) : (
         <div className="text-center space-y-4 py-2">
-          <div className="border-2 border-dashed border-[#e5e7eb] rounded-lg p-8 flex flex-col items-center justify-center">
-            <Barcode className="h-10 w-10 text-[#6b7280] mb-4" />
-            <p className="text-sm text-[#6b7280] mb-2">
+          <div className="border-2 border-dashed border-[#e5e7eb] rounded-lg p-6 sm:p-8 flex flex-col items-center justify-center">
+            <Barcode className="h-8 w-8 sm:h-10 sm:w-10 text-[#6b7280] mb-4" />
+            <p className="text-xs sm:text-sm text-[#6b7280] mb-2">
               Отсканируйте штрих-код товара с помощью камеры
             </p>
             <Button
@@ -432,7 +441,7 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
       {isLoadingProduct && (
         <div className="text-center py-4">
           <Loader2 className="h-6 w-6 animate-spin mx-auto text-[#6322FE]" />
-          <p className="text-sm text-[#6b7280] mt-2">Загрузка информации о товаре...</p>
+          <p className="text-xs sm:text-sm text-[#6b7280] mt-2">Загрузка информации о товаре...</p>
         </div>
       )}
     </div>

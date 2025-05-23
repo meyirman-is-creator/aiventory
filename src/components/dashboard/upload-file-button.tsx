@@ -76,6 +76,8 @@ const UploadFileButton = () => {
         fetchItems(),
         fetchExpiringItems()
       ]);
+
+      window.location.reload();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Не удалось загрузить файл";
       toast({
@@ -89,12 +91,13 @@ const UploadFileButton = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]">
+        <Button className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff] w-full sm:w-auto">
           <Upload className="mr-2 h-4 w-4" />
-          Загрузить инвентарь
+          <span className="hidden sm:inline">Загрузить инвентарь</span>
+          <span className="sm:hidden">Загрузить</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-[#ffffff]">
+      <DialogContent className="w-[90%] sm:w-[425px] bg-[#ffffff]">
         <DialogHeader>
           <DialogTitle className="text-[#1f2937]">Загрузка инвентаря</DialogTitle>
           <DialogDescription className="text-[#6b7280]">
@@ -126,19 +129,19 @@ const UploadFileButton = () => {
             </div>
           )}
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button
             type="button"
             variant="outline"
             onClick={() => setIsOpen(false)}
             disabled={isUploading}
-            className="border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
+            className="w-full sm:w-auto border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
           >
             Отмена
           </Button>
           <Button
             type="button"
-            className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
+            className="w-full sm:w-auto bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
             onClick={handleUpload}
             disabled={!file || isUploading}
           >

@@ -36,13 +36,14 @@ interface MoveToStoreModalProps {
 }
 
 const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState(item.product.default_price || 0);
   const [isLoading, setIsLoading] = useState(false);
   const { moveToStore, fetchItems } = useWarehouseStore();
   const { toast } = useToast();
 
   useEffect(() => {
+    setQuantity("1");
     if (item.suggested_price && item.suggested_price > 0) {
       setPrice(item.suggested_price);
     } else if (item.product.default_price) {
@@ -51,12 +52,13 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
   }, [item]);
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (isNaN(value) || value < 1) {
-      setQuantity(1);
-    } else if (value > item.quantity) {
-      setQuantity(item.quantity);
-    } else {
+    const value = e.target.value;
+    if (value === "") {
+      setQuantity("");
+      return;
+    }
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= item.quantity) {
       setQuantity(value);
     }
   };
@@ -71,19 +73,23 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
   };
 
   const incrementQuantity = () => {
-    if (quantity < item.quantity) {
-      setQuantity(quantity + 1);
+    const currentQty = quantity === "" ? 0 : parseInt(quantity);
+    if (currentQty < item.quantity) {
+      setQuantity((currentQty + 1).toString());
     }
   };
 
   const decrementQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
+    const currentQty = quantity === "" ? 0 : parseInt(quantity);
+    if (currentQty > 0) {
+      setQuantity((currentQty - 1).toString());
     }
   };
 
   const handleSubmit = async () => {
-    if (quantity < 1 || quantity > item.quantity) {
+    const numQuantity = parseInt(quantity) || 0;
+
+    if (numQuantity < 1 || numQuantity > item.quantity) {
       toast({
         title: "Неверное количество",
         description: `Пожалуйста, введите количество от 1 до ${item.quantity}`,
@@ -104,11 +110,11 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
     setIsLoading(true);
 
     try {
-      await moveToStore(item.sid, quantity, price);
+      await moveToStore(item.sid, numQuantity, price);
       await fetchItems();
       toast({
         title: "Товар перемещен в магазин",
-        description: `Успешно перемещено ${quantity} ${item.product.name} в магазин`,
+        description: `Успешно перемещено ${numQuantity} ${item.product.name} в магазин`,
       });
       onClose();
     } catch (error: unknown) {
@@ -136,28 +142,28 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-[#ffffff]">
+      <DialogContent className="w-[95%] sm:w-[90%] md:w-[80%] lg:w-[65%] max-w-[800px] bg-[#ffffff] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-[#1f2937]">Переместить в магазин</DialogTitle>
-          <DialogDescription className="text-[#6b7280]">
+          <DialogTitle className="text-[#1f2937] text-lg sm:text-xl">Переместить в магазин</DialogTitle>
+          <DialogDescription className="text-[#6b7280] text-sm sm:text-base">
             Переместить товар со склада в магазин для продажи
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-2 sm:py-4">
           <Card className="border-[#e5e7eb]">
-            <CardContent className="pt-4 space-y-3">
+            <CardContent className="pt-3 sm:pt-4 space-y-3">
               <div className="flex items-start">
-                <Package className="h-5 w-5 text-[#6322FE] mr-3 mt-0.5" />
+                <Package className="h-4 w-4 sm:h-5 sm:w-5 text-[#6322FE] mr-2 sm:mr-3 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-[#1f2937]">{item.product.name}</h3>
-                  <p className="text-sm text-[#6b7280] mt-1">{item.product.category?.name || "Без категории"}</p>
+                  <h3 className="font-semibold text-[#1f2937] text-sm sm:text-base">{item.product.name}</h3>
+                  <p className="text-xs sm:text-sm text-[#6b7280] mt-1">{item.product.category?.name || "Без категории"}</p>
                 </div>
               </div>
 
               <Separator />
 
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
                 {item.product.barcode && (
                   <div>
                     <p className="text-[#6b7280]">Штрих-код</p>
@@ -187,10 +193,9 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 {daysUntilExpiry !== null && (
                   <div>
                     <p className="text-[#6b7280]">До истечения</p>
-                    <p className={`font-medium ${
-                      daysUntilExpiry <= 3 ? "text-[#ef4444]" : 
-                      daysUntilExpiry <= 7 ? "text-[#f59e0b]" : "text-[#1f2937]"
-                    }`}>
+                    <p className={`font-medium ${daysUntilExpiry <= 3 ? "text-[#ef4444]" :
+                        daysUntilExpiry <= 7 ? "text-[#f59e0b]" : "text-[#1f2937]"
+                      }`}>
                       {daysUntilExpiry} дней
                     </p>
                   </div>
@@ -200,20 +205,20 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
               {item.warehouse_action && (
                 <>
                   <Separator />
-                  <div className="bg-[#fef3c7] border border-[#fcd34d] rounded-md p-3">
+                  <div className="bg-[#fef3c7] border border-[#fcd34d] rounded-md p-2 sm:p-3">
                     <div className="flex items-start">
-                      <AlertTriangle className="h-4 w-4 text-[#f59e0b] mr-2 mt-0.5" />
+                      <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-[#f59e0b] mr-2 mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-[#92400e]">
+                        <p className="text-xs sm:text-sm font-medium text-[#92400e]">
                           {item.warehouse_action.reason}
                         </p>
                         <div className="flex items-center gap-2 mt-2">
                           {item.warehouse_action.urgency === "critical" && (
-                            <Badge className="bg-[#ef4444] text-white">Критический</Badge>
+                            <Badge className="bg-[#ef4444] text-white text-xs">Критический</Badge>
                           )}
                           {item.warehouse_action.discount_suggestion && (
-                            <Badge className="bg-[#d97706] text-white">
-                              <Tag className="h-3 w-3 mr-1" />
+                            <Badge className="bg-[#d97706] text-white text-xs">
+                              <Tag className="h-2 w-2 sm:h-3 sm:w-3 mr-1" />
                               Скидка {item.warehouse_action.discount_suggestion}%
                             </Badge>
                           )}
@@ -227,7 +232,7 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
           </Card>
 
           <div className="space-y-2">
-            <Label htmlFor="quantity" className="text-[#374151]">
+            <Label htmlFor="quantity" className="text-[#374151] text-sm sm:text-base font-medium">
               Количество для перемещения
             </Label>
             <div className="flex items-center">
@@ -237,7 +242,7 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 size="icon"
                 className="h-8 w-8 rounded-r-none border-[#e5e7eb]"
                 onClick={decrementQuantity}
-                disabled={quantity <= 1}
+                disabled={quantity === "" || parseInt(quantity) <= 0}
               >
                 <Minus className="h-4 w-4" />
               </Button>
@@ -246,9 +251,10 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 type="number"
                 value={quantity}
                 onChange={handleQuantityChange}
-                min={1}
+                placeholder="0"
+                min={0}
                 max={item.quantity}
-                className="h-8 rounded-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937]"
+                className="h-8 rounded-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] focus:ring-2 focus:ring-[#6322FE] focus:border-[#6322FE] placeholder:text-[#9ca3af]"
               />
               <Button
                 type="button"
@@ -256,7 +262,7 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 size="icon"
                 className="h-8 w-8 rounded-l-none border-[#e5e7eb]"
                 onClick={incrementQuantity}
-                disabled={quantity >= item.quantity}
+                disabled={quantity !== "" && parseInt(quantity) >= item.quantity}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -264,9 +270,9 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="price" className="text-[#374151]">Цена за единицу</Label>
+            <Label htmlFor="price" className="text-[#374151] text-sm sm:text-base">Цена за единицу</Label>
             <div className="flex items-center">
-              <span className="text-sm mr-2 text-[#6b7280]">₸</span>
+              <span className="text-xs sm:text-sm mr-2 text-[#6b7280]">₸</span>
               <Input
                 id="price"
                 type="number"
@@ -274,7 +280,7 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 onChange={handlePriceChange}
                 min={0}
                 step={0.01}
-                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937]"
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] text-sm sm:text-base"
               />
             </div>
             {item.suggested_price !== undefined && item.suggested_price > 0 && (
@@ -297,19 +303,19 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
-            className="border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
+            className="w-full sm:w-auto border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
           >
             Отмена
           </Button>
           <Button
             type="button"
-            className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
+            className="w-full sm:w-auto bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
             onClick={handleSubmit}
             disabled={isLoading}
           >
