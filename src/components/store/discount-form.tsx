@@ -93,10 +93,11 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
         description: `Скидка ${percentage}% добавлена к ${item.product.name}`,
       });
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Не удалось создать скидку";
       toast({
         title: "Ошибка",
-        description: error.message || "Не удалось создать скидку",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -106,29 +107,29 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#ffffff]">
         <DialogHeader>
-          <DialogTitle>Добавить скидку</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-[#1f2937]">Добавить скидку</DialogTitle>
+          <DialogDescription className="text-[#6b7280]">
             Создать скидку для {item.product.name}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Товар</Label>
-            <div className="text-sm font-medium">{item.product.name}</div>
+            <Label className="text-[#374151]">Товар</Label>
+            <div className="text-sm font-medium text-[#1f2937]">{item.product.name}</div>
           </div>
 
           <div className="space-y-2">
-            <Label>Исходная цена</Label>
-            <div className="text-sm font-medium">
+            <Label className="text-[#374151]">Исходная цена</Label>
+            <div className="text-sm font-medium text-[#1f2937]">
               {formatCurrency(originalPrice)}
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="percentage">Процент скидки</Label>
+            <Label htmlFor="percentage" className="text-[#374151]">Процент скидки</Label>
             <div className="flex items-center">
               <Input
                 id="percentage"
@@ -137,18 +138,18 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
                 onChange={handlePercentageChange}
                 min={0}
                 max={100}
-                className="w-20 mr-2"
+                className="w-20 mr-2 border-[#e5e7eb] text-[#1f2937]"
               />
-              <span>%</span>
+              <span className="text-[#6b7280]">%</span>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Цена со скидкой</Label>
-            <div className="text-lg font-bold text-primary">
+            <Label className="text-[#374151]">Цена со скидкой</Label>
+            <div className="text-lg font-bold text-[#6322FE]">
               {formatCurrency(discountedPrice)}
             </div>
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-[#6b7280]">
               Клиент экономит {formatCurrency(originalPrice - discountedPrice)}{" "}
               за единицу
             </div>
@@ -156,18 +157,18 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Дата начала</Label>
+              <Label htmlFor="startDate" className="text-[#374151]">Дата начала</Label>
               <Popover open={isStartDateOpen} onOpenChange={setIsStartDateOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className="w-full justify-start text-left font-normal border-[#e5e7eb] text-[#374151]"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {format(startDate, "PP")}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 bg-[#ffffff]">
                   <Calendar
                     mode="single"
                     selected={startDate}
@@ -184,18 +185,18 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">Дата окончания</Label>
+              <Label htmlFor="endDate" className="text-[#374151]">Дата окончания</Label>
               <Popover open={isEndDateOpen} onOpenChange={setIsEndDateOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className="w-full justify-start text-left font-normal border-[#e5e7eb] text-[#374151]"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {format(endDate, "PP")}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 bg-[#ffffff]">
                   <Calendar
                     mode="single"
                     selected={endDate}
@@ -219,12 +220,13 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
+            className="border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
           >
             Отмена
           </Button>
           <Button
             type="button"
-            className="bg-brand-purple hover:bg-brand-purple/90"
+            className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
             onClick={handleSubmit}
             disabled={isLoading}
           >

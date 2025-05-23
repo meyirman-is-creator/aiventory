@@ -54,10 +54,10 @@ export default function StorePage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+        <h2 className="text-2xl font-bold tracking-tight text-[#1f2937]">
           Управление магазином
         </h2>
-        <p className="text-gray-600">
+        <p className="text-[#6b7280]">
           Управляйте запасами магазина, просматривайте товары с истекающим
           сроком и регистрируйте продажи
         </p>
@@ -66,45 +66,35 @@ export default function StorePage() {
       <StoreStats reports={reports} isLoading={isLoadingReports} />
 
       <Tabs defaultValue="active" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-100">
+        <TabsList className="grid w-full grid-cols-2 bg-[#f3f4f6]">
           <TabsTrigger
             value="active"
-            className="data-[state=active]:bg-white data-[state=active]:text-gray-900"
+            className="data-[state=active]:bg-[#ffffff] data-[state=active]:text-[#1f2937]"
           >
             Активные товары
             <span
-              className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
-              style={{
-                backgroundColor: "#EBE3FF",
-                color: "#6322FE",
-              }}
+              className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#EBE3FF] text-[#6322FE]"
             >
               {activeItems.length}
             </span>
           </TabsTrigger>
           <TabsTrigger
             value="expired"
-            className="data-[state=active]:bg-white data-[state=active]:text-gray-900"
+            className="data-[state=active]:bg-[#ffffff] data-[state=active]:text-[#1f2937]"
           >
             Истекшие товары
             <span
-              className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
-              style={{ backgroundColor: "#FEE2E2", color: "#ef4444" }}
+              className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#fee2e2] text-[#ef4444]"
             >
               {expiredItems.length}
             </span>
           </TabsTrigger>
         </TabsList>
         <TabsContent value="active" className="space-y-4 mt-4">
-          <Card
-            style={{
-              borderColor: "#e5e7eb",
-              backgroundColor: "#ffffff",
-            }}
-          >
+          <Card className="bg-[#ffffff] border-[#e5e7eb]">
             <CardHeader>
-              <CardTitle className="text-gray-900">Товары в магазине</CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardTitle className="text-[#1f2937]">Товары в магазине</CardTitle>
+              <CardDescription className="text-[#6b7280]">
                 Все товары, доступные в данный момент для продажи в вашем
                 магазине
               </CardDescription>
@@ -118,17 +108,12 @@ export default function StorePage() {
           </Card>
         </TabsContent>
         <TabsContent value="expired" className="space-y-4 mt-4">
-          <Card
-            style={{
-              borderColor: "#e5e7eb",
-              backgroundColor: "#ffffff",
-            }}
-          >
+          <Card className="bg-[#ffffff] border-[#e5e7eb]">
             <CardHeader>
-              <CardTitle className="text-gray-900">
+              <CardTitle className="text-[#1f2937]">
                 Истекшие и удаленные товары
               </CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardDescription className="text-[#6b7280]">
                 Товары, которые истекли или были удалены из магазина
               </CardDescription>
             </CardHeader>

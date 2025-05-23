@@ -56,7 +56,7 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
         title: "Товар удален",
         description: `${item.product.name} был удален из магазина.`,
       });
-    } catch (error: any) {
+    } catch {
       toast({
         title: "Ошибка",
         description: "Не удалось удалить товар.",
@@ -68,16 +68,16 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">Загрузка активных товаров...</p>
+        <p className="text-[#6b7280]">Загрузка активных товаров...</p>
       </div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-8 border rounded-md">
-        <p className="text-muted-foreground">Нет активных товаров</p>
-        <p className="text-sm text-muted-foreground mt-1">
+      <div className="text-center py-8 border border-[#e5e7eb] rounded-md">
+        <p className="text-[#6b7280]">Нет активных товаров</p>
+        <p className="text-sm text-[#6b7280] mt-1">
           Переместите товары со склада в магазин
         </p>
       </div>
@@ -86,18 +86,18 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
 
   return (
     <>
-      <div className="rounded-md border overflow-hidden">
+      <div className="rounded-md border border-[#e5e7eb] overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Товар</TableHead>
-                <TableHead>Категория</TableHead>
-                <TableHead>Статус</TableHead>
-                <TableHead>Количество</TableHead>
-                <TableHead>Цена</TableHead>
-                <TableHead>Срок годности</TableHead>
-                <TableHead>Действия</TableHead>
+              <TableRow className="border-b border-[#e5e7eb]">
+                <TableHead className="text-[#374151] font-semibold">Товар</TableHead>
+                <TableHead className="text-[#374151] font-semibold">Категория</TableHead>
+                <TableHead className="text-[#374151] font-semibold">Статус</TableHead>
+                <TableHead className="text-[#374151] font-semibold">Количество</TableHead>
+                <TableHead className="text-[#374151] font-semibold">Цена</TableHead>
+                <TableHead className="text-[#374151] font-semibold">Срок годности</TableHead>
+                <TableHead className="text-[#374151] font-semibold">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -113,14 +113,14 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                   : 0;
 
                 return (
-                  <TableRow key={item.sid}>
-                    <TableCell className="font-medium text-[#000]">
+                  <TableRow key={item.sid} className="border-b border-[#f3f4f6]">
+                    <TableCell className="font-medium text-[#1f2937]">
                       {item.product.name}
                     </TableCell>
-                    <TableCell className="text-[#000]">
+                    <TableCell className="text-[#374151]">
                       {item.product.category?.name || "Н/Д"}
                     </TableCell>
-                    <TableCell className="text-[#000]">
+                    <TableCell>
                       <Badge className={statusClass}>
                         {getStatusDisplayName(item.status) === "Active"
                           ? "Активен"
@@ -131,17 +131,17 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                           : getStatusDisplayName(item.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-[#000]">
+                    <TableCell className="text-[#374151]">
                       {item.quantity}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center text-[#000]">
+                      <div className="flex items-center">
                         {hasDiscount && (
-                          <span className="line-through  mr-2 ">
+                          <span className="line-through text-[#9ca3af] mr-2">
                             {formatCurrency(item.price)}
                           </span>
                         )}
-                        <span>
+                        <span className="text-[#1f2937]">
                           {hasDiscount
                             ? formatCurrency(
                                 item.price * (1 - discountPercentage / 100)
@@ -149,19 +149,19 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                             : formatCurrency(item.price)}
                         </span>
                         {hasDiscount && (
-                          <span className="ml-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs bg-green-100 text-green-800">
+                          <span className="ml-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs bg-[#d1fae5] text-[#065f46]">
                             {discountPercentage}% скидка
                           </span>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center text-[#000]">
+                      <div className="flex items-center text-[#374151]">
                         {item.expire_date
                           ? formatDate(item.expire_date)
                           : "Н/Д"}
                         {isExpiring && (
-                          <AlertCircle className="ml-2 h-4 w-4 text-amber-500" />
+                          <AlertCircle className="ml-2 h-4 w-4 text-[#f59e0b]" />
                         )}
                       </div>
                     </TableCell>
@@ -169,7 +169,7 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                       <div className="flex space-x-2">
                         <Button
                           size="sm"
-                          className="bg-brand-purple hover:bg-brand-purple/90"
+                          className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
                           onClick={() => handleSellItem(item)}
                         >
                           <ShoppingCart size={16} className="mr-1" />
@@ -178,7 +178,7 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-green-500 text-green-600 hover:bg-green-50"
+                          className="border-[#10b981] text-[#059669] hover:bg-[#d1fae5]"
                           onClick={() => handleAddDiscount(item)}
                         >
                           <PercentIcon size={16} className="mr-1" />
@@ -187,7 +187,7 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-red-200 text-red-600 hover:bg-red-50"
+                          className="border-[#fecaca] text-[#dc2626] hover:bg-[#fee2e2]"
                           onClick={() => handleRemoveItem(item)}
                         >
                           Удалить

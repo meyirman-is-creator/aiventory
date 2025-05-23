@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Upload, Loader2 } from "lucide-react";
 import { useWarehouseStore } from "@/store/warehouse-store";
 import { useDashboardStore } from "@/store/dashboard-store";
+
 const UploadFileButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -29,7 +30,6 @@ const UploadFileButton = () => {
     if (e.target.files && e.target.files.length > 0) {
       const selectedFile = e.target.files[0];
 
-      // Validate file type
       const allowedTypes = [
         "application/vnd.ms-excel",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -71,12 +71,12 @@ const UploadFileButton = () => {
         fileInputRef.current.value = "";
       }
 
-      // Refresh dashboard stats
       fetchStats();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Не удалось загрузить файл";
       toast({
         title: "Ошибка загрузки",
-        description: error.message || "Не удалось загрузить файл",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -85,21 +85,21 @@ const UploadFileButton = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-brand-purple hover:bg-brand-purple/90 ">
-          <Upload className="mr-2 h-4 w-4 " />
+        <Button className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]">
+          <Upload className="mr-2 h-4 w-4" />
           Загрузить инвентарь
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[#ffffff]">
         <DialogHeader>
-          <DialogTitle className="text-black">Загрузка инвентаря</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-[#1f2937]">Загрузка инвентаря</DialogTitle>
+          <DialogDescription className="text-[#6b7280]">
             Загрузите файл CSV или Excel, содержащий данные вашего инвентаря.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="file" className="text-black">
+            <Label htmlFor="file" className="text-[#1f2937]">
               Файл
             </Label>
             <Input
@@ -107,17 +107,17 @@ const UploadFileButton = () => {
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
-              className="text-gray-500"
+              className="text-[#4b5563] border-[#e5e7eb]"
               accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-[#6b7280]">
               Принимаются файлы CSV и Excel
             </p>
           </div>
 
           {file && (
-            <div className="text-sm text-gray-500">
-              Выбранный файл: <span className="font-medium ">{file.name}</span>{" "}
+            <div className="text-sm text-[#4b5563]">
+              Выбранный файл: <span className="font-medium">{file.name}</span>{" "}
               ({(file.size / 1024).toFixed(2)} КБ)
             </div>
           )}
@@ -128,13 +128,13 @@ const UploadFileButton = () => {
             variant="outline"
             onClick={() => setIsOpen(false)}
             disabled={isUploading}
-            className="border-gray-400 text-gray-400"
+            className="border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
           >
             Отмена
           </Button>
           <Button
             type="button"
-            className="bg-brand-purple hover:bg-brand-purple/90"
+            className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
             onClick={handleUpload}
             disabled={!file || isUploading}
           >

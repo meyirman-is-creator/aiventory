@@ -11,12 +11,10 @@ const Header = () => {
   const { user } = useUserStore();
   const [email, setEmail] = useState<string>('');
   const [pageTitle, setPageTitle] = useState<string>('Панель управления');
-  
-  // Check if on auth pages
+
   const isAuthPage = pathname?.startsWith('/auth');
-  
+
   useEffect(() => {
-    // Set page title based on path
     switch (pathname) {
       case '/':
         setPageTitle('Панель управления');
@@ -33,8 +31,7 @@ const Header = () => {
       default:
         setPageTitle('Панель управления');
     }
-    
-    // Try to get user from localStorage if not in store
+
     if (!user?.email) {
       const token = localStorage.getItem('accessToken');
       if (token) {
@@ -43,34 +40,33 @@ const Header = () => {
           if (tokenData.email) {
             setEmail(tokenData.email);
           }
-        } catch (e) {
-          // Invalid token format, ignore
+        } catch {
+          console.error('Error parsing token');
         }
       }
     } else {
       setEmail(user.email);
     }
   }, [pathname, user]);
-  
-  // Don't render header on auth pages
+
   if (isAuthPage) {
     return null;
   }
-  
+
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 sm:px-8 bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 sm:px-8 bg-[#ffffff] border-b border-[#e5e7eb]">
       <div className="flex items-center">
-        <h1 className="text-xl font-semibold text-gray-800">{pageTitle}</h1>
+        <h1 className="text-xl font-semibold text-[#1f2937]">{pageTitle}</h1>
       </div>
-      
+
       <div className="flex items-center space-x-4">
         <div className="hidden md:flex items-center">
-          <span className="text-sm text-gray-600 mr-2">
+          <span className="text-sm text-[#6b7280] mr-2">
             {email}
           </span>
         </div>
-        <Avatar className="h-8 w-8 bg-brand-purple text-white">
-          <AvatarFallback>
+        <Avatar className="h-8 w-8 bg-[#6322FE] text-[#ffffff]">
+          <AvatarFallback className="bg-[#6322FE] text-[#ffffff]">
             {getInitials(email)}
           </AvatarFallback>
         </Avatar>

@@ -41,56 +41,55 @@ const WarehouseItemsTable = ({
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">Загрузка товаров на складе...</p>
+        <p className="text-[#6b7280]">Загрузка товаров на складе...</p>
       </div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-8 border rounded-md">
-        <p className="text-muted-foreground">Нет товаров на складе</p>
-        <p className="text-sm text-muted-foreground mt-1">
+      <div className="text-center py-8 border border-[#e5e7eb] rounded-md">
+        <p className="text-[#6b7280]">Нет товаров на складе</p>
+        <p className="text-sm text-[#6b7280] mt-1">
           Загрузите файлы инвентаря для добавления товаров
         </p>
       </div>
     );
   }
 
-  // Check if any item has expiration date
   const hasAnyExpiration = items.some((item) => item.expire_date);
 
   return (
     <>
-      <div className="rounded-md border overflow-hidden">
+      <div className="rounded-md border border-[#e5e7eb] overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="font-semibold text-gray-900">
+              <TableRow className="border-b border-[#e5e7eb]">
+                <TableHead className="font-semibold text-[#1f2937]">
                   Товар
                 </TableHead>
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="font-semibold text-[#1f2937]">
                   Категория
                 </TableHead>
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="font-semibold text-[#1f2937]">
                   Статус
                 </TableHead>
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="font-semibold text-[#1f2937]">
                   Код партии
                 </TableHead>
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="font-semibold text-[#1f2937]">
                   Количество
                 </TableHead>
                 {hasAnyExpiration && (
-                  <TableHead className="font-semibold text-gray-900">
+                  <TableHead className="font-semibold text-[#1f2937]">
                     Срок годности
                   </TableHead>
                 )}
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="font-semibold text-[#1f2937]">
                   Дата получения
                 </TableHead>
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="font-semibold text-[#1f2937]">
                   Действия
                 </TableHead>
               </TableRow>
@@ -100,15 +99,15 @@ const WarehouseItemsTable = ({
                 const statusClass = cn(getStatusBadgeColor(item.status));
                 const isExpiring =
                   item.expire_date &&
-                  new Date(item.expire_date) <
-                    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                  new Date(item.expire_date)
+                new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
                 return (
-                  <TableRow key={item.sid}>
-                    <TableCell className="font-medium text-gray-800">
+                  <TableRow key={item.sid} className="border-b border-[#f3f4f6]">
+                    <TableCell className="font-medium text-[#1f2937]">
                       {item.product.name}
                     </TableCell>
-                    <TableCell className="text-gray-700">
+                    <TableCell className="text-[#374151]">
                       {item.product.category?.name || "Н/Д"}
                     </TableCell>
                     <TableCell>
@@ -117,27 +116,27 @@ const WarehouseItemsTable = ({
                           ? "На складе"
                           : getStatusDisplayName(item.status) ===
                             "Moved to Store"
-                          ? "Перемещен в магазин"
-                          : getStatusDisplayName(item.status) === "Discarded"
-                          ? "Списан"
-                          : getStatusDisplayName(item.status)}
+                            ? "Перемещен в магазин"
+                            : getStatusDisplayName(item.status) === "Discarded"
+                              ? "Списан"
+                              : getStatusDisplayName(item.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-700">
+                    <TableCell className="text-[#374151]">
                       {item.batch_code || "Н/Д"}
                     </TableCell>
-                    <TableCell className="text-gray-700">
+                    <TableCell className="text-[#374151]">
                       {item.quantity}
                     </TableCell>
                     {hasAnyExpiration && (
-                      <TableCell className="text-gray-700">
+                      <TableCell className="text-[#374151]">
                         {item.expire_date ? (
                           <div className="flex items-center">
                             {formatDate(item.expire_date)}
                             {isExpiring && (
                               <AlertTriangle
                                 size={16}
-                                className="ml-2 text-amber-500"
+                                className="ml-2 text-[#f59e0b]"
                               />
                             )}
                           </div>
@@ -146,7 +145,7 @@ const WarehouseItemsTable = ({
                         )}
                       </TableCell>
                     )}
-                    <TableCell className="text-gray-700">
+                    <TableCell className="text-[#374151]">
                       {formatDate(item.received_at)}
                     </TableCell>
                     <TableCell>
@@ -154,14 +153,14 @@ const WarehouseItemsTable = ({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="bg-brand-purple/10 text-brand-purple border-brand-purple/20 hover:bg-brand-purple/20"
+                          className="bg-[#EBE3FF] text-[#6322FE] border-[#6322FE]/20 hover:bg-[#6322FE]/20"
                           onClick={() => handleMoveToStore(item)}
                         >
                           <ExternalLink size={16} className="mr-1" />
                           Переместить в магазин
                         </Button>
                       ) : (
-                        <Button size="sm" variant="outline" disabled>
+                        <Button size="sm" variant="outline" disabled className="border-[#e5e7eb] text-[#9ca3af]">
                           {item.status === "moved" ? "Перемещен" : "Недоступен"}
                         </Button>
                       )}

@@ -23,10 +23,10 @@ export default function Dashboard() {
   const { isAuthenticated, checkAuth } = useUserStore();
   const { stats, fetchStats, isLoading } = useDashboardStore();
   const { fetchActiveItems, fetchReports } = useStoreItemsStore();
-  
+
   useEffect(() => {
     const isLoggedIn = checkAuth();
-    
+
     if (!isLoggedIn) {
       router.push('/auth/login');
     } else {
@@ -35,11 +35,11 @@ export default function Dashboard() {
       fetchReports();
     }
   }, [checkAuth, fetchActiveItems, fetchReports, fetchStats, router]);
-  
+
   if (!isAuthenticated) {
     return null;
   }
-  
+
   return (
     <div className="space-y-6 px-2 sm:px-0">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -48,7 +48,7 @@ export default function Dashboard() {
           <UploadFileButton />
         </div>
       </div>
-      
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="bg-[#ffffff] border-[#e5e7eb]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -62,7 +62,7 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-[#ffffff] border-[#e5e7eb]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-[#1f2937]">Продукты на складе</CardTitle>
@@ -75,7 +75,7 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-[#ffffff] border-[#e5e7eb]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-[#1f2937]">Продукты в магазине</CardTitle>
@@ -88,7 +88,7 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-[#fffbeb] border-[#fcd34d]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-[#92400e]">Истекает срок</CardTitle>
@@ -100,8 +100,8 @@ export default function Dashboard() {
               Продукты, истекающие в ближайшие 7 дней
             </p>
             {stats?.products_expiring_soon ? (
-              <Button 
-                variant="link" 
+              <Button
+                variant="link"
                 className="p-0 h-auto text-[#d97706]"
                 onClick={() => router.push('/store')}
               >
@@ -110,7 +110,7 @@ export default function Dashboard() {
             ) : null}
           </CardContent>
         </Card>
-        
+
         <Card className="bg-[#ffffff] border-[#e5e7eb]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-[#1f2937]">Выручка (30 дней)</CardTitle>
@@ -125,7 +125,7 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-[#ffffff] border-[#e5e7eb]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-[#1f2937]">Продажи (30 дней)</CardTitle>
@@ -139,7 +139,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <Card className="bg-[#ffffff] border-[#e5e7eb]">
           <CardHeader>
@@ -155,29 +155,29 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-[#ffffff] border-[#e5e7eb]">
           <CardHeader>
             <CardTitle className="text-[#1f2937]">Быстрые действия</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button 
-              variant="outline" 
-              className="w-full justify-between border-[#d1d5db] text-[#1f2937]"
+            <Button
+              variant="outline"
+              className="w-full justify-between border-[#d1d5db] text-[#1f2937] hover:bg-[#f9fafb]"
               onClick={() => router.push('/warehouse')}
             >
               Загрузить новый инвентарь <Upload className="h-4 w-4 ml-2" />
             </Button>
-            
-            <Button 
-              variant="outline" 
-              className="w-full justify-between border-[#d1d5db] text-[#1f2937]"
+
+            <Button
+              variant="outline"
+              className="w-full justify-between border-[#d1d5db] text-[#1f2937] hover:bg-[#f9fafb]"
               onClick={() => router.push('/store')}
             >
               Управление товарами магазина <Store className="h-4 w-4 ml-2" />
             </Button>
-            
-            <Button 
+
+            <Button
               className="w-full justify-between text-[#ffffff] bg-[#6322FE] hover:bg-[#5719d8]"
               onClick={() => router.push('/store')}
             >

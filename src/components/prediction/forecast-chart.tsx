@@ -1,5 +1,3 @@
-// src/components/prediction/forecast-chart.tsx
-
 "use client";
 
 import { useState } from "react";
@@ -28,7 +26,7 @@ const ForecastChart = ({
 
   const handleRefresh = async () => {
     if (!selectedProductSid || refreshLoading) return;
-    
+
     setRefreshLoading(true);
     try {
       await fetchPredictions(selectedProductSid, true);
@@ -48,8 +46,8 @@ const ForecastChart = ({
 
   if (loadingState) {
     return (
-      <div className="h-full flex items-center justify-center border rounded-md bg-gray-50">
-        <div className="flex flex-col items-center text-gray-500">
+      <div className="h-full flex items-center justify-center border border-[#e5e7eb] rounded-md bg-[#f9fafb]">
+        <div className="flex flex-col items-center text-[#6b7280]">
           <Loader2 className="h-10 w-10 animate-spin mb-2" />
           <p>Загрузка прогноза...</p>
         </div>
@@ -59,8 +57,8 @@ const ForecastChart = ({
 
   if (!productName) {
     return (
-      <div className="h-full flex items-center justify-center border rounded-md">
-        <p className="text-muted-foreground">
+      <div className="h-full flex items-center justify-center border border-[#e5e7eb] rounded-md">
+        <p className="text-[#6b7280]">
           Выберите продукт для просмотра прогноза
         </p>
       </div>
@@ -69,13 +67,13 @@ const ForecastChart = ({
 
   if (barData.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center border rounded-md">
-        <p className="text-muted-foreground mb-4">
+      <div className="h-full flex flex-col items-center justify-center border border-[#e5e7eb] rounded-md">
+        <p className="text-[#6b7280] mb-4">
           Нет данных прогноза для этого продукта
         </p>
         <Button
           onClick={handleRefresh}
-          className="bg-brand-purple hover:bg-brand-purple/90"
+          className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
         >
           <RefreshCw className="mr-2 h-4 w-4" />
           Сгенерировать прогноз
@@ -88,9 +86,9 @@ const ForecastChart = ({
     <div className="h-full">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold">{productName}</h3>
-          <p className="text-sm text-muted-foreground">
-            Прогноз на следующие {predictions.length} {timeframe === TimeFrame.DAY ? "дней" : 
+          <h3 className="text-lg font-semibold text-[#1f2937]">{productName}</h3>
+          <p className="text-sm text-[#6b7280]">
+            Прогноз на следующие {predictions.length} {timeframe === TimeFrame.DAY ? "дней" :
               timeframe === TimeFrame.WEEK ? "недель" : "месяцев"}
           </p>
         </div>
@@ -98,6 +96,7 @@ const ForecastChart = ({
           size="sm"
           variant="outline"
           onClick={handleRefresh}
+          className="border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
         >
           <RefreshCw className="mr-1 h-4 w-4" />
           Обновить
@@ -135,13 +134,13 @@ const ForecastChart = ({
           labelSkipHeight={12}
           labelTextColor={{ from: "color", modifiers: [["darker", 3]] }}
           animate={true}
-          tooltip={({ id, value, color, indexValue, data }) => (
-            <div className="px-3 py-2 bg-white shadow-lg border rounded-md">
-              <p className="text-xs font-semibold">{indexValue}</p>
-              <p className="text-xs text-gray-600">
+          tooltip={({ value, color, indexValue, data }) => (
+            <div className="px-3 py-2 bg-[#ffffff] shadow-lg border border-[#e5e7eb] rounded-md">
+              <p className="text-xs font-semibold text-[#1f2937]">{indexValue}</p>
+              <p className="text-xs text-[#6b7280]">
                 {formatDate(data.periodStart)} - {formatDate(data.periodEnd)}
               </p>
-              <p className="text-sm font-medium mt-1">
+              <p className="text-sm font-medium mt-1 text-[#1f2937]">
                 Прогноз: <span style={{ color }}>{value}</span> ед.
               </p>
             </div>
@@ -151,19 +150,19 @@ const ForecastChart = ({
               ticks: {
                 text: {
                   fontSize: 11,
-                  fill: "#888",
+                  fill: "#6b7280",
                 },
               },
               legend: {
                 text: {
                   fontSize: 12,
-                  fill: "#555",
+                  fill: "#374151",
                 },
               },
             },
             grid: {
               line: {
-                stroke: "#eee",
+                stroke: "#e5e7eb",
                 strokeWidth: 1,
               },
             },
