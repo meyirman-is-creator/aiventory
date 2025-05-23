@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { WarehouseItem } from "@/lib/types";
+import { WarehouseItem, UrgencyLevel } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -25,6 +25,39 @@ interface ExpiringItemsTableProps {
   items: WarehouseItem[];
   isLoading: boolean;
 }
+
+const getUrgencyIcon = (level?: UrgencyLevel) => {
+  switch (level) {
+    case UrgencyLevel.CRITICAL:
+      return <AlertTriangle className="h-4 w-4 text-[#ef4444]" />;
+    case UrgencyLevel.URGENT:
+      return <AlertTriangle className="h-4 w-4 text-[#f59e0b]" />;
+    default:
+      return null;
+  }
+};
+
+const getUrgencyBadgeClass = (level?: UrgencyLevel) => {
+  switch (level) {
+    case UrgencyLevel.CRITICAL:
+      return "bg-[#fee2e2] text-[#dc2626] border-[#fecaca]";
+    case UrgencyLevel.URGENT:
+      return "bg-[#fef3c7] text-[#d97706] border-[#fcd34d]";
+    default:
+      return "bg-[#dcfce7] text-[#16a34a] border-[#bbf7d0]";
+  }
+};
+
+const getUrgencyText = (level?: UrgencyLevel) => {
+  switch (level) {
+    case UrgencyLevel.CRITICAL:
+      return "Критичный";
+    case UrgencyLevel.URGENT:
+      return "Срочный";
+    default:
+      return "Обычный";
+  }
+};
 
 const ExpiringItemsTable = ({ items, isLoading }: ExpiringItemsTableProps) => {
   const [selectedItem, setSelectedItem] = useState<WarehouseItem | null>(null);
@@ -54,12 +87,23 @@ const ExpiringItemsTable = ({ items, isLoading }: ExpiringItemsTableProps) => {
     );
   }
 
+  const urgencyOrder = {
+    [UrgencyLevel.CRITICAL]: 3,
+    [UrgencyLevel.URGENT]: 2,
+    [UrgencyLevel.NORMAL]: 1,
+  };
+
   const sortedItems = [...items].sort((a, b) => {
+    const aUrgency = urgencyOrder[a.urgency_level || UrgencyLevel.NORMAL] || 0;
+    const bUrgency = urgencyOrder[b.urgency_level || UrgencyLevel.NORMAL] || 0;
+
+    if (aUrgency !== bUrgency) {
+      return bUrgency - aUrgency;
+    }
+
     if (!a.expire_date) return 1;
     if (!b.expire_date) return -1;
-    return (
-      new Date(a.expire_date).getTime() - new Date(b.expire_date).getTime()
-    );
+    return new Date(a.expire_date).getTime() - new Date(b.expire_date).getTime();
   });
 
   return (
@@ -79,6 +123,7 @@ const ExpiringItemsTable = ({ items, isLoading }: ExpiringItemsTableProps) => {
               <TableRow className="border-b border-[#fcd34d]">
                 <TableHead className="font-semibold text-[#1f2937]">Товар</TableHead>
                 <TableHead className="font-semibold text-[#1f2937]">Статус</TableHead>
+                <TableHead className="font-semibold text-[#1f2937]">Срочность</TableHead>
                 <TableHead className="font-semibold text-[#1f2937]">Код партии</TableHead>
                 <TableHead className="font-semibold text-[#1f2937]">Количество</TableHead>
                 <TableHead className="font-semibold text-[#1f2937]">Истекает через</TableHead>
@@ -127,6 +172,14 @@ const ExpiringItemsTable = ({ items, isLoading }: ExpiringItemsTableProps) => {
                               getStatusDisplayName(item.status)}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {getUrgencyIcon(item.urgency_level)}
+                        <Badge className={cn("border", getUrgencyBadgeClass(item.urgency_level))}>
+                          {getUrgencyText(item.urgency_level)}
+                        </Badge>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-[#374151]">{item.batch_code || "Н/Д"}</TableCell>
                     <TableCell className="text-[#374151]">{item.quantity}</TableCell>
                     <TableCell>
@@ -147,11 +200,20 @@ const ExpiringItemsTable = ({ items, isLoading }: ExpiringItemsTableProps) => {
                       {item.status === "in_stock" && item.quantity > 0 ? (
                         <Button
                           size="sm"
-                          className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
+                          className={cn(
+                            "text-white",
+                            item.urgency_level === UrgencyLevel.CRITICAL
+                              ? "bg-[#ef4444] hover:bg-[#dc2626]"
+                              : item.urgency_level === UrgencyLevel.URGENT
+                                ? "bg-[#f59e0b] hover:bg-[#d97706]"
+                                : "bg-[#6322FE] hover:bg-[#5719d8]"
+                          )}
                           onClick={() => handleMoveToStore(item)}
                         >
                           <ExternalLink size={16} className="mr-1" />
-                          Переместить в магазин
+                          {item.urgency_level === UrgencyLevel.CRITICAL
+                            ? "Срочно переместить"
+                            : "Переместить в магазин"}
                         </Button>
                       ) : (
                         <Button size="sm" variant="outline" disabled className="border-[#e5e7eb] text-[#9ca3af]">

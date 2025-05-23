@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { WarehouseItem, UrgencyLevel } from "@/lib/types";
+import { WarehouseItem } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -26,25 +26,57 @@ interface WarehouseItemsTableProps {
   isLoading: boolean;
 }
 
-const getUrgencyIcon = (level?: UrgencyLevel) => {
-  switch (level) {
-    case UrgencyLevel.CRITICAL:
+const getUrgencyIcon = (urgency?: string) => {
+  switch (urgency) {
+    case "critical":
       return <AlertTriangle className="h-4 w-4 text-[#ef4444]" />;
-    case UrgencyLevel.URGENT:
+    case "high":
+    case "medium":
       return <AlertCircle className="h-4 w-4 text-[#f59e0b]" />;
     default:
       return null;
   }
 };
 
-const getUrgencyBadgeClass = (level?: UrgencyLevel) => {
-  switch (level) {
-    case UrgencyLevel.CRITICAL:
+const getUrgencyBadgeClass = (urgency?: string) => {
+  switch (urgency) {
+    case "critical":
       return "bg-[#fee2e2] text-[#dc2626] border-[#fecaca]";
-    case UrgencyLevel.URGENT:
+    case "high":
+    case "medium":
       return "bg-[#fef3c7] text-[#d97706] border-[#fcd34d]";
     default:
       return "bg-[#dcfce7] text-[#16a34a] border-[#bbf7d0]";
+  }
+};
+
+const getUrgencyText = (urgency?: string) => {
+  switch (urgency) {
+    case "critical":
+      return "Критичный";
+    case "high":
+      return "Высокий";
+    case "medium":
+      return "Средний";
+    case "low":
+      return "Низкий";
+    default:
+      return "Обычный";
+  }
+};
+
+const getUrgencyOrder = (urgency?: string) => {
+  switch (urgency) {
+    case "critical":
+      return 4;
+    case "high":
+      return 3;
+    case "medium":
+      return 2;
+    case "low":
+      return 1;
+    default:
+      return 0;
   }
 };
 
@@ -78,6 +110,21 @@ const WarehouseItemsTable = ({
       </div>
     );
   }
+
+  const sortedItems = [...items].sort((a, b) => {
+    const urgencyA = getUrgencyOrder(a.warehouse_action?.urgency);
+    const urgencyB = getUrgencyOrder(b.warehouse_action?.urgency);
+
+    if (urgencyA !== urgencyB) {
+      return urgencyB - urgencyA;
+    }
+
+    if (!a.expire_date && !b.expire_date) return 0;
+    if (!a.expire_date) return 1;
+    if (!b.expire_date) return -1;
+
+    return new Date(a.expire_date).getTime() - new Date(b.expire_date).getTime();
+  });
 
   const hasAnyExpiration = items.some((item) => item.expire_date);
 
@@ -120,12 +167,13 @@ const WarehouseItemsTable = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => {
+              {sortedItems.map((item) => {
                 const statusClass = cn(getStatusBadgeColor(item.status));
                 const isExpiring =
                   item.expire_date &&
-                  new Date(item.expire_date)
-                new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                  new Date(item.expire_date) <=
+                  new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                const urgency = item.warehouse_action?.urgency;
 
                 return (
                   <TableRow key={item.sid} className="border-b border-[#f3f4f6]">
@@ -149,13 +197,9 @@ const WarehouseItemsTable = ({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        {getUrgencyIcon(item.urgency_level)}
-                        <Badge className={cn("border", getUrgencyBadgeClass(item.urgency_level))}>
-                          {item.urgency_level === UrgencyLevel.CRITICAL
-                            ? "Критичный"
-                            : item.urgency_level === UrgencyLevel.URGENT
-                              ? "Срочный"
-                              : "Обычный"}
+                        {getUrgencyIcon(urgency)}
+                        <Badge className={cn("border", getUrgencyBadgeClass(urgency))}>
+                          {getUrgencyText(urgency)}
                         </Badge>
                       </div>
                     </TableCell>
@@ -193,9 +237,9 @@ const WarehouseItemsTable = ({
                             variant="outline"
                             className={cn(
                               "border-[#6322FE]/20 hover:bg-[#6322FE]/20",
-                              item.urgency_level === UrgencyLevel.CRITICAL
+                              urgency === "critical"
                                 ? "bg-[#fee2e2] text-[#dc2626] hover:bg-[#fecaca]"
-                                : item.urgency_level === UrgencyLevel.URGENT
+                                : urgency === "high" || urgency === "medium"
                                   ? "bg-[#fef3c7] text-[#d97706] hover:bg-[#fcd34d]"
                                   : "bg-[#EBE3FF] text-[#6322FE]"
                             )}
@@ -208,7 +252,7 @@ const WarehouseItemsTable = ({
                                 ? "Срочно переместить"
                                 : "Переместить в магазин"}
                           </Button>
-                          {item.urgency_level === UrgencyLevel.CRITICAL && (
+                          {urgency === "critical" && (
                             <Zap className="h-4 w-4 text-[#ef4444]" />
                           )}
                         </div>
