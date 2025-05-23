@@ -10,6 +10,15 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useUserStore } from '@/store/user-store';
 
+const colors = {
+  purple: '#6322FE',
+  purpleHover: '#5719d8',
+  textDark: '#1f2937',
+  textMuted: '#4b5563',
+  white: '#ffffff',
+  border: '#e5e7eb',
+};
+
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,17 +82,17 @@ export default function RegisterPage() {
   
   return (
     <div className="w-full max-w-md mx-auto">
-      <Card className="shadow-md border-[#e5e7eb] bg-[#ffffff]">
+      <Card style={{borderColor: colors.border, backgroundColor: colors.white}} className="shadow-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center text-[#1f2937]">Создание аккаунта</CardTitle>
-          <CardDescription className="text-center text-[#4b5563]">
+          <CardTitle className="text-2xl font-bold text-center text-gray-900">Создание аккаунта</CardTitle>
+          <CardDescription className="text-center text-gray-600">
             Заполните форму для создания нового аккаунта
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[#374151]">Электронная почта</Label>
+              <Label htmlFor="email" className="text-gray-700">Электронная почта</Label>
               <Input
                 id="email"
                 type="email"
@@ -91,11 +100,11 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="border-[#d1d5db] focus:border-[#6322FE] focus:ring-[#6322FE] placeholder-[#9ca3af]"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500 placeholder-gray-400"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-[#374151]">Пароль</Label>
+              <Label htmlFor="password" className="text-gray-700">Пароль</Label>
               <Input
                 id="password"
                 type="password"
@@ -103,12 +112,12 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="border-[#d1d5db] focus:border-[#6322FE] focus:ring-[#6322FE] placeholder-[#9ca3af]"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500 placeholder-gray-400"
               />
-              <p className="text-xs text-[#6b7280]">Минимум 8 символов</p>
+              <p className="text-xs text-gray-500">Минимум 8 символов</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-[#374151]">Подтверждение пароля</Label>
+              <Label htmlFor="confirmPassword" className="text-gray-700">Подтверждение пароля</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -116,23 +125,25 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="border-[#d1d5db] focus:border-[#6322FE] focus:ring-[#6322FE] placeholder-[#9ca3af]"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500 placeholder-gray-400"
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className={`w-full text-[#ffffff] hover:opacity-90 transition-opacity ${isLoading ? 'bg-[#5719d8]' : 'bg-[#6322FE]'}`}
+              style={{backgroundColor: isLoading ? colors.purpleHover : colors.purple}}
+              className="w-full text-white hover:opacity-90 transition-opacity"
               disabled={isLoading}
             >
               {isLoading ? 'Создание аккаунта...' : 'Создать аккаунт'}
             </Button>
-            <div className="text-center text-sm text-[#4b5563]">
+            <div className="text-center text-sm text-gray-600">
               Уже есть аккаунт?{' '}
               <Link
                 href="/auth/login"
-                className="font-medium hover:underline text-[#6322FE]"
+                style={{color: colors.purple}}
+                className="font-medium hover:underline"
               >
                 Войти
               </Link>

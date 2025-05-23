@@ -16,7 +16,18 @@ import WarehouseItemsTable from "@/components/warehouse/items-table";
 import ExpiringItemsTable from "@/components/warehouse/expiring-items-table";
 import UploadFileButton from "@/components/dashboard/upload-file-button";
 import MoveToStoreButton from "@/components/warehouse/move-to-store-button";
-import { Loader } from "lucide-react";
+import { Loader } from "lucide-react"; // Импортируем компонент загрузки
+
+const colors = {
+  purple: "#6322FE",
+  purpleLight: "#EBE3FF",
+  textDark: "#1f2937",
+  textMuted: "#4b5563",
+  amber: "#f59e0b",
+  amberLight: "#FEF3C7",
+  white: "#ffffff",
+  border: "#e5e7eb",
+};
 
 export default function WarehousePage() {
   const router = useRouter();
@@ -66,20 +77,20 @@ export default function WarehousePage() {
         <div className="space-y-6 relative">
           {/* Индикатор загрузки */}
           {(isInitialLoading || isLoadingItems || isLoadingExpiringItems) && (
-            <div className="fixed inset-0 flex items-center justify-center bg-[#ffffff]/70 z-50">
-              <div className="bg-[#ffffff] p-4 rounded-lg shadow-lg flex flex-col items-center">
-                <Loader className="h-10 w-10 text-[#6322FE] animate-spin mb-2" />
-                <p className="text-sm text-[#4b5563]">Загрузка данных...</p>
+            <div className="fixed inset-0 flex items-center justify-center bg-white/70 z-50">
+              <div className="bg-white p-4 rounded-lg shadow-lg flex flex-col items-center">
+                <Loader className="h-10 w-10 text-brand-purple animate-spin mb-2" />
+                <p className="text-sm text-gray-600">Загрузка данных...</p>
               </div>
             </div>
           )}
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight text-[#1f2937]">
+              <h2 className="text-2xl font-bold tracking-tight text-gray-900">
                 Управление складом
               </h2>
-              <p className="text-[#4b5563]">
+              <p className="text-gray-600">
                 Управляйте запасами на складе и перемещайте товары в магазин
               </p>
             </div>
@@ -90,37 +101,50 @@ export default function WarehousePage() {
           </div>
 
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-[#f3f4f6]">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-100">
               <TabsTrigger
                 value="all"
-                className="data-[state=active]:bg-[#ffffff] data-[state=active]:text-[#1f2937]"
+                className="data-[state=active]:bg-white data-[state=active]:text-gray-900"
               >
                 Все товары
                 <span
-                  className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#EBE3FF] text-[#6322FE]"
+                  className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                  style={{
+                    backgroundColor: colors.purpleLight,
+                    color: colors.purple,
+                  }}
                 >
                   {items.length}
                 </span>
               </TabsTrigger>
               <TabsTrigger
                 value="expiring"
-                className="data-[state=active]:bg-[#ffffff] data-[state=active]:text-[#1f2937]"
+                className="data-[state=active]:bg-white data-[state=active]:text-gray-900"
               >
                 Скоро истекают
                 <span
-                  className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#FEF3C7] text-[#f59e0b]"
+                  className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                  style={{
+                    backgroundColor: colors.amberLight,
+                    color: colors.amber,
+                  }}
                 >
                   {expiringItems.length}
                 </span>
               </TabsTrigger>
             </TabsList>
             <TabsContent value="all" className="space-y-4 mt-4">
-              <Card className="border-[#e5e7eb] bg-[#ffffff]">
+              <Card
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.white,
+                }}
+              >
                 <CardHeader>
-                  <CardTitle className="text-[#1f2937]">
+                  <CardTitle className="text-gray-900">
                     Товары на складе
                   </CardTitle>
-                  <CardDescription className="text-[#4b5563]">
+                  <CardDescription className="text-gray-600">
                     Все товары, которые в настоящее время хранятся на вашем
                     складе
                   </CardDescription>
@@ -134,12 +158,17 @@ export default function WarehousePage() {
               </Card>
             </TabsContent>
             <TabsContent value="expiring" className="space-y-4 mt-4">
-              <Card className="border-[#e5e7eb] bg-[#ffffff]">
+              <Card
+                style={{
+                  borderColor: colors.border,
+                  backgroundColor: colors.white,
+                }}
+              >
                 <CardHeader>
-                  <CardTitle className="text-[#1f2937]">
+                  <CardTitle className="text-gray-900">
                     Товары с истекающим сроком
                   </CardTitle>
-                  <CardDescription className="text-[#4b5563]">
+                  <CardDescription className="text-gray-600">
                     Товары на складе, срок годности которых истекает в течение
                     ближайших 7 дней
                   </CardDescription>

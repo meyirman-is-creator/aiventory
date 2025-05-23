@@ -17,7 +17,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { Upload, Loader2 } from "lucide-react";
 import { useWarehouseStore } from "@/store/warehouse-store";
 import { useDashboardStore } from "@/store/dashboard-store";
-
 const UploadFileButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -86,21 +85,21 @@ const UploadFileButton = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]">
-          <Upload className="mr-2 h-4 w-4" />
+        <Button className="bg-brand-purple hover:bg-brand-purple/90 ">
+          <Upload className="mr-2 h-4 w-4 " />
           Загрузить инвентарь
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-[#ffffff]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[#1f2937]">Загрузка инвентаря</DialogTitle>
-          <DialogDescription className="text-[#4b5563]">
+          <DialogTitle className="text-black">Загрузка инвентаря</DialogTitle>
+          <DialogDescription>
             Загрузите файл CSV или Excel, содержащий данные вашего инвентаря.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="file" className="text-[#1f2937]">
+            <Label htmlFor="file" className="text-black">
               Файл
             </Label>
             <Input
@@ -108,17 +107,17 @@ const UploadFileButton = () => {
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
-              className="text-[#4b5563] border-[#d1d5db]"
+              className="text-gray-500"
               accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
             />
-            <p className="text-xs text-[#6b7280]">
+            <p className="text-xs text-muted-foreground">
               Принимаются файлы CSV и Excel
             </p>
           </div>
 
           {file && (
-            <div className="text-sm text-[#4b5563]">
-              Выбранный файл: <span className="font-medium">{file.name}</span>{" "}
+            <div className="text-sm text-gray-500">
+              Выбранный файл: <span className="font-medium ">{file.name}</span>{" "}
               ({(file.size / 1024).toFixed(2)} КБ)
             </div>
           )}
@@ -129,13 +128,13 @@ const UploadFileButton = () => {
             variant="outline"
             onClick={() => setIsOpen(false)}
             disabled={isUploading}
-            className="border-[#9ca3af] text-[#4b5563]"
+            className="border-gray-400 text-gray-400"
           >
             Отмена
           </Button>
           <Button
             type="button"
-            className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
+            className="bg-brand-purple hover:bg-brand-purple/90"
             onClick={handleUpload}
             disabled={!file || isUploading}
           >

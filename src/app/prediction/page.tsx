@@ -1,5 +1,4 @@
 // src/app/prediction/page.tsx
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -13,12 +12,11 @@ import {
 } from "@/components/ui/card";
 import { useUserStore } from "@/store/user-store";
 import { usePredictionStore } from "@/store/prediction-store";
-import { useStoreItemsStore } from "@/store/store-items-store";
 import SalesAnalytics from "@/components/prediction/sales-analytics";
 import ProductSelector from "@/components/prediction/product-selector";
 import ForecastChart from "@/components/prediction/forecast-chart";
 import ForecastSettings from "@/components/prediction/forecast-settings";
-import { TimeFrame, ProductCategory } from "@/lib/types";
+import { TimeFrame, ProductCategory, ProductResponse } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -28,13 +26,29 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
+const colors = {
+  purple: "#6322FE",
+  purpleLight: "#EBE3FF",
+  textDark: "#1f2937",
+  textMuted: "#4b5563",
+  white: "#ffffff",
+  border: "#e5e7eb",
+  bgLight: "#f9fafb",
+};
+
 export default function PredictionPage() {
   const router = useRouter();
   const { isAuthenticated, checkAuth } = useUserStore();
   const {
     fetchStats,
+    fetchProducts,
+    fetchCategories,
     stats,
+    products,
+    categories,
     isLoadingStats,
+    isLoadingProducts,
+    isLoadingCategories,
     fetchPredictions,
     selectedProductSid,
     setSelectedProduct,
@@ -45,10 +59,10 @@ export default function PredictionPage() {
     setSelectedTimeframe,
     setSelectedPeriods,
   } = usePredictionStore();
-  const { fetchActiveItems, activeItems } = useStoreItemsStore();
+
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const isLoggedIn = checkAuth();
@@ -62,57 +76,28 @@ export default function PredictionPage() {
       setIsInitialLoading(true);
       try {
         // Load data in parallel
-        await Promise.all([fetchStats(), fetchActiveItems()]);
+        await Promise.all([fetchStats(), fetchCategories()]);
       } finally {
         setIsInitialLoading(false);
       }
     };
 
     loadInitialData();
-  }, [checkAuth, fetchStats, fetchActiveItems, router]);
+  }, [checkAuth, fetchStats, fetchCategories, router]);
 
-  // Extract unique categories from active items
+  // Fetch products based on selected category
   useEffect(() => {
-    if (activeItems.length > 0) {
-      const uniqueCategories = Array.from(
-        new Set(
-          activeItems
-            .filter((item) => item.product.category)
-            .map((item) => ({
-              sid: item.product.category?.sid || "",
-              name: item.product.category?.name || "",
-            }))
-        )
-      ).filter((category) => category.sid && category.name);
-
-      setCategories(uniqueCategories as ProductCategory[]);
+    if (!isInitialLoading) {
+      fetchProducts(selectedCategory || undefined, searchTerm || undefined);
     }
-  }, [activeItems]);
+  }, [fetchProducts, selectedCategory, searchTerm, isInitialLoading]);
 
   // Automatically select first product after data loading
   useEffect(() => {
-    if (!selectedProductSid && !isInitialLoading && activeItems.length > 0) {
-      // If we have a category filter, select the first product from that category
-      if (selectedCategory) {
-        const filteredItems = activeItems.filter(
-          (item) => item.product.category?.sid === selectedCategory
-        );
-
-        if (filteredItems.length > 0) {
-          setSelectedProduct(filteredItems[0].product.sid);
-        }
-      } else {
-        // Otherwise select the first product
-        setSelectedProduct(activeItems[0].product.sid);
-      }
+    if (!selectedProductSid && !isInitialLoading && products.length > 0) {
+      setSelectedProduct(products[0].sid);
     }
-  }, [
-    selectedProductSid,
-    activeItems,
-    isInitialLoading,
-    setSelectedProduct,
-    selectedCategory,
-  ]);
+  }, [selectedProductSid, products, isInitialLoading, setSelectedProduct]);
 
   // Fetch predictions when product, timeframe, or periods change
   useEffect(() => {
@@ -138,14 +123,12 @@ export default function PredictionPage() {
 
   const handleCategoryChange = (categorySid: string) => {
     setSelectedCategory(categorySid === "all" ? null : categorySid);
-
-    // Reset selected product when category changes
     setSelectedProduct(null);
   };
 
   const getProductName = (productSid: string): string => {
-    const item = activeItems.find((item) => item.product.sid === productSid);
-    return item ? item.product.name : "Выбранный продукт";
+    const product = products.find((p) => p.sid === productSid);
+    return product ? product.name : "Выбранный продукт";
   };
 
   const getCurrentPredictions = (): any[] => {
@@ -153,22 +136,28 @@ export default function PredictionPage() {
     return predictions[selectedProductSid] || [];
   };
 
+  const isLoading =
+    isInitialLoading || isLoadingCategories || isLoadingProducts;
+
   return (
     <div className="space-y-6 px-2 sm:px-0">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-[#1f2937]">
+        <h2 className="text-2xl font-bold tracking-tight text-gray-900">
           Прогнозирование и аналитика
         </h2>
-        <p className="text-[#4b5563]">
+        <p className="text-gray-600">
           Анализируйте данные о продажах и прогнозируйте будущий спрос на товары
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="col-span-full lg:col-span-2 border-[#e5e7eb] bg-[#ffffff]">
+        <Card
+          className="col-span-full lg:col-span-2"
+          style={{ borderColor: colors.border, backgroundColor: colors.white }}
+        >
           <CardHeader>
-            <CardTitle className="text-[#1f2937]">Анализ продаж</CardTitle>
-            <CardDescription className="text-[#4b5563]">
+            <CardTitle className="text-gray-900">Анализ продаж</CardTitle>
+            <CardDescription className="text-gray-600">
               Исторические данные о продажах за последние 30 дней
             </CardDescription>
           </CardHeader>
@@ -180,29 +169,26 @@ export default function PredictionPage() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-full lg:col-span-1 border-[#e5e7eb] bg-[#ffffff]">
+        <Card
+          className="col-span-full lg:col-span-1"
+          style={{ borderColor: colors.border, backgroundColor: colors.white }}
+        >
           <CardHeader>
             <div className="flex flex-col space-y-2">
-              <CardTitle className="text-[#1f2937]">Выбор продукта</CardTitle>
-              <CardDescription className="text-[#4b5563]">
+              <CardTitle className="text-gray-900">Выбор продукта</CardTitle>
+              <CardDescription className="text-gray-600">
                 Выберите продукт для просмотра прогноза
               </CardDescription>
 
               <div className="pt-2">
-                <Label
-                  htmlFor="category-filter"
-                  className="mb-1 block text-sm text-[#4b5563]"
-                >
+                <Label htmlFor="category-filter" className="mb-1 block text-sm">
                   Категория
                 </Label>
                 <Select
                   value={selectedCategory || "all"}
                   onValueChange={handleCategoryChange}
                 >
-                  <SelectTrigger
-                    id="category-filter"
-                    className="w-full border-[#d1d5db]"
-                  >
+                  <SelectTrigger id="category-filter" className="w-full">
                     <SelectValue placeholder="Все категории" />
                   </SelectTrigger>
                   <SelectContent>
@@ -219,17 +205,24 @@ export default function PredictionPage() {
           </CardHeader>
           <CardContent>
             <ProductSelector
-              selectedCategory={selectedCategory}
-              isLoading={isInitialLoading}
+              products={products}
+              selectedProductSid={selectedProductSid}
+              setSelectedProduct={setSelectedProduct}
+              isLoading={isLoading}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
             />
           </CardContent>
         </Card>
 
-        <Card className="col-span-full border-[#e5e7eb] bg-[#ffffff]">
+        <Card
+          className="col-span-full"
+          style={{ borderColor: colors.border, backgroundColor: colors.white }}
+        >
           <CardHeader className="flex flex-row items-start justify-between">
             <div>
-              <CardTitle className="text-[#1f2937]">Прогноз спроса</CardTitle>
-              <CardDescription className="text-[#4b5563]">
+              <CardTitle className="text-gray-900">Прогноз спроса</CardTitle>
+              <CardDescription className="text-gray-600">
                 Прогнозируемый спрос на выбранный продукт на последующие периоды
               </CardDescription>
             </div>

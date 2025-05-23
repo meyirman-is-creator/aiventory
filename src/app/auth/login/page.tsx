@@ -10,6 +10,15 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useUserStore } from '@/store/user-store';
 
+const colors = {
+  purple: '#6322FE',
+  purpleHover: '#5719d8',
+  textDark: '#1f2937',
+  textMuted: '#4b5563',
+  white: '#ffffff',
+  border: '#e5e7eb',
+};
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,17 +56,17 @@ export default function LoginPage() {
   
   return (
     <div className="w-full max-w-md mx-auto">
-      <Card className="shadow-md border-[#e5e7eb] bg-[#ffffff]">
+      <Card style={{borderColor: colors.border, backgroundColor: colors.white}} className="shadow-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center text-[#1f2937]">Вход в систему</CardTitle>
-          <CardDescription className="text-center text-[#4b5563]">
+          <CardTitle className="text-2xl font-bold text-center text-gray-900">Вход в систему</CardTitle>
+          <CardDescription className="text-center text-gray-600">
             Введите свои данные для доступа к аккаунту
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-[#374151]">Электронная почта</Label>
+              <Label htmlFor="email" className="text-gray-700">Электронная почта</Label>
               <Input
                 id="email"
                 type="email"
@@ -65,12 +74,12 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="border-[#d1d5db] focus:border-[#6322FE] focus:ring-[#6322FE] placeholder-[#9ca3af]"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500 placeholder-gray-400"
               />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-[#374151]">Пароль</Label>
+                <Label htmlFor="password" className="text-gray-700">Пароль</Label>
               </div>
               <Input
                 id="password"
@@ -79,23 +88,25 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="border-[#d1d5db] focus:border-[#6322FE] focus:ring-[#6322FE] placeholder-[#9ca3af]"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500 placeholder-gray-400"
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className={`w-full text-[#ffffff] hover:opacity-90 transition-opacity ${isLoading ? 'bg-[#5719d8]' : 'bg-[#6322FE]'}`}
+              style={{backgroundColor: isLoading ? colors.purpleHover : colors.purple}}
+              className="w-full text-white hover:opacity-90 transition-opacity"
               disabled={isLoading}
             >
               {isLoading ? 'Выполняется вход...' : 'Войти'}
             </Button>
-            <div className="text-center text-sm text-[#4b5563]">
+            <div className="text-center text-sm text-gray-600">
               Нет аккаунта?{' '}
               <Link
                 href="/auth/register"
-                className="font-medium hover:underline text-[#6322FE]"
+                style={{color: colors.purple}}
+                className="font-medium hover:underline"
               >
                 Зарегистрироваться
               </Link>

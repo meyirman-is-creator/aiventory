@@ -20,19 +20,19 @@ const MoveToStoreButton = () => {
       <Button
         variant="default"
         onClick={() => setIsOpen(true)}
-        className="bg-[#26E989] hover:bg-[#1dce7a] text-[#ffffff]"
+        className="bg-brand-green hover:bg-brand-green/90 text-white"
       >
         <ExternalLink className="mr-2 h-4 w-4" />
         Переместить по штрих-коду
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-md bg-[#ffffff]">
+        <DialogContent className="sm:max-w-md !bg-white">
           <DialogHeader>
-            <DialogTitle className="text-[#1f2937]">
+            <DialogTitle className="text-black">
               Сканировать штрих-код
             </DialogTitle>
-            <DialogDescription className="text-[#4b5563]">
+            <DialogDescription>
               Сканируйте штрих-код товара, чтобы переместить его со склада в
               магазин
             </DialogDescription>

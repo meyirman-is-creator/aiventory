@@ -114,22 +114,22 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-[#ffffff]">
+      <DialogContent className="sm:max-w-md !bg-white">
         <DialogHeader>
-          <DialogTitle className="text-[#1f2937]">Переместить в магазин</DialogTitle>
-          <DialogDescription className="text-[#4b5563]">
+          <DialogTitle>Переместить в магазин</DialogTitle>
+          <DialogDescription>
             Переместить {item.product.name} со склада в магазин
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label className="text-[#1f2937]">Товар</Label>
-            <div className="text-sm font-medium text-[#1f2937]">{item.product.name}</div>
+            <Label>Товар</Label>
+            <div className="text-sm font-medium">{item.product.name}</div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="quantity" className="text-[#1f2937]">
+            <Label htmlFor="quantity">
               Количество (Доступно: {item.quantity})
             </Label>
             <div className="flex items-center">
@@ -137,7 +137,7 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 rounded-r-none border-[#d1d5db]"
+                className="h-8 w-8 rounded-r-none"
                 onClick={decrementQuantity}
                 disabled={quantity <= 1}
               >
@@ -150,13 +150,13 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 onChange={handleQuantityChange}
                 min={1}
                 max={item.quantity}
-                className="h-8 rounded-none text-center border-y border-[#d1d5db] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="h-8 rounded-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 rounded-l-none border-[#d1d5db]"
+                className="h-8 w-8 rounded-l-none"
                 onClick={incrementQuantity}
                 disabled={quantity >= item.quantity}
               >
@@ -166,9 +166,9 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="price" className="text-[#1f2937]">Цена за единицу</Label>
+            <Label htmlFor="price">Цена за единицу</Label>
             <div className="flex items-center">
-              <span className="text-sm mr-2 text-[#4b5563]">₸</span>
+              <span className="text-sm mr-2">₸</span>
               <Input
                 id="price"
                 type="number"
@@ -176,21 +176,21 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 onChange={handlePriceChange}
                 min={0}
                 step={0.01}
-                className="border-[#d1d5db] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
             {item.suggested_price !== undefined && item.suggested_price > 0 && (
-              <p className="text-xs text-[#16a34a] font-medium">
+              <p className="text-xs text-green-600 font-medium">
                 Рекомендуемая цена: ₸{item.suggested_price.toFixed(2)}
               </p>
             )}
             {!item.suggested_price && item.product.default_price && (
-              <p className="text-xs text-[#6b7280]">
+              <p className="text-xs text-muted-foreground">
                 Стандартная цена: ₸{item.product.default_price.toFixed(2)}
               </p>
             )}
             {item.discount_suggestion && (
-              <p className="text-xs text-[#d97706] font-medium">
+              <p className="text-xs text-amber-600 font-medium">
                 Рекомендуемая скидка:{" "}
                 {item.discount_suggestion.discount_percent}% (₸
                 {item.discount_suggestion.discounted_price.toFixed(2)})
@@ -205,13 +205,12 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
-            className="border-[#d1d5db] text-[#4b5563]"
           >
             Отмена
           </Button>
           <Button
             type="button"
-            className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
+            className="bg-brand-purple hover:bg-brand-purple/90"
             onClick={handleSubmit}
             disabled={isLoading}
           >
