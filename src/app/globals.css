@@ -83,3 +83,15 @@ body {
   padding: 0;
   margin: 0;
 }
+@keyframes scan {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.animate-scan {
+  animation: scan 2s ease-in-out infinite;
+}

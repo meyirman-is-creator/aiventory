@@ -15,7 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useWarehouseStore } from "@/store/warehouse-store";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Package, AlertTriangle, Tag } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { formatDate } from "@/lib/utils";
 
 interface ApiErrorResponse {
   response?: {
@@ -35,7 +39,7 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState(item.product.default_price || 0);
   const [isLoading, setIsLoading] = useState(false);
-  const { moveToStore } = useWarehouseStore();
+  const { moveToStore, fetchItems } = useWarehouseStore();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -101,6 +105,7 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
 
     try {
       await moveToStore(item.sid, quantity, price);
+      await fetchItems();
       toast({
         title: "Товар перемещен в магазин",
         description: `Успешно перемещено ${quantity} ${item.product.name} в магазин`,
@@ -120,25 +125,110 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
     }
   };
 
+  const getDaysUntilExpiry = () => {
+    if (!item.expire_date) return null;
+    const today = new Date();
+    const expireDate = new Date(item.expire_date);
+    return Math.ceil((expireDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const daysUntilExpiry = getDaysUntilExpiry();
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-[#ffffff]">
+      <DialogContent className="sm:max-w-lg bg-[#ffffff]">
         <DialogHeader>
           <DialogTitle className="text-[#1f2937]">Переместить в магазин</DialogTitle>
           <DialogDescription className="text-[#6b7280]">
-            Переместить {item.product.name} со склада в магазин
+            Переместить товар со склада в магазин для продажи
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label className="text-[#374151]">Товар</Label>
-            <div className="text-sm font-medium text-[#1f2937]">{item.product.name}</div>
-          </div>
+          <Card className="border-[#e5e7eb]">
+            <CardContent className="pt-4 space-y-3">
+              <div className="flex items-start">
+                <Package className="h-5 w-5 text-[#6322FE] mr-3 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-[#1f2937]">{item.product.name}</h3>
+                  <p className="text-sm text-[#6b7280] mt-1">{item.product.category?.name || "Без категории"}</p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {item.product.barcode && (
+                  <div>
+                    <p className="text-[#6b7280]">Штрих-код</p>
+                    <p className="font-medium text-[#1f2937]">{item.product.barcode}</p>
+                  </div>
+                )}
+                {item.batch_code && (
+                  <div>
+                    <p className="text-[#6b7280]">Код партии</p>
+                    <p className="font-medium text-[#1f2937]">{item.batch_code}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[#6b7280]">Доступно</p>
+                  <p className="font-medium text-[#1f2937]">{item.quantity} {item.product.default_unit || "шт"}</p>
+                </div>
+                <div>
+                  <p className="text-[#6b7280]">Дата получения</p>
+                  <p className="font-medium text-[#1f2937]">{formatDate(item.received_at)}</p>
+                </div>
+                {item.expire_date && (
+                  <div>
+                    <p className="text-[#6b7280]">Срок годности</p>
+                    <p className="font-medium text-[#1f2937]">{formatDate(item.expire_date)}</p>
+                  </div>
+                )}
+                {daysUntilExpiry !== null && (
+                  <div>
+                    <p className="text-[#6b7280]">До истечения</p>
+                    <p className={`font-medium ${
+                      daysUntilExpiry <= 3 ? "text-[#ef4444]" : 
+                      daysUntilExpiry <= 7 ? "text-[#f59e0b]" : "text-[#1f2937]"
+                    }`}>
+                      {daysUntilExpiry} дней
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {item.warehouse_action && (
+                <>
+                  <Separator />
+                  <div className="bg-[#fef3c7] border border-[#fcd34d] rounded-md p-3">
+                    <div className="flex items-start">
+                      <AlertTriangle className="h-4 w-4 text-[#f59e0b] mr-2 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-[#92400e]">
+                          {item.warehouse_action.reason}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          {item.warehouse_action.urgency === "critical" && (
+                            <Badge className="bg-[#ef4444] text-white">Критический</Badge>
+                          )}
+                          {item.warehouse_action.discount_suggestion && (
+                            <Badge className="bg-[#d97706] text-white">
+                              <Tag className="h-3 w-3 mr-1" />
+                              Скидка {item.warehouse_action.discount_suggestion}%
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
           <div className="space-y-2">
             <Label htmlFor="quantity" className="text-[#374151]">
-              Количество (Доступно: {item.quantity})
+              Количество для перемещения
             </Label>
             <div className="flex items-center">
               <Button

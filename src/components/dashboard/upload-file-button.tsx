@@ -22,7 +22,7 @@ const UploadFileButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { uploadFile, isUploading } = useWarehouseStore();
+  const { uploadFile, isUploading, fetchItems, fetchExpiringItems } = useWarehouseStore();
   const { fetchStats } = useDashboardStore();
   const { toast } = useToast();
 
@@ -71,7 +71,11 @@ const UploadFileButton = () => {
         fileInputRef.current.value = "";
       }
 
-      fetchStats();
+      await Promise.all([
+        fetchStats(),
+        fetchItems(),
+        fetchExpiringItems()
+      ]);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Не удалось загрузить файл";
       toast({

@@ -1,5 +1,3 @@
-// src/components/warehouse/barcode-scanner.tsx
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,7 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useWarehouseStore } from "@/store/warehouse-store";
-import { Loader2, CameraOff, Camera, Barcode } from "lucide-react";
+import { warehouseApi } from "@/lib/api";
+import { WarehouseItem } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
+import { Loader2, CameraOff, Camera, Barcode, Package, AlertTriangle, SwitchCamera } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface BarcodeScannerProps {
   onSuccess?: () => void;
@@ -20,43 +24,90 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState(0);
-  const [suggestedPrice, setSuggestedPrice] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const { moveToStoreByBarcode } = useWarehouseStore();
+  const [productInfo, setProductInfo] = useState<WarehouseItem | null>(null);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(false);
+  const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
+  const { moveToStoreByBarcode, fetchItems } = useWarehouseStore();
   const { toast } = useToast();
 
   const { ref } = useZxing({
     onDecodeResult(result) {
       const barcodeValue = result.getText();
-      setScannedBarcode(barcodeValue);
-      setIsScanning(false);
       
-      // Provide feedback that barcode was detected
-      toast({
-        title: "Штрих-код обнаружен",
-        description: `Штрих-код: ${barcodeValue}`,
-      });
-      
-      // Mock fetching product price based on barcode
-      fetchProductDetails(barcodeValue);
+      if (barcodeValue && barcodeValue !== lastScannedCode) {
+        setLastScannedCode(barcodeValue);
+        setScannedBarcode(barcodeValue);
+        setIsScanning(false);
+        
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
+        audio.play().catch(() => {});
+        
+        toast({
+          title: "Штрих-код обнаружен",
+          description: `Штрих-код: ${barcodeValue}`,
+        });
+        
+        fetchProductByBarcode(barcodeValue);
+      }
     },
     paused: !isScanning,
+    constraints: {
+      video: {
+        facingMode: facingMode,
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30, max: 30 }
+      },
+      audio: false
+    },
+    timeBetweenDecodingAttempts: 100
   });
 
-  const fetchProductDetails = (barcode: string) => {
-    // In a real app, you would make an API call to get product details
-    // This is a mock implementation
-    setTimeout(() => {
-      const randomSuggestedPrice = Math.round(Math.random() * 1000 + 300);
-      setSuggestedPrice(randomSuggestedPrice);
-      setPrice(randomSuggestedPrice);
-    }, 500);
+  useEffect(() => {
+    if (!isScanning) {
+      setLastScannedCode(null);
+    }
+  }, [isScanning]);
+
+  const fetchProductByBarcode = async (barcode: string) => {
+    setIsLoadingProduct(true);
+    try {
+      const items = await warehouseApi.getItems();
+      const matchingItem = items.find(item => item.product.barcode === barcode);
+      
+      if (matchingItem) {
+        setProductInfo(matchingItem);
+        setPrice(matchingItem.suggested_price || matchingItem.product.default_price || 0);
+      } else {
+        toast({
+          title: "Товар не найден",
+          description: "Товар с таким штрих-кодом не найден на складе",
+          variant: "destructive",
+        });
+      }
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail
+        : "Не удалось загрузить информацию о товаре";
+      toast({
+        title: "Ошибка",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingProduct(false);
+    }
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
+    const maxQty = productInfo?.quantity || 999;
     if (isNaN(value) || value < 1) {
       setQuantity(1);
+    } else if (value > maxQty) {
+      setQuantity(maxQty);
     } else {
       setQuantity(value);
     }
@@ -72,19 +123,19 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
   };
 
   const handleScanBarcode = async () => {
-    if (!scannedBarcode) {
+    if (!scannedBarcode || !productInfo) {
       toast({
-        title: "Штрих-код не отсканирован",
+        title: "Ошибка",
         description: "Пожалуйста, отсканируйте штрих-код товара",
         variant: "destructive",
       });
       return;
     }
 
-    if (quantity < 1) {
+    if (quantity < 1 || quantity > productInfo.quantity) {
       toast({
         title: "Неверное количество",
-        description: "Пожалуйста, введите количество больше 0",
+        description: `Пожалуйста, введите количество от 1 до ${productInfo.quantity}`,
         variant: "destructive",
       });
       return;
@@ -103,6 +154,7 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
 
     try {
       await moveToStoreByBarcode(scannedBarcode, quantity, price);
+      await fetchItems();
       toast({
         title: "Успех",
         description: "Товар успешно перемещен в магазин",
@@ -110,12 +162,13 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
       if (onSuccess) {
         onSuccess();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail
+        : "Не удалось переместить товар в магазин";
       toast({
         title: "Ошибка",
-        description:
-          error.response?.data?.detail ||
-          "Не удалось переместить товар в магазин",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -127,61 +180,185 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
     setIsScanning(!isScanning);
     if (!isScanning) {
       setScannedBarcode(null);
+      setProductInfo(null);
+      setQuantity(1);
+      setPrice(0);
     }
   };
+
+  const switchCamera = () => {
+    setFacingMode(prev => prev === "environment" ? "user" : "environment");
+    setIsScanning(false);
+    setTimeout(() => {
+      setIsScanning(true);
+    }, 100);
+  };
+
+  const getDaysUntilExpiry = () => {
+    if (!productInfo?.expire_date) return null;
+    const today = new Date();
+    const expireDate = new Date(productInfo.expire_date);
+    return Math.ceil((expireDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  const videoStyle = facingMode === "user" ? { transform: 'scaleX(-1)' } : {};
 
   return (
     <div className="space-y-4">
       {isScanning ? (
         <div className="space-y-4">
-          <div className="relative rounded-lg overflow-hidden border border-gray-300 aspect-video">
-            <video ref={ref} className="w-full h-full object-cover" />
+          <div className="relative rounded-lg overflow-hidden border-2 border-[#6322FE] aspect-video bg-black">
+            <video ref={ref} className="w-full h-full object-cover" style={videoStyle} />
             <div className="absolute inset-0 pointer-events-none">
-              <div className="relative w-full h-full">
-                <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-1/4 border-2 border-brand-purple rounded-lg"></div>
-                <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-3/4 h-1/4 border border-white/50 rounded-lg animate-pulse"></div>
+              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                  <mask id="scanMask">
+                    <rect x="0" y="0" width="100" height="100" fill="white" />
+                    <rect x="20" y="40" width="60" height="20" fill="black" rx="2" />
+                  </mask>
+                </defs>
+                <rect x="0" y="0" width="100" height="100" fill="black" fillOpacity="0.6" mask="url(#scanMask)" />
+              </svg>
+              
+              <div className="absolute left-[20%] top-[40%] w-[60%] h-[20%]">
+                <div className="absolute inset-0 border-2 border-[#6322FE] rounded-lg"></div>
+                <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-[#6322FE] rounded-tl-lg"></div>
+                <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-[#6322FE] rounded-tr-lg"></div>
+                <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-[#6322FE] rounded-bl-lg"></div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-[#6322FE] rounded-br-lg"></div>
+                
+                <div className="absolute inset-0 overflow-hidden rounded-lg">
+                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-b from-[#6322FE] to-transparent animate-pulse"></div>
+                  <div className="absolute inset-x-0 top-0 h-0.5 bg-[#6322FE] animate-scan"></div>
+                </div>
+              </div>
+              
+              <div className="absolute top-4 right-4">
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  onClick={switchCamera}
+                  className="bg-black/50 backdrop-blur-sm border-white/20 text-white hover:bg-black/70"
+                >
+                  <SwitchCamera className="h-5 w-5" />
+                </Button>
+              </div>
+              
+              <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+                <div className="bg-black/80 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-full border border-white/20">
+                  Поместите штрих-код в рамку
+                </div>
+              </div>
+
+              <div className="absolute top-4 left-4">
+                <div className="bg-black/50 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-white/20">
+                  {facingMode === "environment" ? "Задняя камера" : "Передняя камера"}
+                </div>
               </div>
             </div>
           </div>
+          
           <div className="flex justify-center">
             <Button
               type="button"
               onClick={toggleScanner}
-              className="bg-gray-200 text-gray-800 hover:bg-gray-300"
+              variant="outline"
+              className="border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
             >
               <CameraOff className="mr-2 h-4 w-4" />
               Остановить сканирование
             </Button>
           </div>
         </div>
-      ) : scannedBarcode ? (
+      ) : productInfo ? (
         <div className="space-y-4">
-          <div className="p-4 border rounded-lg bg-green-50 border-green-200">
-            <div className="flex items-center space-x-2">
-              <Barcode className="h-5 w-5 text-green-600" />
-              <div>
-                <h3 className="font-medium text-green-800">Штрих-код отсканирован</h3>
-                <p className="text-sm text-green-600">{scannedBarcode}</p>
+          <Card className="border-[#10b981] bg-[#d1fae5]/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center text-[#065f46]">
+                <Package className="h-5 w-5 mr-2" />
+                Информация о товаре
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-[#6b7280]">Название</p>
+                  <p className="font-medium text-[#1f2937]">{productInfo.product.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-[#6b7280]">Категория</p>
+                  <p className="font-medium text-[#1f2937]">{productInfo.product.category?.name || "Н/Д"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-[#6b7280]">Штрих-код</p>
+                  <p className="font-medium text-[#1f2937] font-mono">{productInfo.product.barcode || scannedBarcode}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-[#6b7280]">Доступно на складе</p>
+                  <p className="font-medium text-[#1f2937]">{productInfo.quantity} {productInfo.product.default_unit || "шт"}</p>
+                </div>
+                {productInfo.batch_code && (
+                  <div>
+                    <p className="text-sm text-[#6b7280]">Код партии</p>
+                    <p className="font-medium text-[#1f2937]">{productInfo.batch_code}</p>
+                  </div>
+                )}
+                {productInfo.expire_date && (
+                  <div>
+                    <p className="text-sm text-[#6b7280]">Срок годности</p>
+                    <p className="font-medium text-[#1f2937]">{formatDate(productInfo.expire_date)}</p>
+                    {getDaysUntilExpiry() !== null && getDaysUntilExpiry()! <= 7 && (
+                      <p className="text-xs text-[#ef4444] font-medium">
+                        Осталось {getDaysUntilExpiry()} дней
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
-          </div>
 
-          <div className="space-y-4 py-2">
+              {productInfo.warehouse_action && (
+                <>
+                  <Separator />
+                  <div className="bg-[#fef3c7] border border-[#fcd34d] rounded-md p-3">
+                    <div className="flex items-start">
+                      <AlertTriangle className="h-4 w-4 text-[#f59e0b] mr-2 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-[#92400e]">
+                          {productInfo.warehouse_action.reason}
+                        </p>
+                        {productInfo.warehouse_action.urgency === "critical" && (
+                          <Badge className="mt-2 bg-[#ef4444] text-white">
+                            Критический уровень
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="quantity">Количество</Label>
+              <Label htmlFor="quantity" className="text-[#374151]">Количество для перемещения</Label>
               <Input
                 id="quantity"
                 type="number"
                 value={quantity}
                 onChange={handleQuantityChange}
                 min={1}
+                max={productInfo.quantity}
+                className="border-[#e5e7eb] text-[#1f2937]"
               />
+              <p className="text-xs text-[#6b7280]">Максимум: {productInfo.quantity} {productInfo.product.default_unit || "шт"}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price">Цена за единицу</Label>
+              <Label htmlFor="price" className="text-[#374151]">Цена за единицу</Label>
               <div className="flex items-center">
-                <span className="text-sm mr-2">₸</span>
+                <span className="text-sm mr-2 text-[#6b7280]">₸</span>
                 <Input
                   id="price"
                   type="number"
@@ -189,11 +366,17 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
                   onChange={handlePriceChange}
                   min={0}
                   step={0.01}
+                  className="border-[#e5e7eb] text-[#1f2937]"
                 />
               </div>
-              {suggestedPrice > 0 && (
-                <p className="text-xs text-green-600 font-medium">
-                  Рекомендуемая цена: ₸{suggestedPrice.toFixed(2)}
+              {productInfo.suggested_price && (
+                <p className="text-xs text-[#16a34a] font-medium">
+                  Рекомендуемая цена: ₸{productInfo.suggested_price.toFixed(2)}
+                </p>
+              )}
+              {productInfo.discount_suggestion && (
+                <p className="text-xs text-[#d97706] font-medium">
+                  Рекомендуемая скидка: {productInfo.discount_suggestion.discount_percent}%
                 </p>
               )}
             </div>
@@ -205,13 +388,14 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
               variant="outline"
               onClick={toggleScanner}
               disabled={isLoading}
+              className="border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
             >
               <Camera className="mr-2 h-4 w-4" />
               Сканировать новый код
             </Button>
             <Button
               type="button"
-              className="bg-brand-purple hover:bg-brand-purple/90"
+              className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
               onClick={handleScanBarcode}
               disabled={isLoading}
             >
@@ -228,20 +412,27 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
         </div>
       ) : (
         <div className="text-center space-y-4 py-2">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center">
-            <Barcode className="h-10 w-10 text-gray-400 mb-4" />
-            <p className="text-sm text-muted-foreground mb-2">
+          <div className="border-2 border-dashed border-[#e5e7eb] rounded-lg p-8 flex flex-col items-center justify-center">
+            <Barcode className="h-10 w-10 text-[#6b7280] mb-4" />
+            <p className="text-sm text-[#6b7280] mb-2">
               Отсканируйте штрих-код товара с помощью камеры
             </p>
             <Button
               type="button"
               onClick={toggleScanner}
-              className="bg-brand-purple hover:bg-brand-purple/90"
+              className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
             >
               <Camera className="mr-2 h-4 w-4" />
               Начать сканирование
             </Button>
           </div>
+        </div>
+      )}
+
+      {isLoadingProduct && (
+        <div className="text-center py-4">
+          <Loader2 className="h-6 w-6 animate-spin mx-auto text-[#6322FE]" />
+          <p className="text-sm text-[#6b7280] mt-2">Загрузка информации о товаре...</p>
         </div>
       )}
     </div>
