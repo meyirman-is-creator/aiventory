@@ -16,10 +16,19 @@ export enum WarehouseItemStatus {
   DISCARDED = "discarded",
 }
 
+export enum UrgencyLevel {
+  NORMAL = "normal",
+  URGENT = "urgent",
+  CRITICAL = "critical",
+}
+
 export interface DiscountSuggestion {
   discount_percent: number;
   discounted_price: number;
   days_until_expiry: number;
+  urgency: string;
+  shelf_life_remaining: number;
+  reason: string;
 }
 
 export interface WarehouseAction {
@@ -27,6 +36,8 @@ export interface WarehouseAction {
   urgency: string;
   discount_suggestion?: number;
   reason: string;
+  days_until_expiry?: number;
+  shelf_life_remaining?: number;
 }
 
 export interface WarehouseItem {
@@ -42,6 +53,7 @@ export interface WarehouseItem {
   suggested_price?: number;
   discount_suggestion?: DiscountSuggestion;
   warehouse_action?: WarehouseAction;
+  urgency_level?: UrgencyLevel;
 }
 
 export enum StoreItemStatus {
@@ -113,6 +125,7 @@ export interface DashboardStats {
   total_revenue_last_30_days: number;
   total_sales_last_30_days: number;
 }
+
 export interface StoreReports {
   period: {
     start_date: string;
@@ -149,6 +162,7 @@ export interface StoreReports {
     total_discount_savings: number;
   };
 }
+
 export interface ProductResponse {
   sid: string;
   name: string;
@@ -169,12 +183,13 @@ export interface ProductCategory {
   sid: string;
   name: string;
 }
+
 export interface PredictionStats {
   dates: string[];
   products: Array<{ product_sid: string; product_name: string }>;
   categories?: Array<{ category_sid: string; category_name: string }>;
-  quantity_data: any[];
-  revenue_data: any[];
-  category_quantity_data?: any[];
-  category_revenue_data?: any[];
+  quantity_data: Record<string, unknown>[];
+  revenue_data: Record<string, unknown>[];
+  category_quantity_data?: Record<string, unknown>[];
+  category_revenue_data?: Record<string, unknown>[];
 }

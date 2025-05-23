@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { WarehouseItem } from "@/lib/types";
+import { WarehouseItem, UrgencyLevel } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   getStatusDisplayName,
   getStatusBadgeColor,
 } from "@/lib/utils";
-import { ExternalLink, AlertTriangle } from "lucide-react";
+import { ExternalLink, AlertTriangle, AlertCircle, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MoveToStoreModal from "@/components/warehouse/move-to-store-modal";
 
@@ -25,6 +25,28 @@ interface WarehouseItemsTableProps {
   items: WarehouseItem[];
   isLoading: boolean;
 }
+
+const getUrgencyIcon = (level?: UrgencyLevel) => {
+  switch (level) {
+    case UrgencyLevel.CRITICAL:
+      return <AlertTriangle className="h-4 w-4 text-[#ef4444]" />;
+    case UrgencyLevel.URGENT:
+      return <AlertCircle className="h-4 w-4 text-[#f59e0b]" />;
+    default:
+      return null;
+  }
+};
+
+const getUrgencyBadgeClass = (level?: UrgencyLevel) => {
+  switch (level) {
+    case UrgencyLevel.CRITICAL:
+      return "bg-[#fee2e2] text-[#dc2626] border-[#fecaca]";
+    case UrgencyLevel.URGENT:
+      return "bg-[#fef3c7] text-[#d97706] border-[#fcd34d]";
+    default:
+      return "bg-[#dcfce7] text-[#16a34a] border-[#bbf7d0]";
+  }
+};
 
 const WarehouseItemsTable = ({
   items,
@@ -76,6 +98,9 @@ const WarehouseItemsTable = ({
                   Статус
                 </TableHead>
                 <TableHead className="font-semibold text-[#1f2937]">
+                  Срочность
+                </TableHead>
+                <TableHead className="font-semibold text-[#1f2937]">
                   Код партии
                 </TableHead>
                 <TableHead className="font-semibold text-[#1f2937]">
@@ -122,6 +147,18 @@ const WarehouseItemsTable = ({
                               : getStatusDisplayName(item.status)}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {getUrgencyIcon(item.urgency_level)}
+                        <Badge className={cn("border", getUrgencyBadgeClass(item.urgency_level))}>
+                          {item.urgency_level === UrgencyLevel.CRITICAL
+                            ? "Критичный"
+                            : item.urgency_level === UrgencyLevel.URGENT
+                              ? "Срочный"
+                              : "Обычный"}
+                        </Badge>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-[#374151]">
                       {item.batch_code || "Н/Д"}
                     </TableCell>
@@ -150,15 +187,31 @@ const WarehouseItemsTable = ({
                     </TableCell>
                     <TableCell>
                       {item.status === "in_stock" && item.quantity > 0 ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-[#EBE3FF] text-[#6322FE] border-[#6322FE]/20 hover:bg-[#6322FE]/20"
-                          onClick={() => handleMoveToStore(item)}
-                        >
-                          <ExternalLink size={16} className="mr-1" />
-                          Переместить в магазин
-                        </Button>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className={cn(
+                              "border-[#6322FE]/20 hover:bg-[#6322FE]/20",
+                              item.urgency_level === UrgencyLevel.CRITICAL
+                                ? "bg-[#fee2e2] text-[#dc2626] hover:bg-[#fecaca]"
+                                : item.urgency_level === UrgencyLevel.URGENT
+                                  ? "bg-[#fef3c7] text-[#d97706] hover:bg-[#fcd34d]"
+                                  : "bg-[#EBE3FF] text-[#6322FE]"
+                            )}
+                            onClick={() => handleMoveToStore(item)}
+                          >
+                            <ExternalLink size={16} className="mr-1" />
+                            {item.warehouse_action?.action === "move_to_store_with_discount"
+                              ? "Переместить со скидкой"
+                              : item.warehouse_action?.action === "move_to_store_urgent"
+                                ? "Срочно переместить"
+                                : "Переместить в магазин"}
+                          </Button>
+                          {item.urgency_level === UrgencyLevel.CRITICAL && (
+                            <Zap className="h-4 w-4 text-[#ef4444]" />
+                          )}
+                        </div>
                       ) : (
                         <Button size="sm" variant="outline" disabled className="border-[#e5e7eb] text-[#9ca3af]">
                           {item.status === "moved" ? "Перемещен" : "Недоступен"}
