@@ -12,6 +12,9 @@ import {
   Sale,
   ProductCategory,
   ProductResponse,
+  CartItem,
+  CheckoutResponse,
+  Discount,
 } from "./types";
 
 const API_BASE_URL =
@@ -24,7 +27,6 @@ const api = axios.create({
   },
 });
 
-// Add a request interceptor to add Authorization header
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
@@ -38,7 +40,6 @@ api.interceptors.request.use(
   }
 );
 
-// Add a response interceptor to handle token expiration
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -50,7 +51,6 @@ api.interceptors.response.use(
   }
 );
 
-// Auth endpoints
 export const authApi = {
   login: async (email: string, password: string): Promise<AuthResponse> => {
     const formData = new FormData();
@@ -84,7 +84,6 @@ export const authApi = {
   },
 };
 
-// Dashboard endpoints
 export const dashboardApi = {
   getStats: async (): Promise<DashboardStats> => {
     const warehouseResponse = await api.get<WarehouseItem[]>(
@@ -93,7 +92,6 @@ export const dashboardApi = {
     const storeResponse = await api.get<StoreItem[]>("/store/items");
     const reportsResponse = await api.get<StoreReports>("/store/reports");
 
-    // Extract stats from various responses
     const total_products = [
       ...new Set([
         ...warehouseResponse.data.map((item) => item.product_sid),
@@ -136,7 +134,6 @@ export const dashboardApi = {
   },
 };
 
-// Warehouse endpoints
 export const warehouseApi = {
   getItems: async (expireSoon?: boolean): Promise<WarehouseItem[]> => {
     const params = expireSoon ? { expire_soon: true } : {};
@@ -201,11 +198,41 @@ export const warehouseApi = {
   }
 };
 
-// Store endpoints
 export const storeApi = {
   getItems: async (status?: string): Promise<StoreItem[]> => {
     const params = status ? { status } : {};
     const response = await api.get<StoreItem[]>("/store/items", { params });
+    return response.data;
+  },
+
+  getCartItems: async (): Promise<CartItem[]> => {
+    const response = await api.get<CartItem[]>("/store/cart/items");
+    return response.data;
+  },
+
+  addToCart: async (storeItemSid: string, quantity: number): Promise<CartItem> => {
+    const response = await api.post<CartItem>("/store/cart/add", {
+      store_item_sid: storeItemSid,
+      quantity,
+    });
+    return response.data;
+  },
+
+  removeFromCart: async (cartItemSid: string): Promise<void> => {
+    await api.delete(`/store/cart/remove/${cartItemSid}`);
+  },
+
+  checkoutCart: async (): Promise<CheckoutResponse> => {
+    const response = await api.post<CheckoutResponse>("/store/cart/checkout");
+    return response.data;
+  },
+
+  getSales: async (startDate?: Date, endDate?: Date): Promise<Sale[]> => {
+    const params: Record<string, string> = {};
+    if (startDate) params.start_date = startDate.toISOString();
+    if (endDate) params.end_date = endDate.toISOString();
+
+    const response = await api.get<Sale[]>("/store/sales", { params });
     return response.data;
   },
 
@@ -260,7 +287,6 @@ export const storeApi = {
   },
 };
 
-// Prediction endpoints
 export const predictionApi = {
   getForecast: async (
     productSid: string,

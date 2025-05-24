@@ -83,6 +83,18 @@ export interface StoreItem {
   current_discounts: Discount[];
 }
 
+export interface CartItem {
+  sid: string;
+  store_item_sid: string;
+  quantity: number;
+  price_per_unit: number;
+  added_at: string;
+  user_sid: string;
+  product: ProductResponse;
+  expire_date?: string;
+  total_price: number;
+}
+
 export interface Sale {
   sid: string;
   store_item_sid: string;
@@ -90,6 +102,14 @@ export interface Sale {
   sold_price: number;
   sold_at: string;
   cashier_sid: string;
+  product?: ProductResponse;
+  total_amount?: number;
+}
+
+export interface CheckoutResponse {
+  sales: Sale[];
+  total_amount: number;
+  items_count: number;
 }
 
 export interface Upload {

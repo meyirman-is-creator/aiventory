@@ -21,9 +21,8 @@ import {
 } from "@/lib/utils";
 import { ShoppingCart, PercentIcon, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { removeFromStore } from "@/redux/slices/storeSlice";
+import { removeFromStore, addToCart } from "@/redux/slices/storeSlice";
 import { cn } from "@/lib/utils";
-import SellItemModal from "@/components/store/sell-item-modal";
 import DiscountModal from "@/components/store/discount-form";
 import { AppDispatch } from "@/redux/store";
 
@@ -35,13 +34,23 @@ interface ActiveItemsTableProps {
 const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
   const dispatch = useDispatch<AppDispatch>();
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
-  const [isSellModalOpen, setSellModalOpen] = useState(false);
   const [isDiscountModalOpen, setDiscountModalOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleSellItem = (item: StoreItem) => {
-    setSelectedItem(item);
-    setSellModalOpen(true);
+  const handleAddToCart = async (item: StoreItem) => {
+    try {
+      await dispatch(addToCart({ storeItemSid: item.sid, quantity: 1 })).unwrap();
+      toast({
+        title: "Добавлено в корзину",
+        description: `${item.product.name} добавлен в корзину`,
+      });
+    } catch {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось добавить товар в корзину",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddDiscount = (item: StoreItem) => {
@@ -125,10 +134,10 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                         {getStatusDisplayName(item.status) === "Active"
                           ? "Активен"
                           : getStatusDisplayName(item.status) === "Expired"
-                          ? "Истек"
-                          : getStatusDisplayName(item.status) === "Removed"
-                          ? "Удален"
-                          : getStatusDisplayName(item.status)}
+                            ? "Истек"
+                            : getStatusDisplayName(item.status) === "Removed"
+                              ? "Удален"
+                              : getStatusDisplayName(item.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-[#374151]">
@@ -144,8 +153,8 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                         <span className="text-[#1f2937]">
                           {hasDiscount
                             ? formatCurrency(
-                                item.price * (1 - discountPercentage / 100)
-                              )
+                              item.price * (1 - discountPercentage / 100)
+                            )
                             : formatCurrency(item.price)}
                         </span>
                         {hasDiscount && (
@@ -170,10 +179,10 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
                         <Button
                           size="sm"
                           className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
-                          onClick={() => handleSellItem(item)}
+                          onClick={() => handleAddToCart(item)}
                         >
                           <ShoppingCart size={16} className="mr-1" />
-                          Продать
+                          В корзину
                         </Button>
                         <Button
                           size="sm"
@@ -203,18 +212,11 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
       </div>
 
       {selectedItem && (
-        <>
-          <SellItemModal
-            item={selectedItem}
-            open={isSellModalOpen}
-            onClose={() => setSellModalOpen(false)}
-          />
-          <DiscountModal
-            item={selectedItem}
-            open={isDiscountModalOpen}
-            onClose={() => setDiscountModalOpen(false)}
-          />
-        </>
+        <DiscountModal
+          item={selectedItem}
+          open={isDiscountModalOpen}
+          onClose={() => setDiscountModalOpen(false)}
+        />
       )}
     </>
   );

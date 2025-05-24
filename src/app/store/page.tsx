@@ -15,10 +15,14 @@ import {
   fetchActiveItems,
   fetchExpiredItems,
   fetchReports,
+  fetchCartItems,
+  fetchSalesHistory,
 } from "@/redux/slices/storeSlice";
 import { RootState, AppDispatch } from "@/redux/store";
 import ActiveItemsTable from "@/components/store/active-items-table";
 import ExpiredItemsTable from "@/components/store/expired-items-table";
+import CartItemsTable from "@/components/store/cart-items-table";
+import SalesHistoryTable from "@/components/store/sales-history-table";
 import StoreStats from "@/components/store/store-stats";
 import { useUserStore } from "@/store/user-store";
 
@@ -30,8 +34,12 @@ export default function StorePage() {
   const {
     activeItems,
     expiredItems,
+    cartItems,
+    salesHistory,
     reports,
     isLoadingItems,
+    isLoadingCart,
+    isLoadingSales,
     isLoadingReports,
   } = useSelector((state: RootState) => state.store);
 
@@ -43,6 +51,8 @@ export default function StorePage() {
     } else {
       dispatch(fetchActiveItems());
       dispatch(fetchExpiredItems());
+      dispatch(fetchCartItems());
+      dispatch(fetchSalesHistory({}));
       dispatch(fetchReports());
     }
   }, [checkAuth, dispatch, router]);
@@ -66,7 +76,7 @@ export default function StorePage() {
       <StoreStats reports={reports} isLoading={isLoadingReports} />
 
       <Tabs defaultValue="active" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-[#f3f4f6]">
+        <TabsList className="grid w-full grid-cols-4 bg-[#f3f4f6]">
           <TabsTrigger
             value="active"
             className="data-[state=active]:bg-[#ffffff] data-[state=active]:text-[#1f2937]"
@@ -76,6 +86,17 @@ export default function StorePage() {
               className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#EBE3FF] text-[#6322FE]"
             >
               {activeItems.length}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="cart"
+            className="data-[state=active]:bg-[#ffffff] data-[state=active]:text-[#1f2937]"
+          >
+            Корзина
+            <span
+              className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#dbeafe] text-[#2563eb]"
+            >
+              {cartItems.length}
             </span>
           </TabsTrigger>
           <TabsTrigger
@@ -89,7 +110,19 @@ export default function StorePage() {
               {expiredItems.length}
             </span>
           </TabsTrigger>
+          <TabsTrigger
+            value="sales"
+            className="data-[state=active]:bg-[#ffffff] data-[state=active]:text-[#1f2937]"
+          >
+            Проданные товары
+            <span
+              className="ml-2 inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-[#d1fae5] text-[#065f46]"
+            >
+              {salesHistory.length}
+            </span>
+          </TabsTrigger>
         </TabsList>
+        
         <TabsContent value="active" className="space-y-4 mt-4">
           <Card className="bg-[#ffffff] border-[#e5e7eb]">
             <CardHeader>
@@ -107,6 +140,24 @@ export default function StorePage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="cart" className="space-y-4 mt-4">
+          <Card className="bg-[#ffffff] border-[#e5e7eb]">
+            <CardHeader>
+              <CardTitle className="text-[#1f2937]">Корзина</CardTitle>
+              <CardDescription className="text-[#6b7280]">
+                Товары, добавленные в корзину для продажи
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <CartItemsTable
+                items={cartItems}
+                isLoading={isLoadingCart}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="expired" className="space-y-4 mt-4">
           <Card className="bg-[#ffffff] border-[#e5e7eb]">
             <CardHeader>
@@ -121,6 +172,23 @@ export default function StorePage() {
               <ExpiredItemsTable
                 items={expiredItems}
                 isLoading={isLoadingItems}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sales" className="space-y-4 mt-4">
+          <Card className="bg-[#ffffff] border-[#e5e7eb]">
+            <CardHeader>
+              <CardTitle className="text-[#1f2937]">История продаж</CardTitle>
+              <CardDescription className="text-[#6b7280]">
+                Все проданные товары и детали транзакций
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <SalesHistoryTable
+                sales={salesHistory}
+                isLoading={isLoadingSales}
               />
             </CardContent>
           </Card>
