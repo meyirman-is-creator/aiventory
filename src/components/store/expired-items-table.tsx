@@ -40,7 +40,7 @@ const ExpiredItemsTable = ({ items, isLoading }: ExpiredItemsTableProps) => {
         title: "Товар удален",
         description: `${item.product.name} был удален из магазина.`,
       });
-    } catch (error: any) {
+    } catch {
       toast({
         title: "Ошибка",
         description: "Не удалось удалить товар.",

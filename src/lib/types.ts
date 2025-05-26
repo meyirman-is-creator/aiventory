@@ -97,6 +97,15 @@ export interface StoreItem {
   days_until_expiry?: number;
 }
 
+export interface CartItem {
+  sid: string;
+  product: ProductResponse;
+  quantity: number;
+  price_per_unit: number;
+  total_price: number;
+  expire_date?: string;
+}
+
 export interface RemovedItem extends StoreItem {
   removed_at: string;
   lost_value: number;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +25,7 @@ const colors = {
   border: '#e5e7eb',
 };
 
-export default function VerifyPage() {
+function VerifyPageContent() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -135,7 +135,7 @@ export default function VerifyPage() {
                       {slots.map((slot, index) => (
                         <InputOTPSlot
                           key={index}
-                          {...slot}
+                          index={index}
                           className={`w-12 h-14 text-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500 bg-white ${
                             error ? 'border-red-500' : ''
                           }`}
@@ -181,5 +181,13 @@ export default function VerifyPage() {
         </form>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<div>Загрузка...</div>}>
+      <VerifyPageContent />
+    </Suspense>
   );
 }
