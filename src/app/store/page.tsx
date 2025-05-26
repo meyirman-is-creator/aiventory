@@ -59,7 +59,7 @@ export default function StorePage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
+    <div className="space-y-4 sm:space-y-6 px-2 !space-y-6 !p-4  sm:px-0">
       <div className="flex flex-col space-y-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1f2937]">

@@ -60,7 +60,7 @@ const WarehousePage = () => {
   return (
     <>
       {isClient && (
-        <div className="space-y-4 sm:space-y-6 relative px-2 sm:px-0">
+        <div className="space-y-4 sm:space-y-6 relative space-y-6 !p-4 sm:px-0">
           {(isInitialLoading || isLoadingItems || isLoadingExpiringItems) && (
             <div className="fixed inset-0 flex items-center justify-center bg-white/70 z-50">
               <div className="bg-[#ffffff] p-4 rounded-lg shadow-lg flex flex-col items-center">
