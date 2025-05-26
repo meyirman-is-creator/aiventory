@@ -73,10 +73,16 @@ export default function VerifyPage() {
       sessionStorage.removeItem('verificationEmail');
       
       router.push('/auth/login');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : 'Произошла ошибка при подтверждении';
+      
       toast({
         title: 'Ошибка подтверждения',
-        description: error.response?.data?.detail || 'Произошла ошибка при подтверждении',
+        description: errorMessage,
         variant: 'destructive',
       });
       setIsLoading(false);

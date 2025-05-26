@@ -15,7 +15,7 @@ interface UserState {
   checkAuth: () => boolean;
 }
 
-export const useUserStore = create<UserState>((set, get) => ({
+export const useUserStore = create<UserState>((set) => ({
   user: null,
   isLoading: false,
   error: null,
@@ -36,9 +36,15 @@ export const useUserStore = create<UserState>((set, get) => ({
         isAuthenticated: true,
         isLoading: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Login failed";
+      
       set({
-        error: error.response?.data?.detail || "Login failed",
+        error: errorMessage,
         isLoading: false,
         isAuthenticated: false,
       });
@@ -52,9 +58,15 @@ export const useUserStore = create<UserState>((set, get) => ({
       const user = await authApi.register(email, password);
       set({ user, isLoading: false });
       return user;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Registration failed";
+      
       set({
-        error: error.response?.data?.detail || "Registration failed",
+        error: errorMessage,
         isLoading: false,
       });
       throw error;
@@ -66,9 +78,15 @@ export const useUserStore = create<UserState>((set, get) => ({
     try {
       const user = await authApi.verify(email, code);
       set({ user, isLoading: false });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Verification failed";
+      
       set({
-        error: error.response?.data?.detail || "Verification failed",
+        error: errorMessage,
         isLoading: false,
       });
       throw error;
@@ -86,7 +104,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         isAuthenticated: false,
         isLoading: false,
       });
-    } catch (error: any) {
+    } catch {
       set({ isLoading: false });
       localStorage.removeItem("accessToken");
       set({

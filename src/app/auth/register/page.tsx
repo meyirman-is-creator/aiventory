@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { useUserStore } from '@/store/user-store';
 
 const colors = {
   purple: '#6322FE',
@@ -24,7 +23,6 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useUserStore();
   const { toast } = useToast();
   const router = useRouter();
   
@@ -61,7 +59,6 @@ export default function RegisterPage() {
     setIsLoading(true);
     
     try {
-      const user = await register(email, password);
       
       sessionStorage.setItem('verificationEmail', email);
       
@@ -70,10 +67,16 @@ export default function RegisterPage() {
         description: 'Пожалуйста, проверьте вашу почту и введите код подтверждения.',
       });
       router.push(`/auth/verify?email=${encodeURIComponent(email)}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : 'Произошла ошибка при регистрации';
+      
       toast({
         title: 'Ошибка регистрации',
-        description: error.response?.data?.detail || 'Произошла ошибка при регистрации',
+        description: errorMessage,
         variant: 'destructive',
       });
       setIsLoading(false);

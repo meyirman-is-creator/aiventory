@@ -44,10 +44,16 @@ export default function LoginPage() {
     try {
       await login(email, password);
       router.push('/');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : 'Произошла ошибка при входе';
+      
       toast({
         title: 'Ошибка входа',
-        description: error.response?.data?.detail || 'Произошла ошибка при входе',
+        description: errorMessage,
         variant: 'destructive',
       });
       setIsLoading(false);

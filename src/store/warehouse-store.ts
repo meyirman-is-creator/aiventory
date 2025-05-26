@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { warehouseApi } from "@/lib/api";
-import { WarehouseItem, Upload } from "@/lib/types";
+import { WarehouseItem, Upload, WarehouseItemStatus } from "@/lib/types";
 
 interface WarehouseState {
   items: WarehouseItem[];
@@ -60,10 +60,15 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
         isLoadingItems: false,
         lastFetchedItems: new Date(),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to fetch warehouse items";
+      
       set({
-        error:
-          error.response?.data?.detail || "Failed to fetch warehouse items",
+        error: errorMessage,
         isLoadingItems: false,
       });
     }
@@ -89,11 +94,15 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
         isLoadingExpiringItems: false,
         lastFetchedExpiringItems: new Date(),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to fetch expiring warehouse items";
+      
       set({
-        error:
-          error.response?.data?.detail ||
-          "Failed to fetch expiring warehouse items",
+        error: errorMessage,
         isLoadingExpiringItems: false,
       });
     }
@@ -112,9 +121,15 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
         isUploading: false,
       });
       return upload;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to upload file";
+      
       set({
-        error: error.response?.data?.detail || "Failed to upload file",
+        error: errorMessage,
         isUploading: false,
       });
       throw error;
@@ -134,7 +149,7 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
             return {
               ...item,
               quantity: 0,
-              status: "moved",
+              status: WarehouseItemStatus.MOVED,
             };
           }
 
@@ -152,9 +167,15 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
       });
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to move item to store";
+      
       set({
-        error: error.response?.data?.detail || "Failed to move item to store",
+        error: errorMessage,
         isMoving: false,
       });
       throw error;
@@ -185,11 +206,15 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
   
       set({ isMoving: false });
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to move item to store by barcode";
+      
       set({
-        error:
-          error.response?.data?.detail ||
-          "Failed to move item to store by barcode",
+        error: errorMessage,
         isMoving: false,
       });
       throw error;

@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Prediction } from "@/lib/types";
 
 export default function PredictionPage() {
   const router = useRouter();
@@ -113,7 +114,7 @@ export default function PredictionPage() {
     return product ? product.name : "Выбранный продукт";
   };
 
-  const getCurrentPredictions = (): any[] => {
+  const getCurrentPredictions = (): Prediction[] => {
     if (!selectedProductSid) return [];
     return predictions[selectedProductSid] || [];
   };
