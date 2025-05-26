@@ -1,13 +1,32 @@
-// src/store/prediction-store.ts
 import { create } from "zustand";
 import { predictionApi } from "@/lib/api";
 import { Prediction, PredictionStats, ProductCategory, ProductResponse, TimeFrame } from "@/lib/types";
 
+interface Analytics {
+  trends?: {
+    trend?: string;
+    growth?: {
+      quantity?: number;
+      revenue?: number;
+    };
+  };
+  kpis?: {
+    turnover_rate?: number;
+    days_of_supply?: number;
+    avg_monthly_sales?: number;
+    avg_monthly_revenue?: number;
+  };
+  inventory?: {
+    nearest_expiry?: string;
+  };
+}
+
 interface PredictionState {
-  predictions: Record<string, Prediction[]>; // product_sid -> predictions
+  predictions: Record<string, Prediction[]>;
   products: ProductResponse[];
   categories: ProductCategory[];
   stats: PredictionStats | null;
+  analytics: Analytics | null;
   selectedProductSid: string | null;
   selectedTimeframe: TimeFrame;
   selectedPeriods: number;
@@ -15,15 +34,18 @@ interface PredictionState {
   isLoadingStats: boolean;
   isLoadingProducts: boolean;
   isLoadingCategories: boolean;
+  isLoadingAnalytics: boolean;
   error: string | null;
-  lastFetchedPredictions: Record<string, Date>; // product_sid -> date
+  lastFetchedPredictions: Record<string, Date>;
   lastFetchedStats: Date | null;
   lastFetchedProducts: Date | null;
   lastFetchedCategories: Date | null;
+  lastFetchedAnalytics: Record<string, Date>;
   fetchPredictions: (productSid: string, refresh?: boolean, timeframe?: TimeFrame, periods?: number) => Promise<void>;
   fetchStats: (productSid?: string, startDate?: Date, endDate?: Date) => Promise<void>;
   fetchProducts: (category_sid?: string, search?: string) => Promise<void>;
   fetchCategories: () => Promise<void>;
+  fetchAnalytics: (productSid: string) => Promise<void>;
   setSelectedProduct: (productSid: string | null) => void;
   setSelectedTimeframe: (timeframe: TimeFrame) => void;
   setSelectedPeriods: (periods: number) => void;
@@ -34,6 +56,7 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
   products: [],
   categories: [],
   stats: null,
+  analytics: null,
   selectedProductSid: null,
   selectedTimeframe: TimeFrame.MONTH,
   selectedPeriods: 3,
@@ -41,17 +64,18 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
   isLoadingStats: false,
   isLoadingProducts: false,
   isLoadingCategories: false,
+  isLoadingAnalytics: false,
   error: null,
   lastFetchedPredictions: {},
   lastFetchedStats: null,
   lastFetchedProducts: null,
   lastFetchedCategories: null,
+  lastFetchedAnalytics: {},
 
   fetchPredictions: async (productSid: string, refresh = false, timeframe = TimeFrame.MONTH, periods = 3) => {
     const current = new Date();
     const lastFetched = get().lastFetchedPredictions[productSid];
 
-    // If data was fetched in the last 10 minutes and not forcing refresh, don't fetch again
     if (
       !refresh &&
       lastFetched &&
@@ -69,7 +93,6 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
         periods
       );
 
-      // Update predictions for this product
       set((state) => ({
         predictions: {
           ...state.predictions,
@@ -81,9 +104,15 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
           [productSid]: new Date(),
         },
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to fetch predictions";
+      
       set({
-        error: error.response?.data?.detail || "Failed to fetch predictions",
+        error: errorMessage,
         isLoadingPredictions: false,
       });
     }
@@ -93,7 +122,6 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
     const current = new Date();
     const lastFetched = get().lastFetchedStats;
 
-    // If data was fetched in the last 10 minutes, don't fetch again
     if (
       lastFetched &&
       current.getTime() - lastFetched.getTime() < 10 * 60 * 1000 &&
@@ -116,10 +144,15 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
         isLoadingStats: false,
         lastFetchedStats: new Date(),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to fetch prediction stats";
+      
       set({
-        error:
-          error.response?.data?.detail || "Failed to fetch prediction stats",
+        error: errorMessage,
         isLoadingStats: false,
       });
     }
@@ -129,7 +162,6 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
     const current = new Date();
     const lastFetched = get().lastFetchedProducts;
 
-    // If data was fetched in the last 10 minutes and no filters are applied, don't fetch again
     if (
       lastFetched &&
       current.getTime() - lastFetched.getTime() < 10 * 60 * 1000 &&
@@ -147,9 +179,15 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
         isLoadingProducts: false,
         lastFetchedProducts: new Date(),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to fetch products";
+      
       set({
-        error: error.response?.data?.detail || "Failed to fetch products",
+        error: errorMessage,
         isLoadingProducts: false,
       });
     }
@@ -159,7 +197,6 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
     const current = new Date();
     const lastFetched = get().lastFetchedCategories;
 
-    // If data was fetched in the last 30 minutes, don't fetch again
     if (
       lastFetched &&
       current.getTime() - lastFetched.getTime() < 30 * 60 * 1000
@@ -175,10 +212,52 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
         isLoadingCategories: false,
         lastFetchedCategories: new Date(),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to fetch categories";
+      
       set({
-        error: error.response?.data?.detail || "Failed to fetch categories",
+        error: errorMessage,
         isLoadingCategories: false,
+      });
+    }
+  },
+
+  fetchAnalytics: async (productSid: string) => {
+    const current = new Date();
+    const lastFetched = get().lastFetchedAnalytics[productSid];
+
+    if (
+      lastFetched &&
+      current.getTime() - lastFetched.getTime() < 10 * 60 * 1000
+    ) {
+      return;
+    }
+
+    set({ isLoadingAnalytics: true, error: null });
+    try {
+      const analytics = await predictionApi.getAnalytics(productSid);
+      set((state) => ({
+        analytics,
+        isLoadingAnalytics: false,
+        lastFetchedAnalytics: {
+          ...state.lastFetchedAnalytics,
+          [productSid]: new Date(),
+        },
+      }));
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to fetch analytics";
+      
+      set({
+        error: errorMessage,
+        isLoadingAnalytics: false,
       });
     }
   },
@@ -190,7 +269,6 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
   setSelectedTimeframe: (timeframe: TimeFrame) => {
     set({ selectedTimeframe: timeframe });
 
-    // If we have a selected product, fetch new predictions with this timeframe
     const productSid = get().selectedProductSid;
     if (productSid) {
       get().fetchPredictions(productSid, true, timeframe, get().selectedPeriods);
@@ -200,7 +278,6 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
   setSelectedPeriods: (periods: number) => {
     set({ selectedPeriods: periods });
 
-    // If we have a selected product, fetch new predictions with this number of periods
     const productSid = get().selectedProductSid;
     if (productSid) {
       get().fetchPredictions(productSid, true, get().selectedTimeframe, periods);

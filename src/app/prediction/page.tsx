@@ -15,6 +15,8 @@ import SalesAnalytics from "@/components/prediction/sales-analytics";
 import ProductSelector from "@/components/prediction/product-selector";
 import ForecastChart from "@/components/prediction/forecast-chart";
 import ForecastSettings from "@/components/prediction/forecast-settings";
+import InsightsPanel from "@/components/prediction/insights-panel";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -24,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Prediction } from "@/lib/types";
+import { TrendingUp, Package, BarChart3, Lightbulb } from "lucide-react";
 
 export default function PredictionPage() {
   const router = useRouter();
@@ -32,9 +35,11 @@ export default function PredictionPage() {
     fetchStats,
     fetchProducts,
     fetchCategories,
+    fetchAnalytics,
     stats,
     products,
     categories,
+    analytics,
     isLoadingStats,
     isLoadingProducts,
     isLoadingCategories,
@@ -50,6 +55,7 @@ export default function PredictionPage() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showInsights, setShowInsights] = useState(false);
 
   useEffect(() => {
     const isLoggedIn = checkAuth();
@@ -91,10 +97,12 @@ export default function PredictionPage() {
         selectedTimeframe,
         selectedPeriods
       );
+      fetchAnalytics(selectedProductSid);
     }
   }, [
     selectedProductSid,
     fetchPredictions,
+    fetchAnalytics,
     isInitialLoading,
     selectedTimeframe,
     selectedPeriods,
@@ -123,25 +131,47 @@ export default function PredictionPage() {
     isInitialLoading || isLoadingCategories || isLoadingProducts;
 
   return (
-    <div className="space-y-6 px-2 sm:px-0">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-[#1f2937]">
-          Прогнозирование и аналитика
-        </h2>
-        <p className="text-[#6b7280]">
-          Анализируйте данные о продажах и прогнозируйте будущий спрос на товары
-        </p>
+    <div className="space-y-6 p-4 md:p-6 lg:p-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
+            Прогнозирование и аналитика
+          </h2>
+          <p className="text-sm md:text-base text-gray-600 mt-1">
+            Анализируйте данные о продажах и прогнозируйте будущий спрос
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => setShowInsights(!showInsights)}
+          className="w-full md:w-auto"
+        >
+          <Lightbulb className="mr-2 h-4 w-4" />
+          {showInsights ? "Скрыть" : "Показать"} инсайты
+        </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card
-          className="col-span-full lg:col-span-2 bg-[#ffffff] border-[#e5e7eb]"
-        >
+      {showInsights && analytics && (
+        <InsightsPanel analytics={analytics} predictions={getCurrentPredictions()} />
+      )}
+
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-[#1f2937]">Анализ продаж</CardTitle>
-            <CardDescription className="text-[#6b7280]">
-              Исторические данные о продажах за последние 30 дней
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Анализ продаж
+                </CardTitle>
+                <CardDescription>
+                  Исторические данные и тренды
+                </CardDescription>
+              </div>
+              <div className="text-sm text-gray-600">
+                Последние 30 дней
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="h-80">
             <SalesAnalytics
@@ -151,28 +181,30 @@ export default function PredictionPage() {
           </CardContent>
         </Card>
 
-        <Card
-          className="col-span-full lg:col-span-1 bg-[#ffffff] border-[#e5e7eb]"
-        >
+        <Card>
           <CardHeader>
-            <div className="flex flex-col space-y-2">
-              <CardTitle className="text-[#1f2937]">Выбор продукта</CardTitle>
-              <CardDescription className="text-[#6b7280]">
-                Выберите продукт для просмотра прогноза
-              </CardDescription>
-
-              <div className="pt-2">
-                <Label htmlFor="category-filter" className="mb-1 block text-sm text-[#374151]">
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Выбор продукта
+            </CardTitle>
+            <CardDescription>
+              Выберите продукт для анализа
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="category-filter" className="text-sm font-medium">
                   Категория
                 </Label>
                 <Select
                   value={selectedCategory || "all"}
                   onValueChange={handleCategoryChange}
                 >
-                  <SelectTrigger id="category-filter" className="w-full border-[#e5e7eb]">
+                  <SelectTrigger id="category-filter" className="w-full mt-1">
                     <SelectValue placeholder="Все категории" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#ffffff]">
+                  <SelectContent>
                     <SelectItem value="all">Все категории</SelectItem>
                     {categories.map((category) => (
                       <SelectItem key={category.sid} value={category.sid}>
@@ -182,28 +214,28 @@ export default function PredictionPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <ProductSelector
+                products={products}
+                selectedProductSid={selectedProductSid}
+                setSelectedProduct={setSelectedProduct}
+                isLoading={isLoading}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+              />
             </div>
-          </CardHeader>
-          <CardContent>
-            <ProductSelector
-              products={products}
-              selectedProductSid={selectedProductSid}
-              setSelectedProduct={setSelectedProduct}
-              isLoading={isLoading}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-            />
           </CardContent>
         </Card>
 
-        <Card
-          className="col-span-full bg-[#ffffff] border-[#e5e7eb]"
-        >
-          <CardHeader className="flex flex-row items-start justify-between">
+        <Card className="lg:col-span-3">
+          <CardHeader className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
-              <CardTitle className="text-[#1f2937]">Прогноз спроса</CardTitle>
-              <CardDescription className="text-[#6b7280]">
-                Прогнозируемый спрос на выбранный продукт на последующие периоды
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Прогноз спроса
+              </CardTitle>
+              <CardDescription>
+                Прогнозируемый спрос на выбранный продукт
               </CardDescription>
             </div>
             <ForecastSettings />

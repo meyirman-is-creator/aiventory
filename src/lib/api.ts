@@ -16,6 +16,25 @@ import {
   Discount,
 } from "./types";
 
+interface Analytics {
+  trends?: {
+    trend?: string;
+    growth?: {
+      quantity?: number;
+      revenue?: number;
+    };
+  };
+  kpis?: {
+    turnover_rate?: number;
+    days_of_supply?: number;
+    avg_monthly_sales?: number;
+    avg_monthly_revenue?: number;
+  };
+  inventory?: {
+    nearest_expiry?: string;
+  };
+}
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -317,6 +336,7 @@ export const predictionApi = {
     });
     return response.data;
   },
+
   getCategories: async (): Promise<ProductCategory[]> => {
     const response = await api.get<ProductCategory[]>("/prediction/categories");
     return response.data;
@@ -328,6 +348,11 @@ export const predictionApi = {
     if (search) params.search = search;
   
     const response = await api.get<ProductResponse[]>("/prediction/products", { params });
+    return response.data;
+  },
+
+  getAnalytics: async (productSid: string): Promise<Analytics> => {
+    const response = await api.get(`/prediction/analytics/${productSid}`);
     return response.data;
   },
 };
