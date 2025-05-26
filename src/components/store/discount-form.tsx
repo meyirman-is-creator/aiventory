@@ -16,8 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { createDiscount } from "@/redux/slices/storeSlice";
-import { formatCurrency, calculateDiscountPrice } from "@/lib/utils";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
+import { Calendar as CalendarIcon, Info, TrendingDown, DollarSign } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/popover";
 import { format, addDays } from "date-fns";
 import { AppDispatch } from "@/redux/store";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface DiscountModalProps {
   item: StoreItem;
@@ -44,7 +45,24 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
   const { toast } = useToast();
 
   const originalPrice = item.price;
-  const discountedPrice = calculateDiscountPrice(originalPrice, percentage);
+  const basePrice = item.product.default_price || originalPrice * 0.7;
+  const discountedPrice = originalPrice * (1 - percentage / 100);
+  const profitMargin = ((discountedPrice - basePrice) / basePrice) * 100;
+  const customerSavings = originalPrice - discountedPrice;
+
+  // Smart discount recommendation based on expiry
+  const getRecommendedDiscount = () => {
+    if (!item.days_until_expiry) return 10;
+    if (item.days_until_expiry <= 1) return 40;
+    if (item.days_until_expiry <= 3) return 35;
+    if (item.days_until_expiry <= 5) return 30;
+    if (item.days_until_expiry <= 7) return 25;
+    if (item.days_until_expiry <= 14) return 20;
+    if (item.days_until_expiry <= 21) return 15;
+    return 10;
+  };
+
+  const recommendedDiscount = getRecommendedDiscount();
 
   const handlePercentageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
@@ -74,6 +92,13 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
         variant: "destructive",
       });
       return;
+    }
+
+    if (profitMargin < 5) {
+      const confirm = window.confirm(
+        `Прибыль составит всего ${profitMargin.toFixed(1)}%. Вы уверены, что хотите установить такую скидку?`
+      );
+      if (!confirm) return;
     }
 
     setIsLoading(true);
@@ -107,30 +132,78 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-[#ffffff]">
+      <DialogContent className="sm:max-w-lg bg-[#ffffff]">
         <DialogHeader>
-          <DialogTitle className="text-[#1f2937]">Добавить скидку</DialogTitle>
+          <DialogTitle className="text-[#1f2937]">Настройка скидки</DialogTitle>
           <DialogDescription className="text-[#6b7280]">
-            Создать скидку для {item.product.name}
+            Установите скидку для {item.product.name}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label className="text-[#374151]">Товар</Label>
-            <div className="text-sm font-medium text-[#1f2937]">{item.product.name}</div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-[#374151]">Исходная цена</Label>
-            <div className="text-sm font-medium text-[#1f2937]">
-              {formatCurrency(originalPrice)}
+          {/* Product Details */}
+          <div className="bg-[#f9fafb] p-4 rounded-lg space-y-2">
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-medium text-[#1f2937]">{item.product.name}</h4>
+                {item.product.category && (
+                  <p className="text-sm text-[#6b7280]">
+                    {item.product.category.name}
+                  </p>
+                )}
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-[#6b7280]">Текущая цена</p>
+                <p className="font-medium text-[#1f2937]">
+                  {formatCurrency(originalPrice)}
+                </p>
+              </div>
             </div>
+
+            {item.days_until_expiry !== null && item.days_until_expiry !== undefined && (
+              <Alert className={
+                item.days_until_expiry <= 3 ? "border-[#fecaca] bg-[#fee2e2]" :
+                  item.days_until_expiry <= 7 ? "border-[#fed7aa] bg-[#fff7ed]" :
+                    "border-[#e5e7eb] bg-[#f9fafb]"
+              }>
+                <Info className="h-4 w-4" />
+                <AlertDescription className={
+                  item.days_until_expiry <= 3 ? "text-[#7f1d1d]" :
+                    item.days_until_expiry <= 7 ? "text-[#7c2d12]" :
+                      "text-[#374151]"
+                }>
+                  {item.days_until_expiry === 0 ? "Срок годности истекает сегодня!" :
+                    item.days_until_expiry === 1 ? "Срок годности истекает завтра!" :
+                      `До истечения срока годности: ${item.days_until_expiry} дн.`}
+                  {recommendedDiscount > 0 && (
+                    <span className="block mt-1">
+                      Рекомендуемая скидка: <strong>{recommendedDiscount}%</strong>
+                    </span>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
+          {/* Discount Percentage */}
           <div className="space-y-2">
-            <Label htmlFor="percentage" className="text-[#374151]">Процент скидки</Label>
-            <div className="flex items-center">
+            <div className="flex justify-between items-center">
+              <Label htmlFor="percentage" className="text-[#374151]">
+                Процент скидки
+              </Label>
+              {recommendedDiscount > 0 && percentage !== recommendedDiscount && (
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  onClick={() => setPercentage(recommendedDiscount)}
+                  className="text-[#6322FE] h-auto p-0"
+                >
+                  Использовать рекомендуемый ({recommendedDiscount}%)
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
               <Input
                 id="percentage"
                 type="number"
@@ -138,23 +211,60 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
                 onChange={handlePercentageChange}
                 min={0}
                 max={100}
-                className="w-20 mr-2 border-[#e5e7eb] text-[#1f2937]"
+                className="w-24 border-[#e5e7eb] text-[#1f2937]"
               />
               <span className="text-[#6b7280]">%</span>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-[#374151]">Цена со скидкой</Label>
-            <div className="text-lg font-bold text-[#6322FE]">
-              {formatCurrency(discountedPrice)}
+          {/* Price Calculation */}
+          <div className="bg-[#f3f4f6] p-4 rounded-lg space-y-3">
+            <h4 className="font-medium text-[#1f2937] flex items-center">
+              <DollarSign className="h-4 w-4 mr-1" />
+              Расчет цены
+            </h4>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[#6b7280]">Текущая цена:</span>
+                <span className="text-[#374151]">{formatCurrency(originalPrice)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#6b7280]">Скидка ({percentage}%):</span>
+                <span className="text-[#ef4444]">-{formatCurrency(customerSavings)}</span>
+              </div>
+              <div className="flex justify-between font-medium border-t pt-2">
+                <span className="text-[#1f2937]">Цена со скидкой:</span>
+                <span className="text-[#1f2937]">{formatCurrency(discountedPrice)}</span>
+              </div>
             </div>
-            <div className="text-xs text-[#6b7280]">
-              Клиент экономит {formatCurrency(originalPrice - discountedPrice)}{" "}
-              за единицу
+
+            <div className="border-t pt-3 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-[#6b7280]">Закупочная цена:</span>
+                <span className="text-[#374151]">{formatCurrency(basePrice)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={`text-sm font-medium ${profitMargin < 10 ? 'text-[#ef4444]' : 'text-[#059669]'}`}>
+                  Прибыль:
+                </span>
+                <span className={`font-medium ${profitMargin < 10 ? 'text-[#ef4444]' : 'text-[#059669]'}`}>
+                  {profitMargin.toFixed(1)}% ({formatCurrency(discountedPrice - basePrice)})
+                </span>
+              </div>
             </div>
+
+            {profitMargin < 10 && (
+              <Alert className="border-[#fecaca] bg-[#fee2e2]">
+                <TrendingDown className="h-4 w-4 text-[#ef4444]" />
+                <AlertDescription className="text-[#7f1d1d]">
+                  Низкая маржа! Рекомендуется поддерживать прибыль не менее 10%
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
+          {/* Date Selection */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDate" className="text-[#374151]">Дата начала</Label>
@@ -207,6 +317,7 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
                       }
                     }}
                     initialFocus
+                    disabled={(date) => date < startDate}
                   />
                 </PopoverContent>
               </Popover>

@@ -29,6 +29,17 @@ export interface DiscountSuggestion {
   urgency: string;
   shelf_life_remaining: number;
   reason: string;
+  profit_margin: number;
+  calculation_details?: {
+    base_price: number;
+    store_price: number;
+    initial_markup: number;
+    suggested_discount: number;
+    discounted_price: number;
+    final_profit_margin: number;
+    min_acceptable_price: number;
+  };
+  recommendation: string;
 }
 
 export interface WarehouseAction {
@@ -38,6 +49,7 @@ export interface WarehouseAction {
   reason: string;
   days_until_expiry?: number;
   shelf_life_remaining?: number;
+  recommendation?: string;
 }
 
 export interface WarehouseItem {
@@ -81,18 +93,14 @@ export interface StoreItem {
   product: ProductResponse;
   expire_date?: string;
   current_discounts: Discount[];
+  batch_code?: string;
+  days_until_expiry?: number;
 }
 
-export interface CartItem {
-  sid: string;
-  store_item_sid: string;
-  quantity: number;
-  price_per_unit: number;
-  added_at: string;
-  user_sid: string;
-  product: ProductResponse;
-  expire_date?: string;
-  total_price: number;
+export interface RemovedItem extends StoreItem {
+  removed_at: string;
+  lost_value: number;
+  removal_reason: string;
 }
 
 export interface Sale {
@@ -104,12 +112,6 @@ export interface Sale {
   cashier_sid: string;
   product?: ProductResponse;
   total_amount?: number;
-}
-
-export interface CheckoutResponse {
-  sales: Sale[];
-  total_amount: number;
-  items_count: number;
 }
 
 export interface Upload {
@@ -154,11 +156,13 @@ export interface StoreReports {
   sales: Array<{
     date: string;
     product_name: string;
+    category_name: string;
     quantity: number;
     revenue: number;
   }>;
   discounts: Array<{
     product_name: string;
+    category_name: string;
     discount_percentage: number;
     start_date: string;
     end_date: string;
@@ -168,17 +172,19 @@ export interface StoreReports {
     regular_revenue: number;
     savings: number;
   }>;
-  expired: Array<{
+  removed: Array<{
     product_name: string;
-    expired_quantity: number;
-    expired_value: number;
-    expired_items_count: number;
+    category_name: string;
+    removed_quantity: number;
+    removed_value: number;
+    removed_items_count: number;
+    removal_reason: string;
   }>;
   summary: {
     total_sales: number;
     total_items_sold: number;
-    total_expired_value: number;
-    total_expired_items: number;
+    total_removed_value: number;
+    total_removed_items: number;
     total_discount_savings: number;
   };
 }

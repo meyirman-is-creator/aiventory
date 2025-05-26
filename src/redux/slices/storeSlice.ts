@@ -1,37 +1,35 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { storeApi } from "@/lib/api";
-import { StoreItem, StoreReports, Sale, CartItem } from "@/lib/types";
+import { StoreItem, RemovedItem, StoreReports, Sale } from "@/lib/types";
 
 interface StoreState {
   activeItems: StoreItem[];
-  expiredItems: StoreItem[];
-  cartItems: CartItem[];
+  removedItems: RemovedItem[];
   salesHistory: Sale[];
   reports: StoreReports | null;
   isLoadingItems: boolean;
-  isLoadingCart: boolean;
+  isLoadingRemovedItems: boolean;
   isLoadingSales: boolean;
   isLoadingReports: boolean;
   error: string | null;
   lastFetchedItems: string | null;
-  lastFetchedCart: string | null;
+  lastFetchedRemovedItems: string | null;
   lastFetchedSales: string | null;
   lastFetchedReports: string | null;
 }
 
 const initialState: StoreState = {
   activeItems: [],
-  expiredItems: [],
-  cartItems: [],
+  removedItems: [],
   salesHistory: [],
   reports: null,
   isLoadingItems: false,
-  isLoadingCart: false,
+  isLoadingRemovedItems: false,
   isLoadingSales: false,
   isLoadingReports: false,
   error: null,
   lastFetchedItems: null,
-  lastFetchedCart: null,
+  lastFetchedRemovedItems: null,
   lastFetchedSales: null,
   lastFetchedReports: null,
 };
@@ -54,39 +52,21 @@ export const fetchActiveItems = createAsyncThunk(
   }
 );
 
-export const fetchExpiredItems = createAsyncThunk(
-  "store/fetchExpiredItems",
+export const fetchRemovedItems = createAsyncThunk(
+  "store/fetchRemovedItems",
   async (_, { getState }) => {
     const state = getState() as { store: StoreState };
-    const lastFetched = state.store.lastFetchedItems;
+    const lastFetched = state.store.lastFetchedRemovedItems;
 
     if (
       lastFetched &&
       new Date().getTime() - new Date(lastFetched).getTime() < 5 * 60 * 1000
     ) {
-      return state.store.expiredItems;
+      return state.store.removedItems;
     }
 
-    const expiredItems = await storeApi.getItems("expired");
-    return expiredItems;
-  }
-);
-
-export const fetchCartItems = createAsyncThunk(
-  "store/fetchCartItems",
-  async (_, { getState }) => {
-    const state = getState() as { store: StoreState };
-    const lastFetched = state.store.lastFetchedCart;
-
-    if (
-      lastFetched &&
-      new Date().getTime() - new Date(lastFetched).getTime() < 2 * 60 * 1000
-    ) {
-      return state.store.cartItems;
-    }
-
-    const cartItems = await storeApi.getCartItems();
-    return cartItems;
+    const removedItems = await storeApi.getRemovedItems();
+    return removedItems;
   }
 );
 
@@ -128,46 +108,6 @@ export const fetchReports = createAsyncThunk(
   }
 );
 
-export const addToCart = createAsyncThunk(
-  "store/addToCart",
-  async (
-    {
-      storeItemSid,
-      quantity,
-    }: {
-      storeItemSid: string;
-      quantity: number;
-    },
-    { dispatch }
-  ) => {
-    const cartItem = await storeApi.addToCart(storeItemSid, quantity);
-    dispatch(fetchCartItems());
-    dispatch(fetchActiveItems());
-    return cartItem;
-  }
-);
-
-export const removeFromCart = createAsyncThunk(
-  "store/removeFromCart",
-  async (cartItemSid: string, { dispatch }) => {
-    await storeApi.removeFromCart(cartItemSid);
-    dispatch(fetchCartItems());
-    return cartItemSid;
-  }
-);
-
-export const checkoutCart = createAsyncThunk(
-  "store/checkoutCart",
-  async (_, { dispatch }) => {
-    const response = await storeApi.checkoutCart();
-    dispatch(fetchCartItems());
-    dispatch(fetchActiveItems());
-    dispatch(fetchSalesHistory({}));
-    dispatch(fetchReports());
-    return response;
-  }
-);
-
 export const createDiscount = createAsyncThunk(
   "store/createDiscount",
   async (
@@ -200,7 +140,7 @@ export const removeFromStore = createAsyncThunk(
   async (storeItemSid: string, { dispatch }) => {
     await storeApi.removeFromStore(storeItemSid);
     dispatch(fetchActiveItems());
-    dispatch(fetchExpiredItems());
+    dispatch(fetchRemovedItems());
     return storeItemSid;
   }
 );
@@ -251,39 +191,21 @@ const storeSlice = createSlice({
       });
 
     builder
-      .addCase(fetchExpiredItems.pending, (state) => {
-        state.isLoadingItems = true;
+      .addCase(fetchRemovedItems.pending, (state) => {
+        state.isLoadingRemovedItems = true;
         state.error = null;
       })
       .addCase(
-        fetchExpiredItems.fulfilled,
-        (state, action: PayloadAction<StoreItem[]>) => {
-          state.expiredItems = action.payload;
-          state.isLoadingItems = false;
-          state.lastFetchedItems = new Date().toISOString();
+        fetchRemovedItems.fulfilled,
+        (state, action: PayloadAction<RemovedItem[]>) => {
+          state.removedItems = action.payload;
+          state.isLoadingRemovedItems = false;
+          state.lastFetchedRemovedItems = new Date().toISOString();
         }
       )
-      .addCase(fetchExpiredItems.rejected, (state, action) => {
-        state.isLoadingItems = false;
-        state.error = action.error.message || "Failed to fetch expired items";
-      });
-
-    builder
-      .addCase(fetchCartItems.pending, (state) => {
-        state.isLoadingCart = true;
-        state.error = null;
-      })
-      .addCase(
-        fetchCartItems.fulfilled,
-        (state, action: PayloadAction<CartItem[]>) => {
-          state.cartItems = action.payload;
-          state.isLoadingCart = false;
-          state.lastFetchedCart = new Date().toISOString();
-        }
-      )
-      .addCase(fetchCartItems.rejected, (state, action) => {
-        state.isLoadingCart = false;
-        state.error = action.error.message || "Failed to fetch cart items";
+      .addCase(fetchRemovedItems.rejected, (state, action) => {
+        state.isLoadingRemovedItems = false;
+        state.error = action.error.message || "Failed to fetch removed items";
       });
 
     builder

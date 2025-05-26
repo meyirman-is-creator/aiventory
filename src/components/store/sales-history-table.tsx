@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Package } from "lucide-react";
 
 interface SalesHistoryTableProps {
   sales: Sale[];
@@ -53,8 +53,8 @@ const SalesHistoryTable = ({ sales, isLoading }: SalesHistoryTableProps) => {
               <TableRow className="border-b border-[#e5e7eb]">
                 <TableHead className="text-[#374151] font-semibold">Дата и время</TableHead>
                 <TableHead className="text-[#374151] font-semibold">Товар</TableHead>
-                <TableHead className="text-[#374151] font-semibold">Категория</TableHead>
-                <TableHead className="text-[#374151] font-semibold">Количество</TableHead>
+                <TableHead className="text-[#374151] font-semibold hidden lg:table-cell">Категория</TableHead>
+                <TableHead className="text-[#374151] font-semibold">Кол-во</TableHead>
                 <TableHead className="text-[#374151] font-semibold">Цена за ед.</TableHead>
                 <TableHead className="text-[#374151] font-semibold">Сумма</TableHead>
               </TableRow>
@@ -62,17 +62,30 @@ const SalesHistoryTable = ({ sales, isLoading }: SalesHistoryTableProps) => {
             <TableBody>
               {sales.map((sale) => (
                 <TableRow key={sale.sid} className="border-b border-[#f3f4f6]">
-                  <TableCell className="text-[#374151]">
+                  <TableCell className="text-[#374151] text-sm">
                     {formatDateTime(sale.sold_at)}
                   </TableCell>
                   <TableCell className="font-medium text-[#1f2937]">
-                    {sale.product?.name || "Н/Д"}
+                    <div className="flex flex-col">
+                      <span>{sale.product?.name || "Н/Д"}</span>
+                      <span className="text-xs text-[#6b7280] lg:hidden">
+                        {sale.product?.category?.name || "Без категории"}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-[#374151] hidden lg:table-cell">
+                    {sale.product?.category?.name || "Без категории"}
                   </TableCell>
                   <TableCell className="text-[#374151]">
-                    {sale.product?.category?.name || "Н/Д"}
-                  </TableCell>
-                  <TableCell className="text-[#374151]">
-                    {sale.sold_qty}
+                    <div className="flex items-center">
+                      <Package className="h-4 w-4 mr-1 text-[#6b7280]" />
+                      {sale.sold_qty}
+                      {sale.product?.default_unit && (
+                        <span className="text-xs text-[#9ca3af] ml-1">
+                          {sale.product.default_unit}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-[#1f2937]">
                     {formatCurrency(sale.sold_price)}
@@ -89,9 +102,9 @@ const SalesHistoryTable = ({ sales, isLoading }: SalesHistoryTableProps) => {
         </div>
       </div>
 
-      <div className="flex justify-between items-center bg-[#f9fafb] p-4 rounded-md border border-[#e5e7eb]">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#f9fafb] p-4 rounded-md border border-[#e5e7eb]">
         <div>
-          <p className="text-sm text-[#6b7280]">Всего продано: {totalQuantity}</p>
+          <p className="text-sm text-[#6b7280]">Всего продано: {totalQuantity} товаров</p>
           <p className="text-lg font-semibold text-[#1f2937]">
             Общая выручка: {formatCurrency(totalRevenue)}
           </p>

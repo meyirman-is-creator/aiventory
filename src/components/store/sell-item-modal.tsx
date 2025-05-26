@@ -17,7 +17,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { recordSale } from "@/redux/slices/storeSlice";
 import { formatCurrency } from "@/lib/utils";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Package, Calendar, Tag } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { AppDispatch } from "@/redux/store";
 
 interface SellItemModalProps {
@@ -110,45 +111,98 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
         <DialogHeader>
           <DialogTitle className="text-[#1f2937]">Продажа товара</DialogTitle>
           <DialogDescription className="text-[#6b7280]">
-            Зарегистрировать продажу для {item.product.name}
+            Оформление продажи товара
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label className="text-[#374151]">Товар</Label>
-            <div className="text-sm font-medium text-[#1f2937]">{item.product.name}</div>
+          {/* Product Info Section */}
+          <div className="bg-[#f9fafb] p-4 rounded-lg space-y-3">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <h4 className="font-medium text-[#1f2937]">{item.product.name}</h4>
+                {item.product.category && (
+                  <p className="text-sm text-[#6b7280]">
+                    Категория: {item.product.category.name}
+                  </p>
+                )}
+                {item.batch_code && (
+                  <p className="text-xs text-[#9ca3af]">
+                    Партия: {item.batch_code}
+                  </p>
+                )}
+              </div>
+              <Badge variant="outline" className="text-xs">
+                <Package className="h-3 w-3 mr-1" />
+                В наличии: {item.quantity}
+              </Badge>
+            </div>
+
+            {item.expire_date && (
+              <div className="flex items-center text-sm">
+                <Calendar className="h-4 w-4 mr-2 text-[#6b7280]" />
+                <span className="text-[#374151]">
+                  Срок годности: {new Date(item.expire_date).toLocaleDateString()}
+                </span>
+                {item.days_until_expiry !== null && item.days_until_expiry !== undefined && item.days_until_expiry <= 7 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="ml-2 text-xs"
+                  >
+                    Истекает через {item.days_until_expiry} дн.
+                  </Badge>
+                )}
+              </div>
+            )}
+
+            {item.product.barcode && (
+              <div className="flex items-center text-sm">
+                <Tag className="h-4 w-4 mr-2 text-[#6b7280]" />
+                <span className="text-[#374151]">
+                  Штрихкод: {item.product.barcode}
+                </span>
+              </div>
+            )}
           </div>
 
+          {/* Price Section */}
           <div className="space-y-2">
             <Label className="text-[#374151]">Цена за единицу</Label>
-            <div className="flex items-center">
-              <div className="text-sm font-medium">
+            <div className="flex items-center justify-between bg-[#f3f4f6] p-3 rounded-md">
+              <div className="flex items-center">
                 {hasDiscount && (
                   <span className="line-through text-[#9ca3af] mr-2">
                     {formatCurrency(item.price)}
                   </span>
                 )}
-                <span className="text-[#1f2937]">{formatCurrency(pricePerUnit)}</span>
+                <span className="text-lg font-medium text-[#1f2937]">
+                  {formatCurrency(pricePerUnit)}
+                </span>
+                {item.product.default_unit && (
+                  <span className="text-sm text-[#6b7280] ml-1">
+                    / {item.product.default_unit}
+                  </span>
+                )}
               </div>
               {hasDiscount && (
-                <div className="ml-2 text-xs px-2 py-0.5 rounded-full bg-[#d1fae5] text-[#065f46]">
-                  {discountPercentage}% скидка
-                </div>
+                <Badge className="bg-[#d1fae5] text-[#065f46]">
+                  Скидка {discountPercentage}%
+                </Badge>
               )}
             </div>
           </div>
 
+          {/* Quantity Section */}
           <div className="space-y-2">
             <Label htmlFor="quantity" className="text-[#374151]">
-              Количество (Доступно: {item.quantity})
+              Количество
             </Label>
-            <div className="flex items-center">
+            <div className="flex items-center justify-center">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 rounded-r-none border-[#e5e7eb]"
+                className="h-10 w-10 rounded-r-none border-[#e5e7eb]"
                 onClick={decrementQuantity}
                 disabled={quantity <= 1}
               >
@@ -161,13 +215,13 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
                 onChange={handleQuantityChange}
                 min={1}
                 max={item.quantity}
-                className="h-8 rounded-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937]"
+                className="h-10 w-20 rounded-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] font-medium"
               />
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 rounded-l-none border-[#e5e7eb]"
+                className="h-10 w-10 rounded-l-none border-[#e5e7eb]"
                 onClick={incrementQuantity}
                 disabled={quantity >= item.quantity}
               >
@@ -176,11 +230,19 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-[#374151]">Итоговая цена</Label>
-            <div className="text-lg font-bold text-[#1f2937]">
-              {formatCurrency(totalPrice)}
+          {/* Total Section */}
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between">
+              <span className="text-[#374151]">Итоговая сумма:</span>
+              <span className="text-2xl font-bold text-[#1f2937]">
+                {formatCurrency(totalPrice)}
+              </span>
             </div>
+            {hasDiscount && (
+              <p className="text-sm text-[#059669] text-right mt-1">
+                Экономия: {formatCurrency((item.price * quantity) - totalPrice)}
+              </p>
+            )}
           </div>
         </div>
 

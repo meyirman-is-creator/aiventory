@@ -4,6 +4,7 @@ import {
   User,
   WarehouseItem,
   StoreItem,
+  RemovedItem,
   Prediction,
   DashboardStats,
   PredictionStats,
@@ -12,8 +13,6 @@ import {
   Sale,
   ProductCategory,
   ProductResponse,
-  CartItem,
-  CheckoutResponse,
   Discount,
 } from "./types";
 
@@ -205,25 +204,9 @@ export const storeApi = {
     return response.data;
   },
 
-  getCartItems: async (): Promise<CartItem[]> => {
-    const response = await api.get<CartItem[]>("/store/cart/items");
-    return response.data;
-  },
-
-  addToCart: async (storeItemSid: string, quantity: number): Promise<CartItem> => {
-    const response = await api.post<CartItem>("/store/cart/add", {
-      store_item_sid: storeItemSid,
-      quantity,
-    });
-    return response.data;
-  },
-
-  removeFromCart: async (cartItemSid: string): Promise<void> => {
-    await api.delete(`/store/cart/remove/${cartItemSid}`);
-  },
-
-  checkoutCart: async (): Promise<CheckoutResponse> => {
-    const response = await api.post<CheckoutResponse>("/store/cart/checkout");
+  getRemovedItems: async (reason?: string): Promise<RemovedItem[]> => {
+    const params = reason ? { reason } : {};
+    const response = await api.get<RemovedItem[]>("/store/removed-items", { params });
     return response.data;
   },
 
@@ -264,12 +247,14 @@ export const storeApi = {
   recordSale: async (
     storeItemSid: string,
     soldQty: number,
-    soldPrice: number
+    soldPrice: number,
+    ignoreDiscount?: boolean
   ): Promise<Sale> => {
     const response = await api.post<Sale>("/store/sales", {
       store_item_sid: storeItemSid,
       sold_qty: soldQty,
       sold_price: soldPrice,
+      ignore_discount: ignoreDiscount || false,
     });
     return response.data;
   },
