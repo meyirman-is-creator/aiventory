@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useUserStore } from '@/store/user-store';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const colors = {
   purple: '#6322FE',
@@ -22,27 +24,48 @@ const colors = {
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
   const { login } = useUserStore();
   const { toast } = useToast();
   const router = useRouter();
   
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string } = {};
+    
+    if (!email) {
+      newErrors.email = 'Электронная почта обязательна';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Неверный формат электронной почты';
+    }
+    
+    if (!password) {
+      newErrors.password = 'Пароль обязателен';
+    } else if (password.length < 8) {
+      newErrors.password = 'Пароль должен содержать минимум 8 символов';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast({
-        title: 'Ошибка',
-        description: 'Пожалуйста, заполните все поля',
-        variant: 'destructive',
-      });
+    if (!validateForm()) {
       return;
     }
     
     setIsLoading(true);
+    setErrors({});
     
     try {
       await login(email, password);
+      toast({
+        title: 'Успешный вход',
+        description: 'Добро пожаловать в систему!',
+      });
       router.push('/');
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'response' in error && 
@@ -51,6 +74,7 @@ export default function LoginPage() {
         ? String(error.response.data.detail)
         : 'Произошла ошибка при входе';
       
+      setErrors({ general: errorMessage });
       toast({
         title: 'Ошибка входа',
         description: errorMessage,
@@ -71,6 +95,13 @@ export default function LoginPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {errors.general && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{errors.general}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-700">Электронная почта</Label>
               <Input
@@ -78,24 +109,50 @@ export default function LoginPage() {
                 type="email"
                 placeholder="mail@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500 placeholder-gray-400"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) {
+                    setErrors({ ...errors, email: undefined });
+                  }
+                }}
+                className={`border-gray-300 focus:border-purple-500 focus:ring-purple-500 placeholder-gray-400 ${
+                  errors.email ? 'border-red-500' : ''
+                }`}
               />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email}</p>
+              )}
             </div>
+            
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-gray-700">Пароль</Label>
+              <Label htmlFor="password" className="text-gray-700">Пароль</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) {
+                      setErrors({ ...errors, password: undefined });
+                    }
+                  }}
+                  className={`border-gray-300 focus:border-purple-500 focus:ring-purple-500 placeholder-gray-400 pr-10 ${
+                    errors.password ? 'border-red-500' : ''
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500 placeholder-gray-400"
-              />
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password}</p>
+              )}
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">

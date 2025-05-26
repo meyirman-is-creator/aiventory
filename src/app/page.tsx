@@ -37,6 +37,13 @@ export default function Dashboard() {
       fetchStats();
       fetchActiveItems();
       fetchReports();
+      
+      const interval = setInterval(() => {
+        fetchStats();
+        fetchReports();
+      }, 30000);
+
+      return () => clearInterval(interval);
     }
   }, [checkAuth, fetchActiveItems, fetchReports, fetchStats, router]);
 
@@ -226,26 +233,28 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {reports?.sales?.slice(0, 5).map((sale, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      {sale.product_name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {sale.category_name} • {sale.quantity} шт
-                    </p>
+              {reports?.sales && reports.sales.length > 0 ? (
+                reports.sales.slice(0, 5).map((sale, index) => (
+                  <div key={`${sale.date}-${sale.product_name}-${index}`} className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        {sale.product_name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {sale.category_name} • {sale.quantity} шт
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">
+                        {formatCurrency(sale.revenue)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(sale.date).toLocaleDateString('ru-RU')}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">
-                      {formatCurrency(sale.revenue)}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(sale.date).toLocaleDateString('ru-RU')}
-                    </p>
-                  </div>
-                </div>
-              )) || (
+                ))
+              ) : (
                 <p className="text-center text-gray-500 py-8">
                   Нет недавней активности
                 </p>

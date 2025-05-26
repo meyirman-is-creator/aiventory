@@ -29,10 +29,9 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     const current = new Date();
     const lastFetched = get().lastFetched;
 
-    // If data was fetched in the last 5 minutes, don't fetch again
     if (
       lastFetched &&
-      current.getTime() - lastFetched.getTime() < 5 * 60 * 1000
+      current.getTime() - lastFetched.getTime() < 1 * 60 * 1000
     ) {
       return;
     }
@@ -45,10 +44,15 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         isLoading: false,
         lastFetched: new Date(),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to fetch dashboard stats";
+      
       set({
-        error:
-          error.response?.data?.detail || "Failed to fetch dashboard stats",
+        error: errorMessage,
         isLoading: false,
         stats: DEFAULT_STATS,
       });

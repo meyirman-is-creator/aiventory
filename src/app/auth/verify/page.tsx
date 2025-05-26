@@ -13,6 +13,8 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const colors = {
   purple: '#6322FE',
@@ -28,6 +30,7 @@ export default function VerifyPage() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const { verify } = useUserStore();
   const { toast } = useToast();
   const router = useRouter();
@@ -52,16 +55,18 @@ export default function VerifyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !code || code.length !== 6) {
-      toast({
-        title: 'Ошибка',
-        description: 'Пожалуйста, введите корректный код подтверждения',
-        variant: 'destructive',
-      });
+    if (!email) {
+      setError('Электронная почта не указана');
+      return;
+    }
+    
+    if (!code || code.length !== 6) {
+      setError('Введите 6-значный код подтверждения');
       return;
     }
     
     setIsLoading(true);
+    setError('');
     
     try {
       await verify(email, code);
@@ -80,6 +85,7 @@ export default function VerifyPage() {
         ? String(error.response.data.detail)
         : 'Произошла ошибка при подтверждении';
       
+      setError(errorMessage);
       toast({
         title: 'Ошибка подтверждения',
         description: errorMessage,
@@ -100,32 +106,48 @@ export default function VerifyPage() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-700">Электронная почта</Label>
-              <div className="p-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 font-medium">
-                {email}
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-md text-gray-700 font-medium">
+                {email || 'Не указана'}
               </div>
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="code" className="text-gray-700">Код подтверждения</Label>
               <div className="flex justify-center py-2">
                 <InputOTP
                   maxLength={6}
                   value={code}
-                  onChange={(value) => setCode(value)}
+                  onChange={(value) => {
+                    setCode(value);
+                    if (error) setError('');
+                  }}
                   render={({ slots }) => (
                     <InputOTPGroup>
                       {slots.map((slot, index) => (
                         <InputOTPSlot
                           key={index}
                           {...slot}
-                          className="w-10 h-12 text-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500 bg-white"
+                          className={`w-12 h-14 text-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500 bg-white ${
+                            error ? 'border-red-500' : ''
+                          }`}
                         />
                       ))}
                     </InputOTPGroup>
                   )}
                 />
               </div>
+              <p className="text-xs text-gray-500 text-center">
+                Проверьте папку &quot;Спам&quot;, если не видите письмо
+              </p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
@@ -133,7 +155,7 @@ export default function VerifyPage() {
               type="submit"
               style={{backgroundColor: isLoading ? colors.purpleHover : colors.purple}}
               className="w-full text-white hover:opacity-90 transition-opacity"
-              disabled={isLoading}
+              disabled={isLoading || code.length !== 6}
             >
               {isLoading ? 'Проверка...' : 'Подтвердить'}
             </Button>

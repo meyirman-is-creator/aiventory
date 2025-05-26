@@ -43,10 +43,9 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
     const current = new Date();
     const lastFetched = get().lastFetchedItems;
 
-    // If data was fetched in the last 5 minutes, don't fetch again
     if (
       lastFetched &&
-      current.getTime() - lastFetched.getTime() < 5 * 60 * 1000
+      current.getTime() - lastFetched.getTime() < 1 * 60 * 1000
     ) {
       return;
     }
@@ -59,10 +58,15 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
         isLoadingItems: false,
         lastFetchedItems: new Date(),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to fetch active store items";
+      
       set({
-        error:
-          error.response?.data?.detail || "Failed to fetch active store items",
+        error: errorMessage,
         isLoadingItems: false,
       });
     }
@@ -72,10 +76,9 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
     const current = new Date();
     const lastFetched = get().lastFetchedItems;
 
-    // If data was fetched in the last 5 minutes, don't fetch again
     if (
       lastFetched &&
-      current.getTime() - lastFetched.getTime() < 5 * 60 * 1000
+      current.getTime() - lastFetched.getTime() < 1 * 60 * 1000
     ) {
       return;
     }
@@ -88,10 +91,15 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
         isLoadingItems: false,
         lastFetchedItems: new Date(),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to fetch expired store items";
+      
       set({
-        error:
-          error.response?.data?.detail || "Failed to fetch expired store items",
+        error: errorMessage,
         isLoadingItems: false,
       });
     }
@@ -101,10 +109,9 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
     const current = new Date();
     const lastFetched = get().lastFetchedReports;
 
-    // If data was fetched in the last 5 minutes, don't fetch again
     if (
       lastFetched &&
-      current.getTime() - lastFetched.getTime() < 5 * 60 * 1000 &&
+      current.getTime() - lastFetched.getTime() < 1 * 60 * 1000 &&
       !startDate &&
       !endDate
     ) {
@@ -119,9 +126,15 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
         isLoadingReports: false,
         lastFetchedReports: new Date(),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to fetch store reports";
+      
       set({
-        error: error.response?.data?.detail || "Failed to fetch store reports",
+        error: errorMessage,
         isLoadingReports: false,
       });
     }
@@ -142,7 +155,6 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
         endsAt
       );
 
-      // Update active items with new discount
       const activeItems = get().activeItems.map((item) => {
         if (item.sid === storeItemSid) {
           return {
@@ -155,9 +167,15 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
 
       set({ activeItems });
       return discount;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to create discount";
+      
       set({
-        error: error.response?.data?.detail || "Failed to create discount",
+        error: errorMessage,
       });
       throw error;
     }
@@ -168,16 +186,21 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
     try {
       const updatedItem = await storeApi.markAsExpired(storeItemSid);
 
-      // Update store items lists
       const activeItems = get().activeItems.filter(
         (item) => item.sid !== storeItemSid
       );
       const expiredItems = [...get().expiredItems, updatedItem];
 
       set({ activeItems, expiredItems });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to mark item as expired";
+      
       set({
-        error: error.response?.data?.detail || "Failed to mark item as expired",
+        error: errorMessage,
       });
       throw error;
     }
@@ -188,7 +211,6 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
     try {
       await storeApi.removeFromStore(storeItemSid);
 
-      // Update store items lists
       const activeItems = get().activeItems.filter(
         (item) => item.sid !== storeItemSid
       );
@@ -197,10 +219,15 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
       );
 
       set({ activeItems, expiredItems });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to remove item from store";
+      
       set({
-        error:
-          error.response?.data?.detail || "Failed to remove item from store",
+        error: errorMessage,
       });
       throw error;
     }
@@ -215,11 +242,9 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
     try {
       const sale = await storeApi.recordSale(storeItemSid, soldQty, soldPrice);
 
-      // Update active items
       const activeItems = get()
         .activeItems.map((item) => {
           if (item.sid === storeItemSid) {
-            // If quantity is now 0, remove from active items
             if (item.quantity - soldQty <= 0) {
               return null;
             }
@@ -234,10 +259,21 @@ export const useStoreItemsStore = create<StoreItemsState>((set, get) => ({
         .filter(Boolean) as StoreItem[];
 
       set({ activeItems });
+      
+      setTimeout(() => {
+        get().fetchReports();
+      }, 1000);
+      
       return sale;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to record sale";
+      
       set({
-        error: error.response?.data?.detail || "Failed to record sale",
+        error: errorMessage,
       });
       throw error;
     }
