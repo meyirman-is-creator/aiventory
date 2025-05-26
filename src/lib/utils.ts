@@ -17,9 +17,11 @@ export function formatDateTime(date: string | Date): string {
 }
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("kk-KZ", {
     style: "currency",
-    currency: "USD",
+    currency: "KZT",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(amount);
 }
 
@@ -107,16 +109,13 @@ export function getStatusDisplayName(status: string): string {
 export function getInitials(email: string): string {
   if (!email) return '';
   
-  // Extract name part from email (before @)
   const namePart = email.split('@')[0];
   
-  // If name has . or _ separating parts, use first letter of each part
   if (namePart.includes('.') || namePart.includes('_')) {
     const separator = namePart.includes('.') ? '.' : '_';
     const parts = namePart.split(separator);
     return parts.map(part => part[0]?.toUpperCase() || '').join('');
   }
   
-  // Otherwise, use first two letters
   return namePart.slice(0, 2).toUpperCase();
 }

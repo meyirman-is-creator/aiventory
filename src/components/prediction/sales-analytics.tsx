@@ -44,9 +44,10 @@ const SalesAnalytics = ({ stats, isLoading }: SalesAnalyticsProps) => {
 
     return stats.products.map((product) => {
       const data = stats.dates.map((date, index) => {
+        const value = sourceData[index]?.[product.product_sid];
         return {
           x: date,
-          y: sourceData[index]?.[product.product_sid] || 0,
+          y: typeof value === 'number' ? value : 0,
         };
       });
 
@@ -63,10 +64,10 @@ const SalesAnalytics = ({ stats, isLoading }: SalesAnalyticsProps) => {
       dataType === "quantity" ? stats.quantity_data : stats.revenue_data;
 
     return stats.dates.map((date, dateIndex) => {
-      const entry: any = { date };
+      const entry: Record<string, string | number> = { date };
       stats.products.forEach((product) => {
-        entry[product.product_name] =
-          sourceData[dateIndex]?.[product.product_sid] || 0;
+        const value = sourceData[dateIndex]?.[product.product_sid];
+        entry[product.product_name] = typeof value === 'number' ? value : 0;
       });
       return entry;
     });
@@ -78,7 +79,7 @@ const SalesAnalytics = ({ stats, isLoading }: SalesAnalyticsProps) => {
   // Calculate totals for summary
   const totalQuantity = stats.quantity_data.reduce((total, dayData) => {
     const dayTotal = Object.values(dayData).reduce(
-      (sum: number, value: any) => sum + (value || 0),
+      (sum: number, value: unknown) => sum + (typeof value === 'number' ? value : 0),
       0
     );
     return total + dayTotal;
@@ -86,28 +87,11 @@ const SalesAnalytics = ({ stats, isLoading }: SalesAnalyticsProps) => {
 
   const totalRevenue = stats.revenue_data.reduce((total, dayData) => {
     const dayTotal = Object.values(dayData).reduce(
-      (sum: number, value: any) => sum + (value || 0),
+      (sum: number, value: unknown) => sum + (typeof value === 'number' ? value : 0),
       0
     );
     return total + dayTotal;
   }, 0);
-
-  // Get top products
-  const getTopProducts = (dataType: "quantity" | "revenue") => {
-    const productTotals = stats.products.map((product) => {
-      const sourceData =
-        dataType === "quantity" ? stats.quantity_data : stats.revenue_data;
-      const total = sourceData.reduce((sum, dayData) => {
-        return sum + (dayData[product.product_sid] || 0);
-      }, 0);
-      return { ...product, total };
-    });
-
-    return productTotals.sort((a, b) => b.total - a.total).slice(0, 3);
-  };
-
-  const topQuantityProducts = getTopProducts("quantity");
-  const topRevenueProducts = getTopProducts("revenue");
 
   return (
     <div className="h-full space-y-4">

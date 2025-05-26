@@ -270,7 +270,7 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="price" className="text-[#374151] text-sm sm:text-base">Цена за единицу</Label>
+            <Label htmlFor="price" className="text-[#374151] text-sm sm:text-base">Цена за единицу (₸)</Label>
             <div className="flex items-center">
               <span className="text-xs sm:text-sm mr-2 text-[#6b7280]">₸</span>
               <Input
@@ -279,25 +279,25 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 value={price}
                 onChange={handlePriceChange}
                 min={0}
-                step={0.01}
+                step={1}
                 className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] text-sm sm:text-base"
               />
             </div>
             {item.suggested_price !== undefined && item.suggested_price > 0 && (
               <p className="text-xs text-[#16a34a] font-medium">
-                Рекомендуемая цена: ₸{item.suggested_price.toFixed(2)}
+                Рекомендуемая цена: ₸{item.suggested_price.toFixed(0)}
               </p>
             )}
             {!item.suggested_price && item.product.default_price && (
               <p className="text-xs text-[#6b7280]">
-                Стандартная цена: ₸{item.product.default_price.toFixed(2)}
+                Стандартная цена: ₸{item.product.default_price.toFixed(0)}
               </p>
             )}
             {item.discount_suggestion && (
               <p className="text-xs text-[#d97706] font-medium">
                 Рекомендуемая скидка:{" "}
                 {item.discount_suggestion.discount_percent}% (₸
-                {item.discount_suggestion.discounted_price.toFixed(2)})
+                {item.discount_suggestion.discounted_price.toFixed(0)})
               </p>
             )}
           </div>

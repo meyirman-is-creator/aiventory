@@ -259,6 +259,17 @@ export const storeApi = {
     return response.data;
   },
 
+  recordSaleByBarcode: async (
+    barcode: string,
+    soldQty: number
+  ): Promise<Sale> => {
+    const response = await api.post<Sale>("/store/sales-by-barcode", {
+      barcode,
+      sold_qty: soldQty,
+    });
+    return response.data;
+  },
+
   getReports: async (
     startDate?: Date,
     endDate?: Date

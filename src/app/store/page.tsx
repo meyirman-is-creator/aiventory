@@ -22,6 +22,7 @@ import ActiveItemsTable from "@/components/store/active-items-table";
 import RemovedItemsTable from "@/components/store/removed-items-table";
 import SalesHistoryTable from "@/components/store/sales-history-table";
 import StoreStats from "@/components/store/store-stats";
+import SellByBarcodeButton from "@/components/store/sell-by-barcode-button";
 import { useUserStore } from "@/store/user-store";
 
 export default function StorePage() {
@@ -59,14 +60,19 @@ export default function StorePage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 px-2 sm:px-0">
-      <div className="flex flex-col space-y-2">
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1f2937]">
-          Управление магазином
-        </h2>
-        <p className="text-sm sm:text-base text-[#6b7280]">
-          Управляйте запасами магазина, просматривайте товары с истекающим
-          сроком и регистрируйте продажи
-        </p>
+      <div className="flex flex-col space-y-4">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1f2937]">
+            Управление магазином
+          </h2>
+          <p className="text-sm sm:text-base text-[#6b7280] mt-1">
+            Управляйте запасами магазина, просматривайте товары с истекающим
+            сроком и регистрируйте продажи
+          </p>
+        </div>
+        <div>
+          <SellByBarcodeButton />
+        </div>
       </div>
 
       <StoreStats reports={reports} isLoading={isLoadingReports} />
