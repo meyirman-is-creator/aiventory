@@ -76,7 +76,7 @@ export default function RegisterPage() {
         title: 'Регистрация успешна',
         description: 'Пожалуйста, проверьте вашу почту и введите код подтверждения.',
       });
-      router.push(`/auth/verify?email=${encodeURIComponent(email)}`);
+      router.push(`/auth/login`);
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'response' in error && 
         error.response && typeof error.response === 'object' && 'data' in error.response &&
