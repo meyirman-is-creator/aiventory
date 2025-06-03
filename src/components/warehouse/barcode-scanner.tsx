@@ -81,7 +81,7 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
     setIsLoadingProduct(true);
     try {
       const items = await warehouseApi.getItems();
-      const matchingItem = items.find(item => item.product.barcode === barcode);
+      const matchingItem = items.find((item: WarehouseItem) => item.product.barcode === barcode);
 
       if (matchingItem) {
         setProductInfo(matchingItem);

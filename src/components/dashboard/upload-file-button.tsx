@@ -126,16 +126,16 @@ const UploadFileButton = () => {
           <span className="sm:hidden">Загрузить</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px] md:max-w-3xl lg:max-w-4xl max-h-[calc(100vh-2rem)] sm:max-h-[90vh] overflow-hidden flex flex-col p-0">
-        <div className="overflow-y-auto flex-1 p-4 sm:p-6">
-          <DialogHeader className="space-y-2 sm:space-y-3 pb-4">
-            <DialogTitle className="text-[#1f2937] text-base sm:text-lg">Загрузка инвентаря</DialogTitle>
-            <DialogDescription className="text-[#6b7280] text-xs sm:text-sm">
-              Загрузите файл CSV или Excel, содержащий данные вашего инвентаря.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
+      <DialogContent className="sm:max-w-[625px] md:max-w-3xl lg:max-w-4xl max-h-[calc(100vh-2rem)] sm:max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="text-[#1f2937] text-base sm:text-lg">Загрузка инвентаря</DialogTitle>
+          <DialogDescription className="text-[#6b7280] text-xs sm:text-sm">
+            Загрузите файл CSV или Excel, содержащий данные вашего инвентаря.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="overflow-y-auto flex-1 px-1">
+          <div className="space-y-4 pb-4">
             <div className="space-y-2">
               <Label htmlFor="file" className="text-[#1f2937] text-xs sm:text-sm font-medium">
                 Файл инвентаря
@@ -251,7 +251,7 @@ const UploadFileButton = () => {
           </div>
         </div>
         
-        <DialogFooter className="border-t p-4 sm:p-6 flex-col-reverse sm:flex-row gap-2">
+        <DialogFooter className="flex-col-reverse sm:flex-row gap-2 pt-4">
           <Button
             type="button"
             variant="outline"
