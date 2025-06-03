@@ -88,7 +88,7 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
 
     set({ isLoadingExpiringItems: true, error: null });
     try {
-      const expiringItems = await warehouseApi.getItems(true);
+      const expiringItems = await warehouseApi.getItems(undefined, true);
       set({
         expiringItems,
         isLoadingExpiringItems: false,

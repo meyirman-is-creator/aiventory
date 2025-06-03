@@ -19,7 +19,7 @@ import { useDashboardStore } from '@/store/dashboard-store';
 import { useStoreItemsStore } from '@/store/store-items-store';
 import { formatCurrency } from '@/lib/utils';
 import UploadFileButton from '@/components/dashboard/upload-file-button';
-import AnalyticsCards from '@/components/dashboard/analytics-cards';
+import CategoryDistribution from '@/components/dashboard/category-distribution';
 import QuickStats from '@/components/dashboard/quick-stats';
 
 export default function Dashboard() {
@@ -96,33 +96,29 @@ export default function Dashboard() {
       title: "Выручка (30 дней)",
       value: formatCurrency(stats?.total_revenue_last_30_days || 0),
       icon: DollarSign,
-      change: "+23.5%",
-      trend: "up" as const
+      change: stats?.revenue_change ? `${stats.revenue_change > 0 ? '+' : ''}${stats.revenue_change.toFixed(1)}%` : "0%",
+      trend: (stats?.revenue_change ? (stats.revenue_change > 0 ? "up" : stats.revenue_change < 0 ? "down" : "neutral") : "neutral") as "up" | "down" | "neutral"
     },
     {
       title: "Продажи (30 дней)",
       value: stats?.total_sales_last_30_days || 0,
       icon: ShoppingCart,
-      change: "+18.2%",
-      trend: "up" as const
+      change: stats?.sales_change ? `${stats.sales_change > 0 ? '+' : ''}${stats.sales_change.toFixed(1)}%` : "0%",
+      trend: (stats?.sales_change ? (stats.sales_change > 0 ? "up" : stats.sales_change < 0 ? "down" : "neutral") : "neutral") as "up" | "down" | "neutral"
     },
     {
       title: "Средний чек",
-      value: formatCurrency(
-        stats?.total_sales_last_30_days && stats.total_sales_last_30_days > 0
-          ? stats.total_revenue_last_30_days / stats.total_sales_last_30_days
-          : 0
-      ),
+      value: formatCurrency(stats?.avg_check || 0),
       icon: Activity,
-      change: "+5.3%",
-      trend: "up" as const
+      change: stats?.avg_check_change ? `${stats.avg_check_change > 0 ? '+' : ''}${stats.avg_check_change.toFixed(1)}%` : "0%",
+      trend: (stats?.avg_check_change ? (stats.avg_check_change > 0 ? "up" : stats.avg_check_change < 0 ? "down" : "neutral") : "neutral") as "up" | "down" | "neutral"
     },
     {
       title: "Конверсия",
-      value: "68%",
+      value: `${stats?.conversion_rate || 0}%`,
       icon: Users,
-      change: "+2.1%",
-      trend: "up" as const
+      change: stats?.conversion_change ? `${stats.conversion_change > 0 ? '+' : ''}${stats.conversion_change.toFixed(1)}%` : "0%",
+      trend: (stats?.conversion_change ? (stats.conversion_change > 0 ? "up" : stats.conversion_change < 0 ? "down" : "neutral") : "neutral") as "up" | "down" | "neutral"
     }
   ];
 
@@ -188,81 +184,48 @@ export default function Dashboard() {
 
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-7">
         <div className="lg:col-span-4">
-          <AnalyticsCards reports={reports} isLoading={isLoading} />
+          <CategoryDistribution data={stats?.category_distribution || []} isLoading={isLoading} />
         </div>
         <div className="lg:col-span-3">
           <QuickStats data={kpiData} />
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Быстрые действия</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => router.push('/warehouse')}
-            >
-              <Package className="mr-2 h-4 w-4" />
-              Управление складом
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => router.push('/store')}
-            >
-              <Store className="mr-2 h-4 w-4" />
-              Управление магазином
-            </Button>
-            <Button
-              className="w-full justify-start bg-purple-600 hover:bg-purple-700"
-              onClick={() => router.push('/store')}
-            >
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              Новая продажа
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Недавняя активность</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {reports?.sales && reports.sales.length > 0 ? (
-                reports.sales.slice(0, 5).map((sale, index) => (
-                  <div key={`${sale.date}-${sale.product_name}-${index}`} className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        {sale.product_name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {sale.category_name} • {sale.quantity} шт
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">
-                        {formatCurrency(sale.revenue)}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(sale.date).toLocaleDateString('ru-RU')}
-                      </p>
-                    </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Недавняя активность</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {reports?.sales && reports.sales.length > 0 ? (
+              reports.sales.slice(0, 5).map((sale, index) => (
+                <div key={`${sale.date}-${sale.product_name}-${index}`} className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      {sale.product_name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {sale.category_name} • {sale.quantity} шт
+                    </p>
                   </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500 py-8">
-                  Нет недавней активности
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">
+                      {formatCurrency(sale.revenue)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(sale.date).toLocaleDateString('ru-RU')}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-8">
+                Нет недавней активности
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

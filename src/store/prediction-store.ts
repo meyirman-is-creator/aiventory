@@ -136,6 +136,7 @@ export const usePredictionStore = create<PredictionState>((set, get) => ({
     try {
       const stats = await predictionApi.getStats(
         productSid,
+        undefined,
         startDate,
         endDate
       );

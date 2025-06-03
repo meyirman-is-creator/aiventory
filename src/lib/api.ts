@@ -1,250 +1,143 @@
-import axios from "axios";
-import {
-  AuthResponse,
-  User,
-  WarehouseItem,
-  StoreItem,
-  RemovedItem,
-  Prediction,
-  DashboardStats,
-  PredictionStats,
+import axios from 'axios';
+import { 
+  StoreItem, 
+  Sale, 
+  Category,
+  Product,
   StoreReports,
-  Upload,
-  Sale,
-  ProductCategory,
-  ProductResponse,
-  Discount,
-} from "./types";
+  RemovedItem 
+} from './types';
 
-interface Analytics {
-  trends?: {
-    trend?: string;
-    growth?: {
-      quantity?: number;
-      revenue?: number;
-    };
-  };
-  kpis?: {
-    turnover_rate?: number;
-    days_of_supply?: number;
-    avg_monthly_sales?: number;
-    avg_monthly_revenue?: number;
-  };
-  inventory?: {
-    nearest_expiry?: string;
-  };
-}
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-);
+  return config;
+});
 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem("accessToken");
-      window.location.href = "/auth/login";
+    if (error.response?.status === 401) {
+      localStorage.removeItem('accessToken');
+      window.location.href = '/auth/login';
     }
     return Promise.reject(error);
   }
 );
 
 export const authApi = {
-  login: async (email: string, password: string): Promise<AuthResponse> => {
+  login: async (email: string, password: string) => {
     const formData = new FormData();
-    formData.append("username", email);
-    formData.append("password", password);
-
-    const response = await api.post<AuthResponse>("/auth/login", formData, {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
+    formData.append('username', email);
+    formData.append('password', password);
+    const response = await api.post('/auth/login', formData);
     return response.data;
   },
 
-  register: async (email: string, password: string): Promise<User> => {
-    const response = await api.post<User>("/auth/register", {
-      email,
-      password,
-    });
+  register: async (email: string, password: string) => {
+    const response = await api.post('/auth/register', { email, password });
     return response.data;
   },
 
-  verify: async (email: string, code: string): Promise<User> => {
-    const response = await api.post<User>("/auth/verify", { email, code });
+  verify: async (email: string, code: string) => {
+    const response = await api.post('/auth/verify', { email, code });
     return response.data;
   },
 
-  logout: async (): Promise<void> => {
-    await api.post("/auth/logout");
-    localStorage.removeItem("accessToken");
-  },
-};
-
-export const dashboardApi = {
-  getStats: async (): Promise<DashboardStats> => {
-    const warehouseResponse = await api.get<WarehouseItem[]>(
-      "/warehouse/items"
-    );
-    const storeResponse = await api.get<StoreItem[]>("/store/items");
-    const reportsResponse = await api.get<StoreReports>("/store/reports");
-
-    const total_products = [
-      ...new Set([
-        ...warehouseResponse.data.map((item) => item.product_sid),
-        ...storeResponse.data.map((item) => item.product.sid),
-      ]),
-    ].length;
-
-    const products_in_warehouse = warehouseResponse.data.length;
-    const products_in_store = storeResponse.data.length;
-
-    const today = new Date();
-    const oneWeekLater = new Date(today);
-    oneWeekLater.setDate(today.getDate() + 7);
-
-    const products_expiring_soon = [
-      ...warehouseResponse.data.filter((item) => {
-        if (!item.expire_date) return false;
-        const expireDate = new Date(item.expire_date);
-        return expireDate <= oneWeekLater && expireDate >= today;
-      }),
-      ...storeResponse.data.filter((item) => {
-        if (!item.expire_date) return false;
-        const expireDate = new Date(item.expire_date);
-        return expireDate <= oneWeekLater && expireDate >= today;
-      }),
-    ].length;
-
-    const total_revenue_last_30_days = reportsResponse.data.summary.total_sales;
-    const total_sales_last_30_days =
-      reportsResponse.data.summary.total_items_sold;
-
-    return {
-      total_products,
-      products_in_warehouse,
-      products_in_store,
-      products_expiring_soon,
-      total_revenue_last_30_days,
-      total_sales_last_30_days,
-    };
+  logout: async () => {
+    const response = await api.post('/auth/logout');
+    return response.data;
   },
 };
 
 export const warehouseApi = {
-  getItems: async (expireSoon?: boolean): Promise<WarehouseItem[]> => {
-    const params = expireSoon ? { expire_soon: true } : {};
-    const response = await api.get<WarehouseItem[]>("/warehouse/items", {
-      params,
-    });
-    return response.data;
-  },
-
-  uploadFile: async (file: File): Promise<Upload> => {
+  uploadFile: async (file: File) => {
     const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await api.post<Upload>("/warehouse/upload", formData, {
+    formData.append('file', file);
+    const response = await api.post('/warehouse/upload', formData, {
       headers: {
-        "Content-Type": "multipart/form-data",
+        'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
   },
 
-  moveToStore: async (
-    itemSid: string,
-    quantity: number,
-    price: number
-  ): Promise<{ store_item_sid: string; message: string }> => {
-    const formData = new FormData();
-    formData.append("item_sid", itemSid);
-    formData.append("quantity", quantity.toString());
-    formData.append("price", price.toString());
-
-    const response = await api.post<{
-      store_item_sid: string;
-      message: string;
-    }>("/warehouse/to-store", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+  getItems: async (status?: string, expireSoon?: boolean) => {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (expireSoon) params.append('expire_soon', 'true');
+    const response = await api.get(`/warehouse/items?${params.toString()}`);
     return response.data;
   },
 
-  moveToStoreByBarcode: async (
-    barcode: string,
-    quantity: number,
-    price: number
-  ): Promise<{ store_item_sid: string; message: string }> => {
+  moveToStore: async (itemSid: string, quantity: number, price?: number) => {
     const formData = new FormData();
-    formData.append("barcode", barcode);
-    formData.append("quantity", quantity.toString());
-    formData.append("price", price.toString());
-  
-    const response = await api.post<{
-      store_item_sid: string;
-      message: string;
-    }>("/warehouse/to-store-by-barcode", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    formData.append('item_sid', itemSid);
+    formData.append('quantity', quantity.toString());
+    if (price !== undefined) {
+      formData.append('price', price.toString());
+    }
+    const response = await api.post('/warehouse/to-store', formData);
     return response.data;
-  }
+  },
+
+  moveToStoreByBarcode: async (barcode: string, quantity: number, price?: number) => {
+    const formData = new FormData();
+    formData.append('barcode', barcode);
+    formData.append('quantity', quantity.toString());
+    if (price !== undefined) {
+      formData.append('price', price.toString());
+    }
+    const response = await api.post('/warehouse/to-store-by-barcode', formData);
+    return response.data;
+  },
 };
 
 export const storeApi = {
   getItems: async (status?: string): Promise<StoreItem[]> => {
-    const params = status ? { status } : {};
-    const response = await api.get<StoreItem[]>("/store/items", { params });
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    const response = await api.get(`/store/items?${params.toString()}`);
     return response.data;
   },
 
-  getRemovedItems: async (reason?: string): Promise<RemovedItem[]> => {
-    const params = reason ? { reason } : {};
-    const response = await api.get<RemovedItem[]>("/store/removed-items", { params });
+  getRemovedItems: async (): Promise<RemovedItem[]> => {
+    const response = await api.get('/store/removed-items');
+    return response.data;
+  },
+
+  recordSale: async (storeItemSid: string, soldQty: number, soldPrice: number) => {
+    const response = await api.post('/store/sales', {
+      store_item_sid: storeItemSid,
+      sold_qty: soldQty,
+      sold_price: soldPrice,
+    });
+    return response.data;
+  },
+
+  recordSaleByBarcode: async (barcode: string, soldQty: number) => {
+    const response = await api.post(`/store/sales-by-barcode?barcode=${barcode}&sold_qty=${soldQty}`);
     return response.data;
   },
 
   getSales: async (startDate?: Date, endDate?: Date): Promise<Sale[]> => {
-    const params: Record<string, string> = {};
-    if (startDate) params.start_date = startDate.toISOString();
-    if (endDate) params.end_date = endDate.toISOString();
-
-    const response = await api.get<Sale[]>("/store/sales", { params });
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate.toISOString());
+    if (endDate) params.append('end_date', endDate.toISOString());
+    const response = await api.get(`/store/sales?${params.toString()}`);
     return response.data;
   },
 
-  createDiscount: async (
-    storeItemSid: string,
-    percentage: number,
-    startsAt: Date,
-    endsAt: Date
-  ): Promise<Discount> => {
-    const response = await api.post("/store/discount", {
+  createDiscount: async (storeItemSid: string, percentage: number, startsAt: Date, endsAt: Date) => {
+    const response = await api.post('/store/discount', {
       store_item_sid: storeItemSid,
       percentage,
       starts_at: startsAt.toISOString(),
@@ -253,108 +146,87 @@ export const storeApi = {
     return response.data;
   },
 
-  markAsExpired: async (storeItemSid: string): Promise<StoreItem> => {
-    const response = await api.post<StoreItem>(`/store/expire/${storeItemSid}`);
+  markAsExpired: async (storeItemSid: string) => {
+    const response = await api.post(`/store/expire/${storeItemSid}`);
     return response.data;
   },
 
-  removeFromStore: async (storeItemSid: string): Promise<StoreItem> => {
-    const response = await api.post<StoreItem>(`/store/remove/${storeItemSid}`);
+  removeFromStore: async (storeItemSid: string) => {
+    const response = await api.post(`/store/remove/${storeItemSid}`);
     return response.data;
   },
 
-  recordSale: async (
-    storeItemSid: string,
-    soldQty: number,
-    soldPrice: number,
-    ignoreDiscount?: boolean
-  ): Promise<Sale> => {
-    const response = await api.post<Sale>("/store/sales", {
-      store_item_sid: storeItemSid,
-      sold_qty: soldQty,
-      sold_price: soldPrice,
-      ignore_discount: ignoreDiscount || false,
-    });
-    return response.data;
-  },
-
-  recordSaleByBarcode: async (
-    barcode: string,
-    soldQty: number
-  ): Promise<Sale> => {
-    const response = await api.post<Sale>("/store/sales-by-barcode", {
-      barcode,
-      sold_qty: soldQty,
-    });
-    return response.data;
-  },
-
-  getReports: async (
-    startDate?: Date,
-    endDate?: Date
-  ): Promise<StoreReports> => {
-    const params: Record<string, string> = {};
-    if (startDate) params.start_date = startDate.toISOString();
-    if (endDate) params.end_date = endDate.toISOString();
-
-    const response = await api.get<StoreReports>("/store/reports", { params });
+  getReports: async (startDate?: Date, endDate?: Date): Promise<StoreReports> => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate.toISOString());
+    if (endDate) params.append('end_date', endDate.toISOString());
+    const response = await api.get(`/store/reports?${params.toString()}`);
     return response.data;
   },
 };
 
 export const predictionApi = {
-  getForecast: async (
-    productSid: string,
-    refresh?: boolean,
-    timeframe?: string,
-    periods?: number
-  ): Promise<Prediction[]> => {
-    const params: Record<string, string | boolean | number> = {};
-    if (refresh !== undefined) params.refresh = refresh;
-    if (timeframe) params.timeframe = timeframe;
-    if (periods) params.periods = periods;
-
-    const response = await api.get<Prediction[]>(
-      `/prediction/forecast/${productSid}`,
-      { params }
-    );
+  getProducts: async (categorySid?: string, search?: string): Promise<Product[]> => {
+    const params = new URLSearchParams();
+    if (categorySid) params.append('category_sid', categorySid);
+    if (search) params.append('search', search);
+    const response = await api.get(`/prediction/products?${params.toString()}`);
     return response.data;
   },
 
-  getStats: async (
-    productSid?: string,
-    startDate?: Date,
-    endDate?: Date
-  ): Promise<PredictionStats> => {
-    const params: Record<string, string> = {};
-    if (productSid) params.product_sid = productSid;
-    if (startDate) params.start_date = startDate.toISOString();
-    if (endDate) params.end_date = endDate.toISOString();
-
-    const response = await api.get<PredictionStats>("/prediction/stats", {
-      params,
-    });
+  getCategories: async (search?: string): Promise<Category[]> => {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    const response = await api.get(`/prediction/categories?${params.toString()}`);
     return response.data;
   },
 
-  getCategories: async (): Promise<ProductCategory[]> => {
-    const response = await api.get<ProductCategory[]>("/prediction/categories");
-    return response.data;
-  },
-  
-  getProducts: async (category_sid?: string, search?: string): Promise<ProductResponse[]> => {
-    const params: Record<string, string> = {};
-    if (category_sid) params.category_sid = category_sid;
-    if (search) params.search = search;
-  
-    const response = await api.get<ProductResponse[]>("/prediction/products", { params });
+  getForecast: async (productSid: string, refresh?: boolean, timeframe?: string, periods?: number) => {
+    const params = new URLSearchParams();
+    if (refresh) params.append('refresh', 'true');
+    if (timeframe) params.append('timeframe', timeframe);
+    if (periods) params.append('periods', periods.toString());
+    const response = await api.get(`/prediction/forecast/${productSid}?${params.toString()}`);
     return response.data;
   },
 
-  getAnalytics: async (productSid: string): Promise<Analytics> => {
+  getStats: async (productSid?: string, categorySid?: string, startDate?: Date, endDate?: Date, groupBy?: string) => {
+    const params = new URLSearchParams();
+    if (productSid) params.append('product_sid', productSid);
+    if (categorySid) params.append('category_sid', categorySid);
+    if (startDate) params.append('start_date', startDate.toISOString());
+    if (endDate) params.append('end_date', endDate.toISOString());
+    if (groupBy) params.append('group_by', groupBy);
+    const response = await api.get(`/prediction/stats?${params.toString()}`);
+    return response.data;
+  },
+
+  getAnalytics: async (productSid: string) => {
     const response = await api.get(`/prediction/analytics/${productSid}`);
+    return response.data;
+  },
+
+  getTrends: async (productSid: string, daysBack?: number) => {
+    const params = new URLSearchParams();
+    if (daysBack) params.append('days_back', daysBack.toString());
+    const response = await api.get(`/prediction/trends/${productSid}?${params.toString()}`);
+    return response.data;
+  },
+
+  getInsights: async () => {
+    const response = await api.get('/prediction/insights');
+    return response.data;
+  },
+
+  getOptimizationSuggestions: async () => {
+    const response = await api.get('/prediction/optimization-suggestions');
     return response.data;
   },
 };
 
-export default api;
+export const dashboardApi = {
+  getStats: async () => {
+    const response = await api.get('/dashboard/stats');
+    return response.data;
+  },
+};
