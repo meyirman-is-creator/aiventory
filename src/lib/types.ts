@@ -181,6 +181,8 @@ export interface DashboardStats {
   avg_check_change: number;
   conversion_rate: number;
   conversion_change: number;
+  warehouse_change?: number;
+  store_items_change?: number;
   category_distribution: Array<{
     name: string;
     value: number;

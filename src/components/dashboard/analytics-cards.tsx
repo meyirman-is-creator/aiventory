@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardStats, StoreReports } from "@/lib/types";
-import { ResponsiveLine } from "@nivo/line";
+import { ResponsivePie } from "@nivo/pie";
 import { ResponsiveBar } from "@nivo/bar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/utils";
@@ -20,7 +20,7 @@ interface CategoryData {
   quantity: number;
 }
 
-const AnalyticsCards = ({ reports, isLoading }: Omit<AnalyticsCardsProps, 'stats'>) => {
+const AnalyticsCards = ({ stats, reports, isLoading }: AnalyticsCardsProps) => {
   if (isLoading) {
     return (
       <Card>
@@ -34,22 +34,21 @@ const AnalyticsCards = ({ reports, isLoading }: Omit<AnalyticsCardsProps, 'stats
   const salesData = reports?.sales || [];
   const last7Days = salesData.slice(-7);
 
-  const lineData = [
-    {
-      id: "Выручка",
-      color: "#6322FE",
-      data: last7Days.map(sale => ({
-        x: new Date(sale.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }),
-        y: sale.revenue
-      }))
-    }
-  ];
+  // Данные для круговой диаграммы распределения по категориям
+  const categoryDistributionData = stats?.category_distribution?.map(item => ({
+    id: item.name,
+    label: item.name,
+    value: item.value,
+    productCount: item.product_count
+  })) || [];
 
+  // Данные для гистограммы количества продаж
   const barData = last7Days.map(sale => ({
     date: new Date(sale.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }),
     quantity: sale.quantity
   }));
 
+  // Данные по категориям для третьей вкладки
   const categoryData = reports?.sales
     ?.reduce((acc: CategoryData[], sale) => {
       const category = acc.find(c => c.category === sale.category_name);
@@ -81,6 +80,8 @@ const AnalyticsCards = ({ reports, isLoading }: Omit<AnalyticsCardsProps, 'stats
   const previousWeekRevenue = salesData.slice(-14, -7).reduce((sum, sale) => sum + sale.revenue, 0);
   const revenueTrend = calculateTrend(currentWeekRevenue, previousWeekRevenue);
 
+  const totalQuantity = categoryDistributionData.reduce((sum, item) => sum + item.value, 0);
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -109,42 +110,71 @@ const AnalyticsCards = ({ reports, isLoading }: Omit<AnalyticsCardsProps, 'stats
         </div>
       </CardHeader>
       <CardContent className="h-[calc(100%-5rem)]">
-        <Tabs defaultValue="revenue" className="h-full">
+        <Tabs defaultValue="distribution" className="h-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="revenue">Выручка</TabsTrigger>
-            <TabsTrigger value="quantity">Количество</TabsTrigger>
-            <TabsTrigger value="categories">Категории</TabsTrigger>
+            <TabsTrigger value="distribution">Распределение по категориям</TabsTrigger>
+            <TabsTrigger value="quantity">Количество продаж</TabsTrigger>
+            <TabsTrigger value="categories">Топ категории</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="revenue" className="h-[calc(100%-3rem)]">
-            {lineData[0].data.length > 0 ? (
-              <ResponsiveLine
-                data={lineData}
-                margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
-                xScale={{ type: 'point' }}
-                yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
-                curve="cardinal"
-                axisBottom={{
-                  tickSize: 5,
-                  tickPadding: 5,
-                  tickRotation: -45
-                }}
-                axisLeft={{
-                  tickSize: 5,
-                  tickPadding: 5,
-                  tickRotation: 0,
-                  format: value => `${(value / 1000).toFixed(0)}k`
-                }}
-                pointSize={8}
-                pointColor={{ theme: 'background' }}
-                pointBorderWidth={2}
-                pointBorderColor={{ from: 'serieColor' }}
-                enableArea={true}
-                areaOpacity={0.1}
-                useMesh={true}
-                animate={true}
-                motionConfig="gentle"
-              />
+          <TabsContent value="distribution" className="h-[calc(100%-3rem)]">
+            {categoryDistributionData.length > 0 ? (
+              <div className="h-full relative">
+                <ResponsivePie
+                  data={categoryDistributionData}
+                  margin={{ top: 20, right: 80, bottom: 80, left: 80 }}
+                  innerRadius={0.5}
+                  padAngle={0.7}
+                  cornerRadius={3}
+                  activeOuterRadiusOffset={8}
+                  colors={{ scheme: 'nivo' }}
+                  borderWidth={1}
+                  borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
+                  arcLinkLabelsSkipAngle={10}
+                  arcLinkLabelsTextColor="#333333"
+                  arcLinkLabelsThickness={2}
+                  arcLinkLabelsColor={{ from: 'color' }}
+                  arcLabelsSkipAngle={10}
+                  arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+                  tooltip={({ datum }) => (
+                    <div className="bg-white p-2 rounded shadow-lg border border-gray-200">
+                      <div className="font-semibold">{datum.label}</div>
+                      <div className="text-sm text-gray-600">
+                        Количество: {datum.value.toLocaleString()} шт
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Продуктов: {datum.data.productCount}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {((datum.value / totalQuantity) * 100).toFixed(1)}% от общего
+                      </div>
+                    </div>
+                  )}
+                  legends={[
+                    {
+                      anchor: 'bottom',
+                      direction: 'row',
+                      justify: false,
+                      translateX: 0,
+                      translateY: 56,
+                      itemsSpacing: 0,
+                      itemWidth: 100,
+                      itemHeight: 18,
+                      itemTextColor: '#999',
+                      itemDirection: 'left-to-right',
+                      itemOpacity: 1,
+                      symbolSize: 18,
+                      symbolShape: 'circle'
+                    }
+                  ]}
+                />
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                  <div className="text-2xl font-bold text-gray-900">
+                    {totalQuantity.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-600">единиц</div>
+                </div>
+              </div>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-500">
                 Нет данных для отображения
@@ -164,17 +194,31 @@ const AnalyticsCards = ({ reports, isLoading }: Omit<AnalyticsCardsProps, 'stats
                 axisBottom={{
                   tickSize: 5,
                   tickPadding: 5,
-                  tickRotation: -45
+                  tickRotation: -45,
+                  legend: 'Дата',
+                  legendPosition: 'middle',
+                  legendOffset: 40
                 }}
                 axisLeft={{
                   tickSize: 5,
                   tickPadding: 5,
-                  tickRotation: 0
+                  tickRotation: 0,
+                  legend: 'Количество продаж (шт)',
+                  legendPosition: 'middle',
+                  legendOffset: -50
                 }}
                 labelSkipWidth={12}
                 labelSkipHeight={12}
                 animate={true}
                 motionConfig="gentle"
+                tooltip={({ data }) => (
+                  <div className="bg-white p-2 rounded shadow-lg border border-gray-200">
+                    <div className="font-semibold text-sm">{data.date}</div>
+                    <div className="text-sm text-gray-600">
+                      Продано: {data.quantity} шт
+                    </div>
+                  </div>
+                )}
               />
             ) : (
               <div className="h-full flex items-center justify-center text-gray-500">
@@ -185,6 +229,7 @@ const AnalyticsCards = ({ reports, isLoading }: Omit<AnalyticsCardsProps, 'stats
           
           <TabsContent value="categories" className="h-[calc(100%-3rem)]">
             <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Топ-5 категорий по выручке</h4>
               {categoryData.map((category, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between">

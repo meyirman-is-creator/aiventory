@@ -42,6 +42,7 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   fetchStats: async () => {
     set({ isLoading: true, error: null });
     try {
+      // Всегда получаем свежие данные без кэширования
       const stats = await dashboardApi.getStats();
       set({ stats, isLoading: false });
     } catch (error) {
