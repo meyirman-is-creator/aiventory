@@ -5,7 +5,9 @@ import {
   Category,
   Product,
   StoreReports,
-  RemovedItem 
+  RemovedItem,
+  WarehouseItemStatus,
+  UrgencyLevel
 } from './types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -58,6 +60,18 @@ export const authApi = {
   },
 };
 
+interface WarehouseFilters {
+  status?: WarehouseItemStatus;
+  expire_soon?: boolean;
+  urgency_level?: UrgencyLevel;
+  search?: string;
+  category_sid?: string;
+  skip?: number;
+  limit?: number | null;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}
+
 export const warehouseApi = {
   uploadFile: async (file: File) => {
     const formData = new FormData();
@@ -70,10 +84,21 @@ export const warehouseApi = {
     return response.data;
   },
 
-  getItems: async (status?: string, expireSoon?: boolean) => {
+  getItems: async (filters?: WarehouseFilters) => {
     const params = new URLSearchParams();
-    if (status) params.append('status', status);
-    if (expireSoon) params.append('expire_soon', 'true');
+    
+    if (filters) {
+      if (filters.status) params.append('status', filters.status);
+      if (filters.expire_soon) params.append('expire_soon', 'true');
+      if (filters.urgency_level) params.append('urgency_level', filters.urgency_level);
+      if (filters.search) params.append('search', filters.search);
+      if (filters.category_sid) params.append('category_sid', filters.category_sid);
+      if (filters.skip !== undefined) params.append('skip', filters.skip.toString());
+      if (filters.limit !== undefined && filters.limit !== null) params.append('limit', filters.limit.toString());
+      if (filters.sort_by) params.append('sort_by', filters.sort_by);
+      if (filters.sort_order) params.append('sort_order', filters.sort_order);
+    }
+    
     const response = await api.get(`/warehouse/items?${params.toString()}`);
     return response.data;
   },
@@ -97,6 +122,13 @@ export const warehouseApi = {
       formData.append('price', price.toString());
     }
     const response = await api.post('/warehouse/to-store-by-barcode', formData);
+    return response.data;
+  },
+
+  deleteItems: async (itemSids: string[]) => {
+    const response = await api.delete('/warehouse/items', {
+      data: { item_sids: itemSids }
+    });
     return response.data;
   },
 };

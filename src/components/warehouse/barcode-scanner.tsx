@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useWarehouseStore } from "@/store/warehouse-store";
 import { warehouseApi } from "@/lib/api";
-import { WarehouseItem } from "@/lib/types";
+import { WarehouseItem, UrgencyLevel } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { Loader2, CameraOff, Camera, Barcode, Package, AlertTriangle, SwitchCamera } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,12 +80,55 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
   const fetchProductByBarcode = async (barcode: string) => {
     setIsLoadingProduct(true);
     try {
-      const items = await warehouseApi.getItems();
-      const matchingItem = items.find((item: WarehouseItem) => item.product.barcode === barcode);
+      const response = await warehouseApi.getItems({
+        search: barcode,
+        limit: null,
+      });
+      const items = response.items;
+      
+      // Filter items with matching barcode
+      const matchingItems = items.filter((item: WarehouseItem) => 
+        item.product.barcode === barcode && item.status === 'in_stock' && item.quantity > 0
+      );
 
-      if (matchingItem) {
-        setProductInfo(matchingItem);
-        setPrice(matchingItem.suggested_price || matchingItem.product.default_price || 0);
+      if (matchingItems.length > 0) {
+        // Sort by urgency level and expiry date to get the most critical item
+        const sortedItems = matchingItems.sort((a: WarehouseItem, b: WarehouseItem) => {
+          // First sort by urgency level
+          const urgencyOrder: Record<string, number> = {
+            'critical': 3,
+            'urgent': 2,
+            'normal': 1
+          };
+          const aUrgency = urgencyOrder[a.urgency_level || 'normal'] || 0;
+          const bUrgency = urgencyOrder[b.urgency_level || 'normal'] || 0;
+          
+          if (aUrgency !== bUrgency) {
+            return bUrgency - aUrgency;
+          }
+          
+          // Then sort by expiry date (earlier dates first)
+          if (a.expire_date && b.expire_date) {
+            return new Date(a.expire_date).getTime() - new Date(b.expire_date).getTime();
+          }
+          if (a.expire_date) return -1;
+          if (b.expire_date) return 1;
+          
+          // Finally sort by received date (older first - FIFO)
+          return new Date(a.received_at).getTime() - new Date(b.received_at).getTime();
+        });
+
+        const mostCriticalItem = sortedItems[0];
+        setProductInfo(mostCriticalItem);
+        setPrice(mostCriticalItem.suggested_price || mostCriticalItem.product.default_price || 0);
+        
+        // Show warning if there are other batches
+        if (sortedItems.length > 1) {
+          toast({
+            title: "Внимание",
+            description: `Найдено ${sortedItems.length} партий этого товара. Выбрана наиболее критичная партия для реализации.`,
+          });
+        }
       } else {
         toast({
           title: "Товар не найден",
@@ -209,6 +252,28 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
     return Math.ceil((expireDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   };
 
+  const getUrgencyBadge = () => {
+    if (!productInfo?.urgency_level) return null;
+    
+    const urgencyStyles = {
+      [UrgencyLevel.CRITICAL]: "bg-[#ef4444] text-white",
+      [UrgencyLevel.URGENT]: "bg-[#f59e0b] text-white",
+      [UrgencyLevel.NORMAL]: "bg-[#10b981] text-white"
+    };
+
+    const urgencyText = {
+      [UrgencyLevel.CRITICAL]: "Критический",
+      [UrgencyLevel.URGENT]: "Срочный",
+      [UrgencyLevel.NORMAL]: "Обычный"
+    };
+
+    return (
+      <Badge className={urgencyStyles[productInfo.urgency_level]}>
+        {urgencyText[productInfo.urgency_level]}
+      </Badge>
+    );
+  };
+
   const videoStyle = facingMode === "user" ? { transform: 'scaleX(-1)' } : {};
 
   return (
@@ -283,9 +348,12 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
         <div className="space-y-4">
           <Card className="border-[#10b981] bg-[#d1fae5]/20">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base sm:text-lg flex items-center text-[#065f46]">
-                <Package className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                Информация о товаре
+              <CardTitle className="text-base sm:text-lg flex items-center justify-between text-[#065f46]">
+                <div className="flex items-center">
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                  Информация о товаре
+                </div>
+                {getUrgencyBadge()}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -310,6 +378,18 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
                   <div>
                     <p className="text-xs sm:text-sm text-[#6b7280]">Код партии</p>
                     <p className="font-medium text-[#1f2937] text-sm sm:text-base">{productInfo.batch_code}</p>
+                  </div>
+                )}
+                {productInfo.wholesale_price !== undefined && (
+                  <div>
+                    <p className="text-xs sm:text-sm text-[#6b7280]">Оптовая цена</p>
+                    <p className="font-medium text-[#1f2937] text-sm sm:text-base">₸{productInfo.wholesale_price.toFixed(0)}</p>
+                  </div>
+                )}
+                {productInfo.suggested_price !== undefined && (
+                  <div>
+                    <p className="text-xs sm:text-sm text-[#6b7280]">Рекомендуемая цена</p>
+                    <p className="font-medium text-[#16a34a] text-sm sm:text-base">₸{productInfo.suggested_price.toFixed(0)}</p>
                   </div>
                 )}
                 {productInfo.expire_date && (
@@ -381,11 +461,6 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
               {productInfo.suggested_price && (
                 <p className="text-xs text-[#16a34a] font-medium">
                   Рекомендуемая цена: ₸{productInfo.suggested_price.toFixed(2)}
-                </p>
-              )}
-              {productInfo.discount_suggestion && (
-                <p className="text-xs text-[#d97706] font-medium">
-                  Рекомендуемая скидка: {productInfo.discount_suggestion.discount_percent}%
                 </p>
               )}
             </div>

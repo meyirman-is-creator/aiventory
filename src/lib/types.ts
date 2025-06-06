@@ -81,6 +81,7 @@ export interface WarehouseItem {
   status: WarehouseItemStatus;
   product: Product;
   suggested_price?: number;
+  wholesale_price?: number;
   discount_suggestion?: DiscountSuggestion;
   warehouse_action?: WarehouseAction;
   urgency_level?: UrgencyLevel;
@@ -146,6 +147,17 @@ export interface Upload {
   file_name: string;
   uploaded_at: string;
   rows_imported: number;
+  items_updated?: number;
+  new_items_created?: number;
+  updated_items?: Array<{
+    product_name: string;
+    barcode: string;
+    batch_code: string;
+    previous_quantity: number;
+    added_quantity: number;
+    new_total_quantity: number;
+    message: string;
+  }>;
 }
 
 export enum TimeFrame {
@@ -245,6 +257,29 @@ export interface PredictionStats {
   revenue_data: Record<string, unknown>[];
   category_quantity_data?: Record<string, unknown>[];
   category_revenue_data?: Record<string, unknown>[];
+}
+
+// API Response Types
+export interface WarehouseItemsResponse {
+  items: WarehouseItem[];
+  total: number;
+  skip: number;
+  limit: number | null;
+  categories: Array<{ sid: string; name: string }>;
+}
+
+// Filter Types
+export interface WarehouseFilters {
+  search?: string;
+  category_sid?: string;
+  status?: WarehouseItemStatus;
+  urgency_level?: UrgencyLevel;
+  expire_soon?: boolean;
+}
+
+export interface WarehouseSorting {
+  sort_by?: string;
+  sort_order?: "asc" | "desc";
 }
 
 // Aliases for compatibility

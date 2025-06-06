@@ -184,6 +184,12 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                   <p className="text-[#6b7280]">Дата получения</p>
                   <p className="font-medium text-[#1f2937]">{formatDate(item.received_at)}</p>
                 </div>
+                {item.wholesale_price !== undefined && (
+                  <div>
+                    <p className="text-[#6b7280]">Оптовая цена</p>
+                    <p className="font-medium text-[#1f2937]">₸{item.wholesale_price.toFixed(0)}</p>
+                  </div>
+                )}
                 {item.expire_date && (
                   <div>
                     <p className="text-[#6b7280]">Срок годности</p>
@@ -288,16 +294,14 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 Рекомендуемая цена: ₸{item.suggested_price.toFixed(0)}
               </p>
             )}
+            {item.wholesale_price !== undefined && (
+              <p className="text-xs text-[#6b7280]">
+                Оптовая цена: ₸{item.wholesale_price.toFixed(0)}
+              </p>
+            )}
             {!item.suggested_price && item.product.default_price && (
               <p className="text-xs text-[#6b7280]">
                 Стандартная цена: ₸{item.product.default_price.toFixed(0)}
-              </p>
-            )}
-            {item.discount_suggestion && (
-              <p className="text-xs text-[#d97706] font-medium">
-                Рекомендуемая скидка:{" "}
-                {item.discount_suggestion.discount_percent}% (₸
-                {item.discount_suggestion.discounted_price.toFixed(0)})
               </p>
             )}
           </div>

@@ -1,64 +1,84 @@
 import { create } from "zustand";
 import { warehouseApi } from "@/lib/api";
-import { WarehouseItem, Upload, WarehouseItemStatus } from "@/lib/types";
+import { WarehouseItem, Upload, WarehouseItemStatus, UrgencyLevel } from "@/lib/types";
 
-interface WarehouseState {
-  items: WarehouseItem[];
-  expiringItems: WarehouseItem[];
-  uploads: Upload[];
-  isLoadingItems: boolean;
-  isLoadingExpiringItems: boolean;
-  isUploading: boolean;
-  isMoving: boolean;
-  error: string | null;
-  lastFetchedItems: Date | null;
-  lastFetchedExpiringItems: Date | null;
-  fetchItems: () => Promise<void>;
-  fetchExpiringItems: () => Promise<void>;
-  uploadFile: (file: File) => Promise<Upload>;
-  moveToStore: (
-    itemSid: string,
-    quantity: number,
-    price: number
-  ) => Promise<{ store_item_sid: string; message: string }>;
-  moveToStoreByBarcode: (
-    barcodeImage: string,
-    quantity: number,
-    price: number
-  ) => Promise<{ store_item_sid: string; message: string }>;
+interface WarehouseFilters {
+  search: string;
+  category_sid: string | null;
+  status: WarehouseItemStatus | null;
+  urgency_level: UrgencyLevel | null;
+  expire_soon: boolean;
 }
 
-export const useWarehouseStore = create<WarehouseState>((set, get) => ({
+interface WarehouseStore {
+  items: WarehouseItem[];
+  totalCount: number;
+  filters: WarehouseFilters;
+  isLoadingItems: boolean;
+  isUploading: boolean;
+  isMoving: boolean;
+  isDeleting: boolean;
+  error: string | null;
+  
+  setFilter: <K extends keyof WarehouseFilters>(key: K, value: WarehouseFilters[K]) => void;
+  resetFilters: () => void;
+  
+  fetchItems: (skip?: number, limit?: number) => Promise<void>;
+  uploadFile: (file: File) => Promise<Upload>;
+  moveToStore: (itemSid: string, quantity: number, price: number) => Promise<{ store_item_sid: string; message: string }>;
+  moveToStoreByBarcode: (barcode: string, quantity: number, price: number) => Promise<{ store_item_sid: string; message: string }>;
+  deleteItems: (itemSids: string[]) => Promise<void>;
+}
+
+const initialFilters: WarehouseFilters = {
+  search: "",
+  category_sid: null,
+  status: null,
+  urgency_level: null,
+  expire_soon: false,
+};
+
+export const useWarehouseStore = create<WarehouseStore>((set, get) => ({
   items: [],
-  expiringItems: [],
-  uploads: [],
+  totalCount: 0,
+  filters: initialFilters,
   isLoadingItems: false,
-  isLoadingExpiringItems: false,
   isUploading: false,
   isMoving: false,
+  isDeleting: false,
   error: null,
-  lastFetchedItems: null,
-  lastFetchedExpiringItems: null,
 
-  fetchItems: async () => {
-    const current = new Date();
-    const lastFetched = get().lastFetchedItems;
+  setFilter: <K extends keyof WarehouseFilters>(key: K, value: WarehouseFilters[K]) => {
+    set((state) => ({
+      filters: {
+        ...state.filters,
+        [key]: value,
+      },
+    }));
+  },
 
-    // If data was fetched in the last 5 minutes, don't fetch again
-    if (
-      lastFetched &&
-      current.getTime() - lastFetched.getTime() < 5 * 60 * 1000
-    ) {
-      return;
-    }
+  resetFilters: () => {
+    set({ filters: initialFilters });
+  },
 
+  fetchItems: async (skip = 0, limit?: number) => {
     set({ isLoadingItems: true, error: null });
     try {
-      const items = await warehouseApi.getItems();
+      const filters = get().filters;
+      const response = await warehouseApi.getItems({
+        skip,
+        limit,
+        search: filters.search || undefined,
+        category_sid: filters.category_sid || undefined,
+        status: filters.status || undefined,
+        urgency_level: filters.urgency_level || undefined,
+        expire_soon: filters.expire_soon || undefined,
+      });
+      
       set({
-        items,
+        items: response.items,
+        totalCount: response.total_count,
         isLoadingItems: false,
-        lastFetchedItems: new Date(),
       });
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'response' in error && 
@@ -74,52 +94,12 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
     }
   },
 
-  fetchExpiringItems: async () => {
-    const current = new Date();
-    const lastFetched = get().lastFetchedExpiringItems;
-
-    // If data was fetched in the last 5 minutes, don't fetch again
-    if (
-      lastFetched &&
-      current.getTime() - lastFetched.getTime() < 5 * 60 * 1000
-    ) {
-      return;
-    }
-
-    set({ isLoadingExpiringItems: true, error: null });
-    try {
-      const expiringItems = await warehouseApi.getItems(undefined, true);
-      set({
-        expiringItems,
-        isLoadingExpiringItems: false,
-        lastFetchedExpiringItems: new Date(),
-      });
-    } catch (error: unknown) {
-      const errorMessage = error && typeof error === 'object' && 'response' in error && 
-        error.response && typeof error.response === 'object' && 'data' in error.response &&
-        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
-        ? String(error.response.data.detail)
-        : "Failed to fetch expiring warehouse items";
-      
-      set({
-        error: errorMessage,
-        isLoadingExpiringItems: false,
-      });
-    }
-  },
-
   uploadFile: async (file: File) => {
     set({ isUploading: true, error: null });
     try {
       const upload = await warehouseApi.uploadFile(file);
-
-      // Refresh items after upload
       await get().fetchItems();
-
-      set({
-        uploads: [...get().uploads, upload],
-        isUploading: false,
-      });
+      set({ isUploading: false });
       return upload;
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'response' in error && 
@@ -140,32 +120,8 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
     set({ isMoving: true, error: null });
     try {
       const result = await warehouseApi.moveToStore(itemSid, quantity, price);
-
-      // Update the item in the items list
-      const updatedItems = get().items.map((item) => {
-        if (item.sid === itemSid) {
-          // If all quantity is moved, change status
-          if (item.quantity - quantity <= 0) {
-            return {
-              ...item,
-              quantity: 0,
-              status: WarehouseItemStatus.MOVED,
-            };
-          }
-
-          return {
-            ...item,
-            quantity: item.quantity - quantity,
-          };
-        }
-        return item;
-      });
-
-      set({
-        items: updatedItems,
-        isMoving: false,
-      });
-
+      await get().fetchItems();
+      set({ isMoving: false });
       return result;
     } catch (error: unknown) {
       const errorMessage = error && typeof error === 'object' && 'response' in error && 
@@ -182,28 +138,11 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
     }
   },
 
-  moveToStoreByBarcode: async (
-    barcode: string,
-    quantity: number,
-    price: number
-  ) => {
+  moveToStoreByBarcode: async (barcode: string, quantity: number, price: number) => {
     set({ isMoving: true, error: null });
     try {
-      const formData = new FormData();
-      formData.append("barcode", barcode);
-      formData.append("quantity", quantity.toString());
-      formData.append("price", price.toString());
-  
-      // In your real API, this would be sending the barcode value rather than an image
-      const result = await warehouseApi.moveToStoreByBarcode(
-        barcode,
-        quantity,
-        price
-      );
-  
-      // Refresh warehouse items
+      const result = await warehouseApi.moveToStoreByBarcode(barcode, quantity, price);
       await get().fetchItems();
-  
       set({ isMoving: false });
       return result;
     } catch (error: unknown) {
@@ -216,6 +155,27 @@ export const useWarehouseStore = create<WarehouseState>((set, get) => ({
       set({
         error: errorMessage,
         isMoving: false,
+      });
+      throw error;
+    }
+  },
+
+  deleteItems: async (itemSids: string[]) => {
+    set({ isDeleting: true, error: null });
+    try {
+      await warehouseApi.deleteItems(itemSids);
+      await get().fetchItems();
+      set({ isDeleting: false });
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to delete items";
+      
+      set({
+        error: errorMessage,
+        isDeleting: false,
       });
       throw error;
     }

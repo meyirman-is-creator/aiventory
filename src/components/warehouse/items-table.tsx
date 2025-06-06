@@ -12,12 +12,14 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   formatDate,
   getStatusDisplayName,
   getStatusBadgeColor,
+  formatCurrency,
 } from "@/lib/utils";
-import { ExternalLink, AlertTriangle, AlertCircle, Zap } from "lucide-react";
+import { ExternalLink, AlertTriangle, AlertCircle, Zap, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MoveToStoreModal from "@/components/warehouse/move-to-store-modal";
 
@@ -25,6 +27,8 @@ interface WarehouseItemsTableProps {
   items: WarehouseItem[];
   isLoading: boolean;
 }
+
+type SortField = "product_name" | "quantity" | "expire_date" | "received_at" | "batch_code" | "wholesale_price" | "suggested_price";
 
 const getUrgencyIcon = (urgency?: string) => {
   switch (urgency) {
@@ -65,31 +69,59 @@ const getUrgencyText = (urgency?: string) => {
   }
 };
 
-const getUrgencyOrder = (urgency?: string) => {
-  switch (urgency) {
-    case "critical":
-      return 4;
-    case "high":
-      return 3;
-    case "medium":
-      return 2;
-    case "low":
-      return 1;
-    default:
-      return 0;
-  }
-};
-
 const WarehouseItemsTable = ({
   items,
   isLoading,
 }: WarehouseItemsTableProps) => {
   const [selectedItem, setSelectedItem] = useState<WarehouseItem | null>(null);
   const [isMoveModalOpen, setMoveModalOpen] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [sorting, setSorting] = useState<{ sort_by: SortField; sort_order: "asc" | "desc" }>({
+    sort_by: "product_name",
+    sort_order: "asc"
+  });
 
   const handleMoveToStore = (item: WarehouseItem) => {
     setSelectedItem(item);
     setMoveModalOpen(true);
+  };
+
+  const toggleItemSelection = (itemSid: string) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(itemSid)) {
+      newSelected.delete(itemSid);
+    } else {
+      newSelected.add(itemSid);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const selectAllItems = () => {
+    setSelectedItems(new Set(items.map(item => item.sid)));
+  };
+
+  const clearSelection = () => {
+    setSelectedItems(new Set());
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sorting.sort_by === field) {
+      setSorting({
+        sort_by: field,
+        sort_order: sorting.sort_order === "asc" ? "desc" : "asc"
+      });
+    } else {
+      setSorting({ sort_by: field, sort_order: "asc" });
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sorting.sort_by !== field) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 text-[#9ca3af]" />;
+    }
+    return sorting.sort_order === "asc" 
+      ? <ArrowUp className="h-4 w-4 ml-1 text-[#6322FE]" />
+      : <ArrowDown className="h-4 w-4 ml-1 text-[#6322FE]" />;
   };
 
   if (isLoading) {
@@ -111,22 +143,16 @@ const WarehouseItemsTable = ({
     );
   }
 
-  const sortedItems = [...items].sort((a, b) => {
-    const urgencyA = getUrgencyOrder(a.warehouse_action?.urgency);
-    const urgencyB = getUrgencyOrder(b.warehouse_action?.urgency);
-
-    if (urgencyA !== urgencyB) {
-      return urgencyB - urgencyA;
-    }
-
-    if (!a.expire_date && !b.expire_date) return 0;
-    if (!a.expire_date) return 1;
-    if (!b.expire_date) return -1;
-
-    return new Date(a.expire_date).getTime() - new Date(b.expire_date).getTime();
-  });
-
+  const isAllSelected = items.length > 0 && items.every(item => selectedItems.has(item.sid));
   const hasAnyExpiration = items.some((item) => item.expire_date);
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      clearSelection();
+    } else {
+      selectAllItems();
+    }
+  };
 
   return (
     <>
@@ -135,8 +161,20 @@ const WarehouseItemsTable = ({
           <Table>
             <TableHeader>
               <TableRow className="border-b border-[#e5e7eb]">
-                <TableHead className="font-semibold text-[#1f2937]">
-                  Товар
+                <TableHead className="w-[50px]">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
+                <TableHead 
+                  className="font-semibold text-[#1f2937] cursor-pointer hover:bg-[#f9fafb]"
+                  onClick={() => handleSort("product_name")}
+                >
+                  <div className="flex items-center">
+                    Товар
+                    <SortIcon field="product_name" />
+                  </div>
                 </TableHead>
                 <TableHead className="font-semibold text-[#1f2937]">
                   Категория
@@ -147,19 +185,61 @@ const WarehouseItemsTable = ({
                 <TableHead className="font-semibold text-[#1f2937]">
                   Срочность
                 </TableHead>
-                <TableHead className="font-semibold text-[#1f2937]">
-                  Код партии
+                <TableHead 
+                  className="font-semibold text-[#1f2937] cursor-pointer hover:bg-[#f9fafb]"
+                  onClick={() => handleSort("batch_code")}
+                >
+                  <div className="flex items-center">
+                    Код партии
+                    <SortIcon field="batch_code" />
+                  </div>
                 </TableHead>
-                <TableHead className="font-semibold text-[#1f2937]">
-                  Количество
+                <TableHead 
+                  className="font-semibold text-[#1f2937] cursor-pointer hover:bg-[#f9fafb]"
+                  onClick={() => handleSort("quantity")}
+                >
+                  <div className="flex items-center">
+                    Количество
+                    <SortIcon field="quantity" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="font-semibold text-[#1f2937] cursor-pointer hover:bg-[#f9fafb]"
+                  onClick={() => handleSort("wholesale_price")}
+                >
+                  <div className="flex items-center">
+                    Оптовая цена
+                    <SortIcon field="wholesale_price" />
+                  </div>
+                </TableHead>
+                <TableHead 
+                  className="font-semibold text-[#1f2937] cursor-pointer hover:bg-[#f9fafb]"
+                  onClick={() => handleSort("suggested_price")}
+                >
+                  <div className="flex items-center">
+                    Рекомендуемая цена
+                    <SortIcon field="suggested_price" />
+                  </div>
                 </TableHead>
                 {hasAnyExpiration && (
-                  <TableHead className="font-semibold text-[#1f2937]">
-                    Срок годности
+                  <TableHead 
+                    className="font-semibold text-[#1f2937] cursor-pointer hover:bg-[#f9fafb]"
+                    onClick={() => handleSort("expire_date")}
+                  >
+                    <div className="flex items-center">
+                      Срок годности
+                      <SortIcon field="expire_date" />
+                    </div>
                   </TableHead>
                 )}
-                <TableHead className="font-semibold text-[#1f2937]">
-                  Дата получения
+                <TableHead 
+                  className="font-semibold text-[#1f2937] cursor-pointer hover:bg-[#f9fafb]"
+                  onClick={() => handleSort("received_at")}
+                >
+                  <div className="flex items-center">
+                    Дата получения
+                    <SortIcon field="received_at" />
+                  </div>
                 </TableHead>
                 <TableHead className="font-semibold text-[#1f2937]">
                   Действия
@@ -167,16 +247,29 @@ const WarehouseItemsTable = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedItems.map((item) => {
+              {items.map((item) => {
                 const statusClass = cn(getStatusBadgeColor(item.status));
                 const isExpiring =
                   item.expire_date &&
                   new Date(item.expire_date) <=
                   new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
                 const urgency = item.warehouse_action?.urgency;
+                const isSelected = selectedItems.has(item.sid);
 
                 return (
-                  <TableRow key={item.sid} className="border-b border-[#f3f4f6]">
+                  <TableRow 
+                    key={item.sid} 
+                    className={cn(
+                      "border-b border-[#f3f4f6]",
+                      isSelected && "bg-[#f3f4f6]"
+                    )}
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleItemSelection(item.sid)}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium text-[#1f2937]">
                       {item.product.name}
                     </TableCell>
@@ -207,7 +300,13 @@ const WarehouseItemsTable = ({
                       {item.batch_code || "Н/Д"}
                     </TableCell>
                     <TableCell className="text-[#374151]">
-                      {item.quantity}
+                      {item.quantity} {item.product.default_unit || "шт"}
+                    </TableCell>
+                    <TableCell className="text-[#374151]">
+                      {item.wholesale_price ? formatCurrency(item.wholesale_price) : "Н/Д"}
+                    </TableCell>
+                    <TableCell className="text-[#374151] font-semibold">
+                      {item.suggested_price ? formatCurrency(item.suggested_price) : "Н/Д"}
                     </TableCell>
                     {hasAnyExpiration && (
                       <TableCell className="text-[#374151]">
