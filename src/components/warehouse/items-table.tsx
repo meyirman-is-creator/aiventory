@@ -22,6 +22,7 @@ import {
 import { ExternalLink, AlertTriangle, AlertCircle, Zap, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MoveToStoreModal from "@/components/warehouse/move-to-store-modal";
+import { useWarehouseStore } from "@/store/warehouse-store";
 
 interface WarehouseItemsTableProps {
   items: WarehouseItem[];
@@ -34,8 +35,7 @@ const getUrgencyIcon = (urgency?: string) => {
   switch (urgency) {
     case "critical":
       return <AlertTriangle className="h-4 w-4 text-[#ef4444]" />;
-    case "high":
-    case "medium":
+    case "urgent":
       return <AlertCircle className="h-4 w-4 text-[#f59e0b]" />;
     default:
       return null;
@@ -46,8 +46,7 @@ const getUrgencyBadgeClass = (urgency?: string) => {
   switch (urgency) {
     case "critical":
       return "bg-[#fee2e2] text-[#dc2626] border-[#fecaca]";
-    case "high":
-    case "medium":
+    case "urgent":
       return "bg-[#fef3c7] text-[#d97706] border-[#fcd34d]";
     default:
       return "bg-[#dcfce7] text-[#16a34a] border-[#bbf7d0]";
@@ -58,12 +57,8 @@ const getUrgencyText = (urgency?: string) => {
   switch (urgency) {
     case "critical":
       return "Критичный";
-    case "high":
-      return "Высокий";
-    case "medium":
-      return "Средний";
-    case "low":
-      return "Низкий";
+    case "urgent":
+      return "Срочный";
     default:
       return "Обычный";
   }
@@ -75,43 +70,26 @@ const WarehouseItemsTable = ({
 }: WarehouseItemsTableProps) => {
   const [selectedItem, setSelectedItem] = useState<WarehouseItem | null>(null);
   const [isMoveModalOpen, setMoveModalOpen] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [sorting, setSorting] = useState<{ sort_by: SortField; sort_order: "asc" | "desc" }>({
-    sort_by: "product_name",
-    sort_order: "asc"
-  });
+  
+  const { 
+    selectedItems, 
+    toggleItemSelection, 
+    selectAll, 
+    clearSelection,
+    sorting,
+    setSorting
+  } = useWarehouseStore();
 
   const handleMoveToStore = (item: WarehouseItem) => {
     setSelectedItem(item);
     setMoveModalOpen(true);
   };
 
-  const toggleItemSelection = (itemSid: string) => {
-    const newSelected = new Set(selectedItems);
-    if (newSelected.has(itemSid)) {
-      newSelected.delete(itemSid);
-    } else {
-      newSelected.add(itemSid);
-    }
-    setSelectedItems(newSelected);
-  };
-
-  const selectAllItems = () => {
-    setSelectedItems(new Set(items.map(item => item.sid)));
-  };
-
-  const clearSelection = () => {
-    setSelectedItems(new Set());
-  };
-
   const handleSort = (field: SortField) => {
     if (sorting.sort_by === field) {
-      setSorting({
-        sort_by: field,
-        sort_order: sorting.sort_order === "asc" ? "desc" : "asc"
-      });
+      setSorting(field, sorting.sort_order === "asc" ? "desc" : "asc");
     } else {
-      setSorting({ sort_by: field, sort_order: "asc" });
+      setSorting(field, "asc");
     }
   };
 
@@ -150,7 +128,7 @@ const WarehouseItemsTable = ({
     if (isAllSelected) {
       clearSelection();
     } else {
-      selectAllItems();
+      selectAll();
     }
   };
 
@@ -253,7 +231,7 @@ const WarehouseItemsTable = ({
                   item.expire_date &&
                   new Date(item.expire_date) <=
                   new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-                const urgency = item.warehouse_action?.urgency;
+                const urgency = item.urgency_level;
                 const isSelected = selectedItems.has(item.sid);
 
                 return (
@@ -268,6 +246,7 @@ const WarehouseItemsTable = ({
                       <Checkbox
                         checked={isSelected}
                         onCheckedChange={() => toggleItemSelection(item.sid)}
+                        disabled={item.status !== "in_stock" || item.quantity <= 0}
                       />
                     </TableCell>
                     <TableCell className="font-medium text-[#1f2937]">
@@ -338,7 +317,7 @@ const WarehouseItemsTable = ({
                               "border-[#6322FE]/20 hover:bg-[#6322FE]/20",
                               urgency === "critical"
                                 ? "bg-[#fee2e2] text-[#dc2626] hover:bg-[#fecaca]"
-                                : urgency === "high" || urgency === "medium"
+                                : urgency === "urgent"
                                   ? "bg-[#fef3c7] text-[#d97706] hover:bg-[#fcd34d]"
                                   : "bg-[#EBE3FF] text-[#6322FE]"
                             )}
@@ -379,5 +358,4 @@ const WarehouseItemsTable = ({
     </>
   );
 };
-
 export default WarehouseItemsTable;

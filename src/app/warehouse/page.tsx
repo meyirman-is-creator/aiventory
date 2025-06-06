@@ -24,24 +24,55 @@ import { useWarehouseStore } from "@/store/warehouse-store";
 import WarehouseItemsTable from "@/components/warehouse/items-table";
 import UploadFileButton from "@/components/dashboard/upload-file-button";
 import MoveToStoreButton from "@/components/warehouse/move-to-store-button";
-import { Loader, Search, Package } from "lucide-react";
+import { Loader, Search, Package, Trash2 } from "lucide-react";
 import { UrgencyLevel, WarehouseItemStatus } from "@/lib/types";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const WarehousePage = () => {
   const router = useRouter();
+  const { toast } = useToast();
   const { isAuthenticated, checkAuth } = useUserStore();
   const {
     fetchItems,
     items,
+    filteredItems,
     totalCount,
     isLoadingItems,
+    isDeleting,
     setFilter,
     resetFilters,
+    selectedItems,
+    deleteSelectedItems,
+    clearSelection,
   } = useWarehouseStore();
 
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const categories = items.reduce((acc, item) => {
+    if (item.product.category) {
+      const existing = acc.find(cat => cat.sid === item.product.category!.sid);
+      if (!existing) {
+        acc.push({
+          sid: item.product.category.sid,
+          name: item.product.category.name,
+        });
+      }
+    }
+    return acc;
+  }, [] as Array<{ sid: string; name: string }>);
 
   useEffect(() => {
     setIsClient(true);
@@ -68,6 +99,11 @@ const WarehousePage = () => {
     setFilter('search', value);
   };
 
+  const handleCategoryFilter = (value: string) => {
+    const newCategory = value === "all" ? null : value;
+    setFilter('category_sid', newCategory);
+  };
+
   const handleStatusFilter = (value: string) => {
     const newStatus = value === "all" ? null : value as WarehouseItemStatus;
     setFilter('status', newStatus);
@@ -76,6 +112,24 @@ const WarehousePage = () => {
   const handleUrgencyFilter = (value: string) => {
     const newUrgency = value === "all" ? null : value as UrgencyLevel;
     setFilter('urgency_level', newUrgency);
+  };
+
+  const handleDeleteSelected = async () => {
+    setShowDeleteConfirm(false);
+    try {
+      await deleteSelectedItems();
+      toast({
+        title: "Успех",
+        description: `Удалено ${selectedItems.size} товаров`,
+      });
+      clearSelection();
+    } catch  {
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить товары",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!isAuthenticated) {
@@ -111,8 +165,7 @@ const WarehousePage = () => {
               </div>
             </div>
             
-            {/* Filters */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-[#6b7280]" />
                 <Input
@@ -122,6 +175,20 @@ const WarehousePage = () => {
                   className="pl-8"
                 />
               </div>
+
+              <Select onValueChange={handleCategoryFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Все категории" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все категории</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.sid} value={category.sid}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
               <Select onValueChange={handleStatusFilter}>
                 <SelectTrigger>
@@ -161,6 +228,16 @@ const WarehousePage = () => {
             <div className="flex flex-col sm:flex-row gap-2">
               <MoveToStoreButton />
               <UploadFileButton />
+              {selectedItems.size > 0 && (
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Удалить выбранные ({selectedItems.size})
+                </Button>
+              )}
             </div>
           </div>
 
@@ -179,7 +256,7 @@ const WarehousePage = () => {
                     color: "#6322FE",
                   }}
                 >
-                  {items.length}
+                  {filteredItems.length}
                 </span>
               </TabsTrigger>
             </TabsList>
@@ -201,13 +278,34 @@ const WarehousePage = () => {
                 </CardHeader>
                 <CardContent className="px-2 sm:px-6 overflow-x-auto">
                   <WarehouseItemsTable
-                    items={items}
+                    items={filteredItems}
                     isLoading={isLoadingItems}
                   />
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
+
+          <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Подтверждение удаления</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Вы уверены, что хотите удалить {selectedItems.size} выбранных товаров?
+                  Это действие нельзя отменить.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteSelected}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Удалить
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </>
