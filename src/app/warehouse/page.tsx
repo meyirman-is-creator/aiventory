@@ -24,7 +24,7 @@ import { useWarehouseStore } from "@/store/warehouse-store";
 import WarehouseItemsTable from "@/components/warehouse/items-table";
 import UploadFileButton from "@/components/dashboard/upload-file-button";
 import MoveToStoreButton from "@/components/warehouse/move-to-store-button";
-import { Loader, Search, Package, Trash2 } from "lucide-react";
+import { Loader, Search, Package, Trash2, AlertTriangle } from "lucide-react";
 import { UrgencyLevel, WarehouseItemStatus } from "@/lib/types";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -60,6 +60,10 @@ const WarehousePage = () => {
   const [isClient, setIsClient] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
+
+  const activeItems = filteredItems.filter(item => !item.is_expired && item.status === "in_stock");
+  const expiredItems = filteredItems.filter(item => item.is_expired);
 
   const categories = items.reduce((acc, item) => {
     if (item.product.category) {
@@ -139,45 +143,45 @@ const WarehousePage = () => {
   return (
     <>
       {isClient && (
-        <div className="space-y-4 sm:space-y-6 relative space-y-6 !p-4 sm:px-0">
+        <div className="space-y-4 px-4 py-6 sm:px-6 lg:px-8">
           {(isInitialLoading || isLoadingItems) && (
             <div className="fixed inset-0 flex items-center justify-center bg-white/70 z-50">
-              <div className="bg-[#ffffff] p-4 rounded-lg shadow-lg flex flex-col items-center">
+              <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
                 <Loader className="h-10 w-10 text-[#6322FE] animate-spin mb-2" />
-                <p className="text-sm text-[#6b7280]">Загрузка данных...</p>
+                <p className="text-sm text-gray-600">Загрузка данных...</p>
               </div>
             </div>
           )}
 
           <div className="flex flex-col gap-4">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#1f2937]">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
                 Управление складом
               </h2>
-              <p className="text-sm sm:text-base text-[#6b7280] mt-1">
+              <p className="text-sm sm:text-base text-gray-600 mt-1">
                 Управляйте запасами на складе и перемещайте товары в магазин
               </p>
               <div className="flex items-center gap-2 mt-2">
                 <Package className="h-5 w-5 text-[#6322FE]" />
-                <span className="text-sm font-semibold text-[#1f2937]">
+                <span className="text-sm font-semibold text-gray-800">
                   Всего товаров на складе: {totalCount}
                 </span>
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-[#6b7280]" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   placeholder="Поиск по названию..."
                   value={searchValue}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-8"
+                  className="pl-10 h-10"
                 />
               </div>
 
               <Select onValueChange={handleCategoryFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="h-10">
                   <SelectValue placeholder="Все категории" />
                 </SelectTrigger>
                 <SelectContent>
@@ -191,7 +195,7 @@ const WarehousePage = () => {
               </Select>
 
               <Select onValueChange={handleStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="h-10">
                   <SelectValue placeholder="Все статусы" />
                 </SelectTrigger>
                 <SelectContent>
@@ -203,7 +207,7 @@ const WarehousePage = () => {
               </Select>
 
               <Select onValueChange={handleUrgencyFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="h-10">
                   <SelectValue placeholder="Все уровни срочности" />
                 </SelectTrigger>
                 <SelectContent>
@@ -214,18 +218,16 @@ const WarehousePage = () => {
                 </SelectContent>
               </Select>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetFilters}
-                >
-                  Сбросить фильтры
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                onClick={resetFilters}
+                className="h-10"
+              >
+                Сбросить фильтры
+              </Button>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-3">
               <MoveToStoreButton />
               <UploadFileButton />
               {selectedItems.size > 0 && (
@@ -233,6 +235,7 @@ const WarehousePage = () => {
                   variant="destructive"
                   onClick={() => setShowDeleteConfirm(true)}
                   disabled={isDeleting}
+                  className="bg-red-600 hover:bg-red-700 text-white"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Удалить выбранные ({selectedItems.size})
@@ -241,45 +244,64 @@ const WarehousePage = () => {
             </div>
           </div>
 
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-1 bg-[#f3f4f6] h-auto p-1">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-100 h-auto p-1">
               <TabsTrigger
                 value="all"
-                className="data-[state=active]:bg-[#ffffff] data-[state=active]:text-[#1f2937] text-xs sm:text-sm py-2"
+                className="data-[state=active]:bg-white data-[state=active]:text-gray-900 py-2"
               >
-                <span className="hidden sm:inline">Все товары</span>
-                <span className="sm:hidden">Все</span>
-                <span
-                  className="ml-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold"
-                  style={{
-                    backgroundColor: "#EBE3FF",
-                    color: "#6322FE",
-                  }}
-                >
-                  {filteredItems.length}
+                <span className="text-sm sm:text-base">Активные товары</span>
+                <span className="ml-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold bg-[#6322FE]/10 text-[#6322FE]">
+                  {activeItems.length}
+                </span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="expired"
+                className="data-[state=active]:bg-white data-[state=active]:text-gray-900 py-2"
+              >
+                <span className="text-sm sm:text-base">Истек срок годности</span>
+                <span className="ml-2 inline-flex items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700">
+                  {expiredItems.length}
                 </span>
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="all" className="space-y-4 mt-4">
-              <Card
-                style={{
-                  borderColor: "#e5e7eb",
-                  backgroundColor: "#ffffff",
-                }}
-              >
-                <CardHeader className="px-4 sm:px-6">
-                  <CardTitle className="text-[#1f2937] text-lg sm:text-xl">
+            
+            <TabsContent value="all" className="space-y-4 mt-6">
+              <Card className="border-gray-200">
+                <CardHeader>
+                  <CardTitle className="text-gray-900 text-lg sm:text-xl">
                     Товары на складе
                   </CardTitle>
-                  <CardDescription className="text-[#6b7280] text-sm sm:text-base">
-                    Все товары, которые в настоящее время хранятся на вашем
-                    складе
+                  <CardDescription className="text-gray-600">
+                    Все товары, которые в настоящее время хранятся на вашем складе
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="px-2 sm:px-6 overflow-x-auto">
+                <CardContent className="px-2 sm:px-6">
                   <WarehouseItemsTable
-                    items={filteredItems}
+                    items={activeItems}
                     isLoading={isLoadingItems}
+                    showExpired={false}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="expired" className="space-y-4 mt-6">
+              <Card className="border-red-200 bg-red-50">
+                <CardHeader>
+                  <CardTitle className="text-gray-900 text-lg sm:text-xl flex items-center">
+                    <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
+                    Товары с истекшим сроком годности
+                  </CardTitle>
+                  <CardDescription className="text-red-700">
+                    Эти товары нельзя переместить в магазин. Рекомендуется списать их.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-2 sm:px-6">
+                  <WarehouseItemsTable
+                    items={expiredItems}
+                    isLoading={isLoadingItems}
+                    showExpired={true}
                   />
                 </CardContent>
               </Card>
@@ -299,7 +321,7 @@ const WarehousePage = () => {
                 <AlertDialogCancel>Отмена</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDeleteSelected}
-                  className="bg-red-600 hover:bg-red-700"
+                  className="bg-red-600 hover:bg-red-700 text-white"
                 >
                   Удалить
                 </AlertDialogAction>

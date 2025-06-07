@@ -85,6 +85,7 @@ export interface WarehouseItem {
   discount_suggestion?: DiscountSuggestion;
   warehouse_action?: WarehouseAction;
   urgency_level?: UrgencyLevel;
+  is_expired?: boolean;
 }
 
 export enum StoreItemStatus {
@@ -259,7 +260,6 @@ export interface PredictionStats {
   category_revenue_data?: Record<string, unknown>[];
 }
 
-// API Response Types
 export interface WarehouseItemsResponse {
   items: WarehouseItem[];
   total: number;
@@ -268,13 +268,13 @@ export interface WarehouseItemsResponse {
   categories: Array<{ sid: string; name: string }>;
 }
 
-// Filter Types
 export interface WarehouseFilters {
   search?: string;
   category_sid?: string;
   status?: WarehouseItemStatus;
   urgency_level?: UrgencyLevel;
   expire_soon?: boolean;
+  expired?: boolean;
 }
 
 export interface WarehouseSorting {
@@ -282,6 +282,5 @@ export interface WarehouseSorting {
   sort_order?: "asc" | "desc";
 }
 
-// Aliases for compatibility
 export type ProductResponse = Product;
 export type ProductCategory = Category;
