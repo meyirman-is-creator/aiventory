@@ -17,9 +17,8 @@ import {
   formatDate,
   getStatusDisplayName,
   getStatusBadgeColor,
-  formatCurrency,
 } from "@/lib/utils";
-import { ExternalLink, AlertTriangle, AlertCircle, Zap, ArrowUpDown, ArrowUp, ArrowDown, Ban } from "lucide-react";
+import { ExternalLink, AlertTriangle, AlertCircle, Zap, ArrowUpDown, ArrowUp, ArrowDown, Ban, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MoveToStoreModal from "@/components/warehouse/move-to-store-modal";
 import { useWarehouseStore } from "@/store/warehouse-store";
@@ -35,9 +34,9 @@ type SortField = "product_name" | "quantity" | "expire_date" | "received_at" | "
 const getUrgencyIcon = (urgency?: string) => {
   switch (urgency) {
     case "critical":
-      return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      return <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />;
     case "urgent":
-      return <AlertCircle className="h-4 w-4 text-amber-500" />;
+      return <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-amber-500" />;
     default:
       return null;
   }
@@ -79,12 +78,23 @@ const WarehouseItemsTable = ({
     selectAll, 
     clearSelection,
     sorting,
-    setSorting
+    setSorting,
+    deleteItems
   } = useWarehouseStore();
 
   const handleMoveToStore = (item: WarehouseItem) => {
     setSelectedItem(item);
     setMoveModalOpen(true);
+  };
+
+  const handleDeleteItem = async (item: WarehouseItem) => {
+    if (confirm(`Удалить товар "${item.product.name}"?`)) {
+      try {
+        await deleteItems([item.sid]);
+      } catch (error) {
+        console.error("Error deleting item:", error);
+      }
+    }
   };
 
   const handleSort = (field: SortField) => {
@@ -97,28 +107,28 @@ const WarehouseItemsTable = ({
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sorting.sort_by !== field) {
-      return <ArrowUpDown className="h-4 w-4 ml-1 text-gray-400" />;
+      return <ArrowUpDown className="h-3 w-3 sm:h-4 sm:w-4 ml-1 text-gray-400" />;
     }
     return sorting.sort_order === "asc" 
-      ? <ArrowUp className="h-4 w-4 ml-1 text-[#6322FE]" />
-      : <ArrowDown className="h-4 w-4 ml-1 text-[#6322FE]" />;
+      ? <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4 ml-1 text-[#6322FE]" />
+      : <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4 ml-1 text-[#6322FE]" />;
   };
 
   if (isLoading) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">Загрузка товаров на складе...</p>
+      <div className="text-center py-6 sm:py-8">
+        <p className="text-gray-600 text-sm">Загрузка товаров на складе...</p>
       </div>
     );
   }
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-8 border border-gray-200 rounded-md">
-        <p className="text-gray-600">
+      <div className="text-center py-6 sm:py-8 border border-gray-200 rounded-md">
+        <p className="text-gray-600 text-sm">
           {showExpired ? "Нет товаров с истекшим сроком годности" : "Нет товаров на складе"}
         </p>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-xs sm:text-sm text-gray-500 mt-1">
           {showExpired ? "Все товары имеют действующий срок годности" : "Загрузите файлы инвентаря для добавления товаров"}
         </p>
       </div>
@@ -143,7 +153,7 @@ const WarehouseItemsTable = ({
           <Table>
             <TableHeader>
               <TableRow className="border-b border-gray-200 bg-gray-50">
-                <TableHead className="w-[50px]">
+                <TableHead className="w-[40px] sm:w-[50px]">
                   <Checkbox
                     checked={isAllSelected}
                     onCheckedChange={handleSelectAll}
@@ -151,7 +161,7 @@ const WarehouseItemsTable = ({
                   />
                 </TableHead>
                 <TableHead 
-                  className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 text-xs sm:text-sm"
                   onClick={() => handleSort("product_name")}
                 >
                   <div className="flex items-center">
@@ -159,58 +169,29 @@ const WarehouseItemsTable = ({
                     <SortIcon field="product_name" />
                   </div>
                 </TableHead>
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="font-semibold text-gray-900 hidden md:table-cell text-xs sm:text-sm">
                   Категория
                 </TableHead>
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="font-semibold text-gray-900 hidden sm:table-cell text-xs sm:text-sm">
                   Статус
                 </TableHead>
                 {!showExpired && (
-                  <TableHead className="font-semibold text-gray-900">
+                  <TableHead className="font-semibold text-gray-900 hidden lg:table-cell text-xs sm:text-sm">
                     Срочность
                   </TableHead>
                 )}
                 <TableHead 
-                  className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("batch_code")}
-                >
-                  <div className="flex items-center">
-                    Код партии
-                    <SortIcon field="batch_code" />
-                  </div>
-                </TableHead>
-                <TableHead 
-                  className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                  className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 text-xs sm:text-sm"
                   onClick={() => handleSort("quantity")}
                 >
                   <div className="flex items-center">
-                    Количество
+                    Кол-во
                     <SortIcon field="quantity" />
                   </div>
                 </TableHead>
-                <TableHead 
-                  className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("wholesale_price")}
-                >
-                  <div className="flex items-center">
-                    Оптовая цена
-                    <SortIcon field="wholesale_price" />
-                  </div>
-                </TableHead>
-                {!showExpired && (
-                  <TableHead 
-                    className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
-                    onClick={() => handleSort("suggested_price")}
-                  >
-                    <div className="flex items-center">
-                      Рекомендуемая цена
-                      <SortIcon field="suggested_price" />
-                    </div>
-                  </TableHead>
-                )}
                 {hasAnyExpiration && (
                   <TableHead 
-                    className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                    className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 hidden sm:table-cell text-xs sm:text-sm"
                     onClick={() => handleSort("expire_date")}
                   >
                     <div className="flex items-center">
@@ -219,16 +200,7 @@ const WarehouseItemsTable = ({
                     </div>
                   </TableHead>
                 )}
-                <TableHead 
-                  className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("received_at")}
-                >
-                  <div className="flex items-center">
-                    Дата получения
-                    <SortIcon field="received_at" />
-                  </div>
-                </TableHead>
-                <TableHead className="font-semibold text-gray-900">
+                <TableHead className="font-semibold text-gray-900 text-xs sm:text-sm">
                   Действия
                 </TableHead>
               </TableRow>
@@ -253,88 +225,90 @@ const WarehouseItemsTable = ({
                       isExpired && "bg-red-50"
                     )}
                   >
-                    <TableCell>
+                    <TableCell className="py-2">
                       <Checkbox
                         checked={isSelected}
                         onCheckedChange={() => toggleItemSelection(item.sid)}
                         disabled={item.status !== "in_stock" || item.quantity <= 0 || isExpired}
                       />
                     </TableCell>
-                    <TableCell className="font-medium text-gray-900">
-                      {item.product.name}
+                    <TableCell className="font-medium text-gray-900 text-xs sm:text-sm py-2">
+                      <div className="flex flex-col">
+                        <span>{item.product.name}</span>
+                        <span className="text-xs text-gray-500 md:hidden">
+                          {item.product.category?.name || "Н/Д"}
+                        </span>
+                      </div>
                     </TableCell>
-                    <TableCell className="text-gray-700">
+                    <TableCell className="text-gray-700 hidden md:table-cell text-xs sm:text-sm py-2">
                       {item.product.category?.name || "Н/Д"}
                     </TableCell>
-                    <TableCell>
-                      <Badge className={statusClass}>
+                    <TableCell className="hidden sm:table-cell py-2">
+                      <Badge className={cn(statusClass, "text-xs")}>
                         {getStatusDisplayName(item.status) === "In Stock"
                           ? "На складе"
                           : getStatusDisplayName(item.status) ===
                             "Moved to Store"
-                            ? "Перемещен в магазин"
+                            ? "Перемещен"
                             : getStatusDisplayName(item.status) === "Discarded"
                               ? "Списан"
                               : getStatusDisplayName(item.status)}
                       </Badge>
                     </TableCell>
                     {!showExpired && (
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
+                      <TableCell className="hidden lg:table-cell py-2">
+                        <div className="flex items-center space-x-1 sm:space-x-2">
                           {getUrgencyIcon(urgency)}
-                          <Badge className={cn("border", getUrgencyBadgeClass(urgency))}>
+                          <Badge className={cn("border text-xs", getUrgencyBadgeClass(urgency))}>
                             {getUrgencyText(urgency)}
                           </Badge>
                         </div>
                       </TableCell>
                     )}
-                    <TableCell className="text-gray-700">
-                      {item.batch_code || "Н/Д"}
-                    </TableCell>
-                    <TableCell className="text-gray-700">
+                    <TableCell className="text-gray-700 text-xs sm:text-sm py-2">
                       {item.quantity} {item.product.default_unit || "шт"}
                     </TableCell>
-                    <TableCell className="text-gray-700">
-                      {item.wholesale_price ? formatCurrency(item.wholesale_price) : "Н/Д"}
-                    </TableCell>
-                    {!showExpired && (
-                      <TableCell className="text-gray-700 font-semibold">
-                        {item.suggested_price ? formatCurrency(item.suggested_price) : "Н/Д"}
-                      </TableCell>
-                    )}
                     {hasAnyExpiration && (
-                      <TableCell className="text-gray-700">
+                      <TableCell className="text-gray-700 hidden sm:table-cell text-xs sm:text-sm py-2">
                         {item.expire_date ? (
                           <div className="flex items-center">
                             {formatDate(item.expire_date)}
                             {isExpiring && !isExpired && (
                               <AlertTriangle
-                                size={16}
-                                className="ml-2 text-amber-500"
+                                size={14}
+                                className="ml-1 sm:ml-2 text-amber-500"
                               />
                             )}
                             {isExpired && (
                               <Ban
-                                size={16}
-                                className="ml-2 text-red-500"
+                                size={14}
+                                className="ml-1 sm:ml-2 text-red-500"
                               />
                             )}
                           </div>
                         ) : (
-                          "Н/Д"
+                          <span className="text-gray-400">Н/Д</span>
                         )}
                       </TableCell>
                     )}
-                    <TableCell className="text-gray-700">
-                      {formatDate(item.received_at)}
-                    </TableCell>
-                    <TableCell>
-                      {!isExpired && item.status === "in_stock" && item.quantity > 0 ? (
-                        <div className="flex items-center space-x-2">
+                    <TableCell className="py-2">
+                      {isExpired ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteItem(item)}
+                          className="bg-red-600 hover:bg-red-700 text-white text-xs"
+                        >
+                          <Trash2 size={12} className="mr-1" />
+                          Удалить
+                        </Button>
+                      ) : item.status === "in_stock" && item.quantity > 0 ? (
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <Button
                             size="sm"
                             variant="outline"
                             className={cn(
+                              "text-xs",
                               "border-[#6322FE]/20 hover:bg-[#6322FE]/10",
                               urgency === "critical"
                                 ? "bg-red-100 text-red-700 hover:bg-red-200 border-red-300"
@@ -344,20 +318,23 @@ const WarehouseItemsTable = ({
                             )}
                             onClick={() => handleMoveToStore(item)}
                           >
-                            <ExternalLink size={16} className="mr-1" />
-                            {item.warehouse_action?.action === "move_to_store_with_discount"
-                              ? "Переместить со скидкой"
-                              : item.warehouse_action?.action === "move_to_store_urgent"
-                                ? "Срочно переместить"
-                                : "Переместить в магазин"}
+                            <ExternalLink size={12} className="mr-1" />
+                            <span className="hidden sm:inline">
+                              {item.warehouse_action?.action === "move_to_store_with_discount"
+                                ? "Переместить со скидкой"
+                                : item.warehouse_action?.action === "move_to_store_urgent"
+                                  ? "Срочно переместить"
+                                  : "Переместить"}
+                            </span>
+                            <span className="sm:hidden">Переместить</span>
                           </Button>
                           {urgency === "critical" && (
-                            <Zap className="h-4 w-4 text-red-500" />
+                            <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
                           )}
                         </div>
                       ) : (
-                        <Button size="sm" variant="outline" disabled className="border-gray-200 text-gray-400">
-                          {isExpired ? "Истек срок" : item.status === "moved" ? "Перемещен" : "Недоступен"}
+                        <Button size="sm" variant="outline" disabled className="border-gray-200 text-gray-400 text-xs">
+                          {item.status === "moved" ? "Перемещен" : "Недоступен"}
                         </Button>
                       )}
                     </TableCell>

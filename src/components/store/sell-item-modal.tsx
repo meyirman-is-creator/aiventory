@@ -29,7 +29,8 @@ interface SellItemModalProps {
 
 const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
   const dispatch = useDispatch<AppDispatch>();
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState("1");
+  const [customPrice, setCustomPrice] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -38,40 +39,67 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
   const discountPercentage = hasDiscount
     ? item.current_discounts[0].percentage
     : 0;
-  const pricePerUnit = hasDiscount
+  const defaultPrice = hasDiscount
     ? item.price * (1 - discountPercentage / 100)
     : item.price;
-
-  const totalPrice = pricePerUnit * quantity;
+  
+  const pricePerUnit = customPrice ? parseFloat(customPrice) : defaultPrice;
+  const totalPrice = pricePerUnit * (parseInt(quantity) || 0);
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    if (isNaN(value) || value < 1) {
-      setQuantity(1);
-    } else if (value > item.quantity) {
-      setQuantity(item.quantity);
-    } else {
+    const value = e.target.value;
+    if (value === "") {
+      setQuantity("");
+      return;
+    }
+    const intValue = parseInt(value);
+    if (!isNaN(intValue) && intValue >= 0 && intValue <= item.quantity) {
       setQuantity(value);
     }
   };
 
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === "") {
+      setCustomPrice("");
+      return;
+    }
+    const floatValue = parseFloat(value);
+    if (!isNaN(floatValue) && floatValue >= 0) {
+      setCustomPrice(value);
+    }
+  };
+
   const incrementQuantity = () => {
-    if (quantity < item.quantity) {
-      setQuantity(quantity + 1);
+    const currentQty = quantity === "" ? 0 : parseInt(quantity);
+    if (currentQty < item.quantity) {
+      setQuantity((currentQty + 1).toString());
     }
   };
 
   const decrementQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(quantity - 1);
+    const currentQty = quantity === "" ? 0 : parseInt(quantity);
+    if (currentQty > 0) {
+      setQuantity((currentQty - 1).toString());
     }
   };
 
   const handleSubmit = async () => {
-    if (quantity < 1 || quantity > item.quantity) {
+    const qty = parseInt(quantity) || 0;
+    
+    if (qty < 1 || qty > item.quantity) {
       toast({
         title: "Неверное количество",
         description: `Пожалуйста, введите количество от 1 до ${item.quantity}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (pricePerUnit <= 0) {
+      toast({
+        title: "Неверная цена",
+        description: "Цена должна быть больше 0",
         variant: "destructive",
       });
       return;
@@ -83,14 +111,14 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
       await dispatch(
         recordSale({
           storeItemSid: item.sid,
-          soldQty: quantity,
+          soldQty: qty,
           soldPrice: pricePerUnit,
         })
       ).unwrap();
 
       toast({
         title: "Продажа зарегистрирована",
-        description: `Успешно продано ${quantity} ${item.product.name}`,
+        description: `Успешно продано ${qty} ${item.product.name}`,
       });
       onClose();
     } catch (error: unknown) {
@@ -107,22 +135,21 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-[#ffffff]">
-        <DialogHeader>
-          <DialogTitle className="text-[#1f2937]">Продажа товара</DialogTitle>
-          <DialogDescription className="text-[#6b7280]">
+      <DialogContent className="w-[95%] sm:w-full sm:max-w-md max-h-[90vh] overflow-y-auto bg-[#ffffff]">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-[#1f2937] text-base sm:text-lg">Продажа товара</DialogTitle>
+          <DialogDescription className="text-[#6b7280] text-xs sm:text-sm">
             Оформление продажи товара
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Product Info Section */}
-          <div className="bg-[#f9fafb] p-4 rounded-lg space-y-3">
+        <div className="space-y-3 sm:space-y-4 py-2">
+          <div className="bg-[#f9fafb] p-3 sm:p-4 rounded-lg space-y-2 sm:space-y-3">
             <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <h4 className="font-medium text-[#1f2937]">{item.product.name}</h4>
+              <div className="space-y-0.5 sm:space-y-1">
+                <h4 className="font-medium text-[#1f2937] text-sm sm:text-base">{item.product.name}</h4>
                 {item.product.category && (
-                  <p className="text-sm text-[#6b7280]">
+                  <p className="text-xs sm:text-sm text-[#6b7280]">
                     Категория: {item.product.category.name}
                   </p>
                 )}
@@ -133,14 +160,14 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
                 )}
               </div>
               <Badge variant="outline" className="text-xs">
-                <Package className="h-3 w-3 mr-1" />
+                <Package className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
                 В наличии: {item.quantity}
               </Badge>
             </div>
 
             {item.expire_date && (
-              <div className="flex items-center text-sm">
-                <Calendar className="h-4 w-4 mr-2 text-[#6b7280]" />
+              <div className="flex items-center text-xs sm:text-sm">
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-[#6b7280]" />
                 <span className="text-[#374151]">
                   Срок годности: {new Date(item.expire_date).toLocaleDateString()}
                 </span>
@@ -156,8 +183,8 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
             )}
 
             {item.product.barcode && (
-              <div className="flex items-center text-sm">
-                <Tag className="h-4 w-4 mr-2 text-[#6b7280]" />
+              <div className="flex items-center text-xs sm:text-sm">
+                <Tag className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-[#6b7280]" />
                 <span className="text-[#374151]">
                   Штрихкод: {item.product.barcode}
                 </span>
@@ -165,102 +192,117 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
             )}
           </div>
 
-          {/* Price Section */}
           <div className="space-y-2">
-            <Label className="text-[#374151]">Цена за единицу</Label>
-            <div className="flex items-center justify-between bg-[#f3f4f6] p-3 rounded-md">
-              <div className="flex items-center">
-                {hasDiscount && (
-                  <span className="line-through text-[#9ca3af] mr-2">
-                    {formatCurrency(item.price)}
-                  </span>
-                )}
-                <span className="text-lg font-medium text-[#1f2937]">
-                  {formatCurrency(pricePerUnit)}
-                </span>
-                {item.product.default_unit && (
-                  <span className="text-sm text-[#6b7280] ml-1">
-                    / {item.product.default_unit}
-                  </span>
-                )}
-              </div>
-              {hasDiscount && (
-                <Badge className="bg-[#d1fae5] text-[#065f46]">
-                  Скидка {discountPercentage}%
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          {/* Quantity Section */}
-          <div className="space-y-2">
-            <Label htmlFor="quantity" className="text-[#374151]">
+            <Label htmlFor="quantity" className="text-[#374151] text-sm font-medium">
               Количество
             </Label>
-            <div className="flex items-center justify-center">
+            <div className="flex items-center">
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-10 w-10 rounded-r-none border-[#e5e7eb]"
+                className="h-8 w-8 rounded-r-none border-[#e5e7eb]"
                 onClick={decrementQuantity}
-                disabled={quantity <= 1}
+                disabled={quantity === "0" || quantity === ""}
               >
-                <Minus className="h-4 w-4" />
+                <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               <Input
                 id="quantity"
                 type="number"
                 value={quantity}
                 onChange={handleQuantityChange}
-                min={1}
+                min={0}
                 max={item.quantity}
-                className="h-10 w-20 rounded-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] font-medium"
+                className="h-8 w-16 sm:w-20 rounded-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] font-medium text-sm"
               />
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-10 w-10 rounded-l-none border-[#e5e7eb]"
+                className="h-8 w-8 rounded-l-none border-[#e5e7eb]"
                 onClick={incrementQuantity}
-                disabled={quantity >= item.quantity}
+                disabled={parseInt(quantity) >= item.quantity}
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
           </div>
 
-          {/* Total Section */}
-          <div className="border-t pt-4">
+          <div className="space-y-2">
+            <Label className="text-[#374151] text-sm">Цена за единицу</Label>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between bg-[#f3f4f6] p-2.5 sm:p-3 rounded-md">
+                <div className="flex items-center">
+                  {hasDiscount && (
+                    <span className="line-through text-[#9ca3af] mr-2 text-sm">
+                      {formatCurrency(item.price)}
+                    </span>
+                  )}
+                  <span className="text-base sm:text-lg font-medium text-[#1f2937]">
+                    {formatCurrency(defaultPrice)}
+                  </span>
+                  {item.product.default_unit && (
+                    <span className="text-xs sm:text-sm text-[#6b7280] ml-1">
+                      / {item.product.default_unit}
+                    </span>
+                  )}
+                </div>
+                {hasDiscount && (
+                  <Badge className="bg-[#d1fae5] text-[#065f46] text-xs">
+                    Скидка {discountPercentage}%
+                  </Badge>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[#6b7280]">₸</span>
+                <Input
+                  type="number"
+                  value={customPrice}
+                  onChange={handlePriceChange}
+                  placeholder={defaultPrice.toFixed(2)}
+                  min={0}
+                  step={0.01}
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] text-sm"
+                />
+              </div>
+              <p className="text-xs text-[#6b7280]">
+                Оставьте пустым для использования стандартной цены
+              </p>
+            </div>
+          </div>
+
+          <div className="border-t pt-3 sm:pt-4">
             <div className="flex items-center justify-between">
-              <span className="text-[#374151]">Итоговая сумма:</span>
-              <span className="text-2xl font-bold text-[#1f2937]">
+              <span className="text-[#374151] text-sm">Итоговая сумма:</span>
+              <span className="text-xl sm:text-2xl font-bold text-[#1f2937]">
                 {formatCurrency(totalPrice)}
               </span>
             </div>
-            {hasDiscount && (
-              <p className="text-sm text-[#059669] text-right mt-1">
-                Экономия: {formatCurrency((item.price * quantity) - totalPrice)}
+            {hasDiscount && customPrice === "" && (
+              <p className="text-xs sm:text-sm text-[#059669] text-right mt-1">
+                Экономия: {formatCurrency((item.price * (parseInt(quantity) || 0)) - totalPrice)}
               </p>
             )}
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="pt-2">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
-            className="border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]"
+            className="border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb] text-sm"
           >
             Отмена
           </Button>
           <Button
             type="button"
-            className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff]"
+            className="bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff] text-sm"
             onClick={handleSubmit}
-            disabled={isLoading}
+            disabled={isLoading || !quantity || parseInt(quantity) === 0}
           >
             {isLoading ? "Обработка..." : "Завершить продажу"}
           </Button>
