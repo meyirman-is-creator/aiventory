@@ -18,7 +18,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { createDiscount } from "@/redux/slices/storeSlice";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
-import { Calendar as CalendarIcon, Info, TrendingDown, DollarSign } from "lucide-react";
+import { Calendar as CalendarIcon, Info, TrendingDown, DollarSign, Minus, Plus } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -74,6 +74,20 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
     const numValue = parseInt(value);
     if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
       setPercentage(value);
+    }
+  };
+
+  const incrementPercentage = () => {
+    const currentPercentage = percentage === "" ? 0 : parseInt(percentage);
+    if (currentPercentage < 100) {
+      setPercentage(Math.min(currentPercentage + 5, 100).toString());
+    }
+  };
+
+  const decrementPercentage = () => {
+    const currentPercentage = percentage === "" ? 0 : parseInt(percentage);
+    if (currentPercentage > 0) {
+      setPercentage(Math.max(currentPercentage - 5, 0).toString());
     }
   };
 
@@ -207,6 +221,16 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
               )}
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="h-12 w-12 p-0 border-[#e5e7eb] hover:bg-[#f3f4f6] hover:border-[#6322FE] transition-colors"
+                onClick={decrementPercentage}
+                disabled={percentage === "" || parseInt(percentage) <= 0}
+              >
+                <Minus className="h-5 w-5 text-[#6b7280]" />
+              </Button>
               <Input
                 id="percentage"
                 type="number"
@@ -214,9 +238,19 @@ const DiscountModal = ({ item, open, onClose }: DiscountModalProps) => {
                 onChange={handlePercentageChange}
                 min={0}
                 max={100}
-                className="w-20 sm:w-24 border-[#e5e7eb] text-[#1f2937] text-sm"
+                className="h-12 text-center text-lg font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] focus:ring-2 focus:ring-[#6322FE] focus:border-[#6322FE] w-24"
               />
-              <span className="text-[#6b7280] text-sm">%</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="h-12 w-12 p-0 border-[#e5e7eb] hover:bg-[#f3f4f6] hover:border-[#6322FE] transition-colors"
+                onClick={incrementPercentage}
+                disabled={parseInt(percentage) >= 100}
+              >
+                <Plus className="h-5 w-5 text-[#6b7280]" />
+              </Button>
+              <span className="text-sm text-[#6b7280] ml-2">%</span>
             </div>
           </div>
 

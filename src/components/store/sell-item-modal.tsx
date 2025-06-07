@@ -196,16 +196,16 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
             <Label htmlFor="quantity" className="text-[#374151] text-sm font-medium">
               Количество
             </Label>
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                className="h-8 w-8 rounded-r-none border-[#e5e7eb]"
+                size="lg"
+                className="h-12 w-12 p-0 border-[#e5e7eb] hover:bg-[#f3f4f6] hover:border-[#6322FE] transition-colors"
                 onClick={decrementQuantity}
                 disabled={quantity === "0" || quantity === ""}
               >
-                <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Minus className="h-5 w-5 text-[#6b7280]" />
               </Button>
               <Input
                 id="quantity"
@@ -214,18 +214,21 @@ const SellItemModal = ({ item, open, onClose }: SellItemModalProps) => {
                 onChange={handleQuantityChange}
                 min={0}
                 max={item.quantity}
-                className="h-8 w-16 sm:w-20 rounded-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] font-medium text-sm"
+                className="h-12 text-center text-lg font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] focus:ring-2 focus:ring-[#6322FE] focus:border-[#6322FE] w-24"
               />
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                className="h-8 w-8 rounded-l-none border-[#e5e7eb]"
+                size="lg"
+                className="h-12 w-12 p-0 border-[#e5e7eb] hover:bg-[#f3f4f6] hover:border-[#6322FE] transition-colors"
                 onClick={incrementQuantity}
                 disabled={parseInt(quantity) >= item.quantity}
               >
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Plus className="h-5 w-5 text-[#6b7280]" />
               </Button>
+              <span className="text-sm text-[#6b7280] ml-2">
+                из {item.quantity} {item.product.default_unit || "шт"}
+              </span>
             </div>
           </div>
 

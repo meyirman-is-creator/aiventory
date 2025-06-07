@@ -20,6 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface ApiErrorResponse {
   response?: {
@@ -215,16 +216,16 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
             <Label htmlFor="quantity" className="text-[#374151] text-sm font-medium">
               Количество для перемещения
             </Label>
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                className="h-8 w-8 rounded-r-none border-[#e5e7eb]"
+                size="lg"
+                className="h-12 w-12 p-0 border-[#e5e7eb] hover:bg-[#f3f4f6] hover:border-[#6322FE] transition-colors"
                 onClick={decrementQuantity}
                 disabled={quantity === "" || parseInt(quantity) <= 0}
               >
-                <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Minus className="h-5 w-5 text-[#6b7280]" />
               </Button>
               <Input
                 id="quantity"
@@ -234,18 +235,21 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
                 placeholder="0"
                 min={0}
                 max={item.quantity}
-                className="h-8 rounded-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] text-sm focus:ring-2 focus:ring-[#6322FE] focus:border-[#6322FE]"
+                className="h-12 text-center text-lg font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none border-[#e5e7eb] text-[#1f2937] focus:ring-2 focus:ring-[#6322FE] focus:border-[#6322FE] w-24"
               />
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                className="h-8 w-8 rounded-l-none border-[#e5e7eb]"
+                size="lg"
+                className="h-12 w-12 p-0 border-[#e5e7eb] hover:bg-[#f3f4f6] hover:border-[#6322FE] transition-colors"
                 onClick={incrementQuantity}
                 disabled={quantity !== "" && parseInt(quantity) >= item.quantity}
               >
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Plus className="h-5 w-5 text-[#6b7280]" />
               </Button>
+              <span className="text-sm text-[#6b7280] ml-2">
+                из {item.quantity} {item.product.default_unit || "шт"}
+              </span>
             </div>
           </div>
 
@@ -283,7 +287,14 @@ const MoveToStoreModal = ({ item, open, onClose }: MoveToStoreModalProps) => {
           </Button>
           <Button
             type="button"
-            className="w-full sm:w-auto bg-[#6322FE] hover:bg-[#5719d8] text-[#ffffff] text-sm"
+            className={cn(
+              "w-full sm:w-auto text-[#ffffff] text-sm",
+              item.warehouse_action?.urgency === "critical"
+                ? "bg-[#ef4444] hover:bg-[#dc2626]"
+                : item.warehouse_action?.urgency === "urgent"
+                  ? "bg-[#f59e0b] hover:bg-[#d97706]"
+                  : "bg-[#6322FE] hover:bg-[#5719d8]"
+            )}
             onClick={handleSubmit}
             disabled={isLoading}
           >
