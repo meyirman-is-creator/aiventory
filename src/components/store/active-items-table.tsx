@@ -25,6 +25,7 @@ import { removeFromStore } from "@/redux/slices/storeSlice";
 import { cn } from "@/lib/utils";
 import DiscountModal from "@/components/store/discount-form";
 import SellItemModal from "@/components/store/sell-item-modal";
+import RemoveItemModal from "@/components/store/remove-item-modal";
 import { AppDispatch } from "@/redux/store";
 
 interface ActiveItemsTableProps {
@@ -37,6 +38,7 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
   const [isDiscountModalOpen, setDiscountModalOpen] = useState(false);
   const [isSellModalOpen, setSellModalOpen] = useState(false);
+  const [isRemoveModalOpen, setRemoveModalOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSellItem = (item: StoreItem) => {
@@ -49,20 +51,9 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
     setDiscountModalOpen(true);
   };
 
-  const handleRemoveItem = async (item: StoreItem) => {
-    try {
-      await dispatch(removeFromStore(item.sid)).unwrap();
-      toast({
-        title: "Товар убран",
-        description: `${item.product.name} был убран с витрины.`,
-      });
-    } catch {
-      toast({
-        title: "Ошибка",
-        description: "Не удалось убрать товар.",
-        variant: "destructive",
-      });
-    }
+  const handleRemoveItem = (item: StoreItem) => {
+    setSelectedItem(item);
+    setRemoveModalOpen(true);
   };
 
   if (isLoading) {
@@ -242,6 +233,11 @@ const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
             item={selectedItem}
             open={isSellModalOpen}
             onClose={() => setSellModalOpen(false)}
+          />
+          <RemoveItemModal
+            item={selectedItem}
+            open={isRemoveModalOpen}
+            onClose={() => setRemoveModalOpen(false)}
           />
         </>
       )}

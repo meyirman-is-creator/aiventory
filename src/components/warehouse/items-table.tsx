@@ -22,6 +22,7 @@ import {
 import { ExternalLink, AlertTriangle, AlertCircle, Zap, ArrowUpDown, ArrowUp, ArrowDown, Ban, Trash2, DollarSign} from "lucide-react";
 import { cn } from "@/lib/utils";
 import MoveToStoreModal from "@/components/warehouse/move-to-store-modal";
+import PartialDeleteModal from "@/components/warehouse/partial-delete-modal";
 import { useWarehouseStore } from "@/store/warehouse-store";
 
 interface WarehouseItemsTableProps {
@@ -72,6 +73,7 @@ const WarehouseItemsTable = ({
 }: WarehouseItemsTableProps) => {
   const [selectedItem, setSelectedItem] = useState<WarehouseItem | null>(null);
   const [isMoveModalOpen, setMoveModalOpen] = useState(false);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   
   const { 
     selectedItems, 
@@ -89,12 +91,16 @@ const WarehouseItemsTable = ({
   };
 
   const handleDeleteItem = async (item: WarehouseItem) => {
-    if (confirm(`Удалить товар "${item.product.name}"?`)) {
+    if (selectedItems.size > 1) {
       try {
-        await deleteItems([item.sid]);
+        await deleteItems(Array.from(selectedItems));
+        clearSelection();
       } catch (error) {
-        console.error("Error deleting item:", error);
+        console.error("Error deleting items:", error);
       }
+    } else {
+      setSelectedItem(item);
+      setDeleteModalOpen(true);
     }
   };
 
@@ -383,6 +389,16 @@ const WarehouseItemsTable = ({
                                   : "Переместить"}
                             </span>
                           </Button>
+                          {selectedItems.size <= 1 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-xs border-red-200 text-red-600 hover:bg-red-50"
+                              onClick={() => handleDeleteItem(item)}
+                            >
+                              <Trash2 size={12} />
+                            </Button>
+                          )}
                         </div>
                       ) : (
                         <Button size="sm" variant="outline" disabled className="border-gray-200 text-gray-400 text-xs">
@@ -403,6 +419,14 @@ const WarehouseItemsTable = ({
           item={selectedItem}
           open={isMoveModalOpen}
           onClose={() => setMoveModalOpen(false)}
+        />
+      )}
+
+      {selectedItem && (
+        <PartialDeleteModal
+          item={selectedItem}
+          open={isDeleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
         />
       )}
     </>
