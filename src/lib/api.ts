@@ -131,6 +131,14 @@ export const warehouseApi = {
     });
     return response.data;
   },
+
+  partialDeleteItem: async (itemSid: string, quantity: number) => {
+    const response = await api.post('/warehouse/partial-delete', {
+      item_sid: itemSid,
+      quantity: quantity
+    });
+    return response.data;
+  },
 };
 
 export const storeApi = {
@@ -185,6 +193,13 @@ export const storeApi = {
 
   removeFromStore: async (storeItemSid: string) => {
     const response = await api.post(`/store/remove/${storeItemSid}`);
+    return response.data;
+  },
+
+  partialRemoveFromStore: async (storeItemSid: string, quantity: number) => {
+    const response = await api.post(`/store/partial-remove/${storeItemSid}`, {
+      quantity: quantity
+    });
     return response.data;
   },
 

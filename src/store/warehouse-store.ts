@@ -38,6 +38,7 @@ interface WarehouseStore {
   moveToStore: (itemSid: string, quantity: number, price: number) => Promise<{ store_item_sid: string; message: string }>;
   moveToStoreByBarcode: (barcode: string, quantity: number, price: number) => Promise<{ store_item_sid: string; message: string }>;
   deleteItems: (itemSids: string[]) => Promise<void>;
+  partialDeleteItem: (itemSid: string, quantity: number) => Promise<void>;
   
   toggleItemSelection: (itemSid: string) => void;
   selectAll: () => void;
@@ -202,7 +203,7 @@ export const useWarehouseStore = create<WarehouseStore>((set, get) => ({
       
       set({
         items: response.items,
-        totalCount: response.total_count,
+        totalCount: response.total,
         isLoadingItems: false,
       });
       
@@ -299,6 +300,27 @@ export const useWarehouseStore = create<WarehouseStore>((set, get) => ({
         error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
         ? String(error.response.data.detail)
         : "Failed to delete items";
+      
+      set({
+        error: errorMessage,
+        isDeleting: false,
+      });
+      throw error;
+    }
+  },
+
+  partialDeleteItem: async (itemSid: string, quantity: number) => {
+    set({ isDeleting: true, error: null });
+    try {
+      await warehouseApi.partialDeleteItem(itemSid, quantity);
+      await get().fetchItems();
+      set({ isDeleting: false });
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error && 
+        error.response && typeof error.response === 'object' && 'data' in error.response &&
+        error.response.data && typeof error.response.data === 'object' && 'detail' in error.response.data
+        ? String(error.response.data.detail)
+        : "Failed to partially delete item";
       
       set({
         error: errorMessage,

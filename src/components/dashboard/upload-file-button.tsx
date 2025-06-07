@@ -31,7 +31,7 @@ const UploadFileButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { uploadFile, isUploading, fetchItems, fetchExpiringItems } = useWarehouseStore();
+  const { uploadFile, isUploading, fetchItems } = useWarehouseStore();
   const { fetchStats } = useDashboardStore();
   const { toast } = useToast();
 
@@ -82,8 +82,7 @@ const UploadFileButton = () => {
 
       await Promise.all([
         fetchStats(),
-        fetchItems(),
-        fetchExpiringItems()
+        fetchItems()
       ]);
 
       window.location.reload();

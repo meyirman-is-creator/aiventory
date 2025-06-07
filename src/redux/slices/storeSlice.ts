@@ -145,6 +145,19 @@ export const removeFromStore = createAsyncThunk(
   }
 );
 
+export const partialRemoveFromStore = createAsyncThunk(
+  "store/partialRemoveFromStore",
+  async (
+    { storeItemSid, quantity }: { storeItemSid: string; quantity: number },
+    { dispatch }
+  ) => {
+    await storeApi.partialRemoveFromStore(storeItemSid, quantity);
+    dispatch(fetchActiveItems());
+    dispatch(fetchRemovedItems());
+    return { storeItemSid, quantity };
+  }
+);
+
 export const recordSale = createAsyncThunk(
   "store/recordSale",
   async (
@@ -242,6 +255,17 @@ const storeSlice = createSlice({
       .addCase(fetchReports.rejected, (state, action) => {
         state.isLoadingReports = false;
         state.error = action.error.message || "Failed to fetch reports";
+      });
+
+    builder
+      .addCase(partialRemoveFromStore.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(partialRemoveFromStore.fulfilled, (state) => {
+        state.error = null;
+      })
+      .addCase(partialRemoveFromStore.rejected, (state, action) => {
+        state.error = action.error.message || "Failed to partially remove item";
       });
   },
 });

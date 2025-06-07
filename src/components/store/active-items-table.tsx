@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useDispatch } from "react-redux";
 import { StoreItem } from "@/lib/types";
 import {
   Table,
@@ -20,13 +19,10 @@ import {
   getStatusBadgeColor,
 } from "@/lib/utils";
 import { ShoppingCart, PercentIcon, AlertCircle, Package } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { removeFromStore } from "@/redux/slices/storeSlice";
 import { cn } from "@/lib/utils";
 import DiscountModal from "@/components/store/discount-form";
 import SellItemModal from "@/components/store/sell-item-modal";
 import RemoveItemModal from "@/components/store/remove-item-modal";
-import { AppDispatch } from "@/redux/store";
 
 interface ActiveItemsTableProps {
   items: StoreItem[];
@@ -34,12 +30,10 @@ interface ActiveItemsTableProps {
 }
 
 const ActiveItemsTable = ({ items, isLoading }: ActiveItemsTableProps) => {
-  const dispatch = useDispatch<AppDispatch>();
   const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
   const [isDiscountModalOpen, setDiscountModalOpen] = useState(false);
   const [isSellModalOpen, setSellModalOpen] = useState(false);
   const [isRemoveModalOpen, setRemoveModalOpen] = useState(false);
-  const { toast } = useToast();
 
   const handleSellItem = (item: StoreItem) => {
     setSelectedItem(item);
