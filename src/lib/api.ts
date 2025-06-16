@@ -228,49 +228,27 @@ export const predictionApi = {
     return response.data;
   },
 
-  getForecast: async (productSid: string, refresh?: boolean, timeframe?: string, periods?: number) => {
+  getSalesHistory: async (productSid: string, daysBack?: number) => {
+    const params = new URLSearchParams();
+    if (daysBack) params.append('days_back', daysBack.toString());
+    const response = await api.get(`/prediction/sales-history/${productSid}?${params.toString()}`);
+    return response.data;
+  },
+
+  getCategorySales: async (categorySid: string, daysBack?: number) => {
+    const params = new URLSearchParams();
+    if (daysBack) params.append('days_back', daysBack.toString());
+    const response = await api.get(`/prediction/category-sales/${categorySid}?${params.toString()}`);
+    return response.data;
+  },
+
+  getForecast: async (productSid: string, refresh?: boolean) => {
     const params = new URLSearchParams();
     if (refresh) params.append('refresh', 'true');
-    if (timeframe) params.append('timeframe', timeframe);
-    if (periods) params.append('periods', periods.toString());
     const response = await api.get(`/prediction/forecast/${productSid}?${params.toString()}`);
     return response.data;
   },
-
-  getStats: async (productSid?: string, categorySid?: string, startDate?: Date, endDate?: Date, groupBy?: string) => {
-    const params = new URLSearchParams();
-    if (productSid) params.append('product_sid', productSid);
-    if (categorySid) params.append('category_sid', categorySid);
-    if (startDate) params.append('start_date', startDate.toISOString());
-    if (endDate) params.append('end_date', endDate.toISOString());
-    if (groupBy) params.append('group_by', groupBy);
-    const response = await api.get(`/prediction/stats?${params.toString()}`);
-    return response.data;
-  },
-
-  getAnalytics: async (productSid: string) => {
-    const response = await api.get(`/prediction/analytics/${productSid}`);
-    return response.data;
-  },
-
-  getTrends: async (productSid: string, daysBack?: number) => {
-    const params = new URLSearchParams();
-    if (daysBack) params.append('days_back', daysBack.toString());
-    const response = await api.get(`/prediction/trends/${productSid}?${params.toString()}`);
-    return response.data;
-  },
-
-  getInsights: async () => {
-    const response = await api.get('/prediction/insights');
-    return response.data;
-  },
-
-  getOptimizationSuggestions: async () => {
-    const response = await api.get('/prediction/optimization-suggestions');
-    return response.data;
-  },
 };
-
 export const dashboardApi = {
   getStats: async () => {
     const response = await api.get('/dashboard/stats');
