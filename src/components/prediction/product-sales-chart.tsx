@@ -9,32 +9,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
   Legend,
-  Filler,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
+  ResponsiveContainer,
+  Brush,
+} from "recharts";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductResponse } from "@/lib/types";
 import { predictionApi } from "@/lib/api";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+import { format, parseISO } from "date-fns";
 
 interface ProductSalesChartProps {
   products: ProductResponse[];
@@ -75,67 +64,48 @@ export default function ProductSalesChart({
     }
   };
 
-  const chartData = {
-    labels: [
-      ...(salesData?.dates || []),
-      ...(forecastData?.map((f: any) => f.period_start) || []),
-    ],
-    datasets: [
-      {
-        label: "Фактические продажи",
-        data: [
-          ...(salesData?.quantities || []),
-          ...Array(forecastData?.length || 0).fill(null),
-        ],
-        borderColor: "rgb(99, 34, 254)",
-        backgroundColor: "rgba(99, 34, 254, 0.1)",
-        tension: 0.1,
-      },
-      {
-        label: "Прогноз",
-        data: [
-          ...Array(salesData?.dates?.length || 0).fill(null),
-          ...(forecastData?.map((f: any) => f.forecast_qty) || []),
-        ],
-        borderColor: "rgb(34, 197, 94)",
-        backgroundColor: "rgba(34, 197, 94, 0.1)",
-        borderDash: [5, 5],
-        tension: 0.1,
-      },
-    ],
+  const prepareChartData = () => {
+    const historicalData = (salesData?.dates || []).map((date: string, idx: number) => ({
+      date,
+      historical: salesData.quantities[idx],
+      forecast: null,
+      displayDate: format(parseISO(date), "dd.MM"),
+    }));
+
+    const forecastDataPoints = (forecastData || []).map((f: any) => ({
+      date: f.period_start,
+      historical: null,
+      forecast: f.forecast_qty,
+      displayDate: format(parseISO(f.period_start), "dd.MM"),
+    }));
+
+    return [...historicalData, ...forecastDataPoints];
   };
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top" as const,
-      },
-      title: {
-        display: true,
-        text: "История продаж и прогноз",
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          display: false,
-        },
-      },
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: "Количество",
-        },
-      },
-    },
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-white p-3 border rounded-lg shadow-lg">
+          <p className="font-semibold">{format(parseISO(data.date), "dd.MM.yyyy")}</p>
+          {payload.map((entry: any) => (
+            entry.value !== null && (
+              <p key={entry.dataKey} className="text-sm" style={{ color: entry.color }}>
+                {entry.name}: <span className="font-bold">{Math.round(entry.value)}</span> ед.
+              </p>
+            )
+          ))}
+        </div>
+      );
+    }
+    return null;
   };
 
   if (isLoadingProducts) {
     return <Skeleton className="h-[500px]" />;
   }
+
+  const chartData = prepareChartData();
 
   return (
     <div className="space-y-4">
@@ -159,8 +129,64 @@ export default function ProductSalesChart({
         <div className="h-[400px]">
           {isLoadingData ? (
             <Skeleton className="h-full" />
+          ) : chartData.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-gray-500">
+              Нет данных для отображения
+            </div>
           ) : (
-            <Line data={chartData} options={chartOptions} />
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={chartData}
+                margin={{ top: 5, right: 30, left: 20, bottom: 60 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="displayDate"
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                  interval={Math.floor(chartData.length / 15)}
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis 
+                  tick={{ fontSize: 11 }}
+                  label={{ value: 'Количество', angle: -90, position: 'insideLeft' }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend 
+                  verticalAlign="top"
+                  height={36}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="historical"
+                  stroke="#6322FE"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  name="Фактические продажи"
+                  connectNulls={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="forecast"
+                  stroke="#22C55E"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ r: 3 }}
+                  name="Прогноз"
+                  connectNulls={false}
+                />
+                {chartData.length > 30 && (
+                  <Brush
+                    dataKey="displayDate"
+                    height={30}
+                    stroke="#6322FE"
+                    startIndex={Math.max(0, chartData.length - 30)}
+                    endIndex={chartData.length - 1}
+                  />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
           )}
         </div>
       </Card>

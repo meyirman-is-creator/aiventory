@@ -3,11 +3,25 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ResponsiveLine } from "@nivo/line";
-import { ResponsiveBar } from "@nivo/bar";
-import { Loader2, TrendingUp, Calendar, Package } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Brush,
+  ReferenceLine,
+  Area,
+  ComposedChart,
+} from "recharts";
+import { Loader2, TrendingUp, Calendar, Package, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { predictionApi } from "@/lib/api";
+import { format, parseISO } from "date-fns";
 
 interface ThreeMonthForecastProps {
   productSid: string;
@@ -18,6 +32,9 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
   const [analytics, setAnalytics] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"daily" | "weekly" | "monthly">("daily");
+  const [zoomDomain, setZoomDomain] = useState<{ start: number; end: number } | null>(null);
+  const [brushStartIndex, setBrushStartIndex] = useState(0);
+  const [brushEndIndex, setBrushEndIndex] = useState(30);
 
   useEffect(() => {
     loadAnalytics();
@@ -54,55 +71,75 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
     );
   }
 
-  // Подготовка данных для графиков
+  // Подготовка данных для графика
   const prepareChartData = () => {
     const historicalData = analytics.sales_history.dates.map((date: string, idx: number) => ({
-      x: date,
-      y: analytics.sales_history.quantities[idx]
+      date: date,
+      value: analytics.sales_history.quantities[idx],
+      type: "historical",
+      displayDate: format(parseISO(date), "dd.MM.yyyy"),
     }));
 
     const forecastData = analytics.forecast_90_days.map((f: any) => ({
-      x: f.date,
-      y: f.forecast_qty,
-      yLower: f.forecast_qty_lower,
-      yUpper: f.forecast_qty_upper
+      date: f.date,
+      value: f.forecast_qty,
+      lowerBound: f.forecast_qty_lower,
+      upperBound: f.forecast_qty_upper,
+      type: "forecast",
+      displayDate: format(parseISO(f.date), "dd.MM.yyyy"),
     }));
 
-    return [
-      {
-        id: "История продаж",
-        data: historicalData,
-        color: "#6322FE"
-      },
-      {
-        id: "Прогноз",
-        data: forecastData,
-        color: "#22C55E"
-      }
-    ];
+    return [...historicalData, ...forecastData];
   };
 
   const aggregateByPeriod = (data: any[], period: "weekly" | "monthly") => {
     if (period === "weekly") {
-      // Группировка по неделям
-      const weeks: { [key: string]: number } = {};
+      const weeks: { [key: string]: { sum: number; count: number; dates: string[] } } = {};
+      
       data.forEach((item) => {
-        const date = new Date(item.x);
+        const date = parseISO(item.date);
         const weekStart = new Date(date);
         weekStart.setDate(date.getDate() - date.getDay());
-        const weekKey = weekStart.toISOString().split('T')[0];
-        weeks[weekKey] = (weeks[weekKey] || 0) + item.y;
+        const weekKey = format(weekStart, "yyyy-MM-dd");
+        
+        if (!weeks[weekKey]) {
+          weeks[weekKey] = { sum: 0, count: 0, dates: [] };
+        }
+        
+        weeks[weekKey].sum += item.value;
+        weeks[weekKey].count += 1;
+        weeks[weekKey].dates.push(item.date);
       });
-      return Object.entries(weeks).map(([date, value]) => ({ x: date, y: value }));
+
+      return Object.entries(weeks).map(([weekStart, data]) => ({
+        date: weekStart,
+        value: Math.round(data.sum),
+        type: "aggregated",
+        displayDate: `Неделя ${format(parseISO(weekStart), "dd.MM")}`,
+        tooltip: `${data.count} дней`,
+      }));
     } else {
-      // Группировка по месяцам
-      const months: { [key: string]: number } = {};
+      const months: { [key: string]: { sum: number; count: number } } = {};
+      
       data.forEach((item) => {
-        const date = new Date(item.x);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        months[monthKey] = (months[monthKey] || 0) + item.y;
+        const date = parseISO(item.date);
+        const monthKey = format(date, "yyyy-MM");
+        
+        if (!months[monthKey]) {
+          months[monthKey] = { sum: 0, count: 0 };
+        }
+        
+        months[monthKey].sum += item.value;
+        months[monthKey].count += 1;
       });
-      return Object.entries(months).map(([date, value]) => ({ x: date + '-01', y: value }));
+
+      return Object.entries(months).map(([month, data]) => ({
+        date: `${month}-01`,
+        value: Math.round(data.sum),
+        type: "aggregated",
+        displayDate: format(parseISO(`${month}-01`), "MMM yyyy"),
+        tooltip: `${data.count} дней`,
+      }));
     }
   };
 
@@ -112,12 +149,64 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
     if (viewMode === "daily") {
       return chartData;
     } else {
-      return chartData.map(series => ({
-        ...series,
-        data: aggregateByPeriod(series.data, viewMode)
-      }));
+      return aggregateByPeriod(chartData, viewMode);
     }
   };
+
+  const handleZoomIn = () => {
+    const data = getViewData();
+    const currentRange = brushEndIndex - brushStartIndex;
+    const newRange = Math.max(7, Math.floor(currentRange * 0.7));
+    const center = Math.floor((brushStartIndex + brushEndIndex) / 2);
+    const newStart = Math.max(0, center - Math.floor(newRange / 2));
+    const newEnd = Math.min(data.length - 1, newStart + newRange);
+    
+    setBrushStartIndex(newStart);
+    setBrushEndIndex(newEnd);
+  };
+
+  const handleZoomOut = () => {
+    const data = getViewData();
+    const currentRange = brushEndIndex - brushStartIndex;
+    const newRange = Math.min(data.length, Math.floor(currentRange * 1.5));
+    const center = Math.floor((brushStartIndex + brushEndIndex) / 2);
+    const newStart = Math.max(0, center - Math.floor(newRange / 2));
+    const newEnd = Math.min(data.length - 1, newStart + newRange);
+    
+    setBrushStartIndex(newStart);
+    setBrushEndIndex(newEnd);
+  };
+
+  const handleResetZoom = () => {
+    const data = getViewData();
+    setBrushStartIndex(0);
+    setBrushEndIndex(Math.min(30, data.length - 1));
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-white p-3 border rounded-lg shadow-lg">
+          <p className="font-semibold">{data.displayDate}</p>
+          <p className="text-sm">
+            Количество: <span className="font-bold">{Math.round(payload[0].value)}</span> ед.
+          </p>
+          {data.type === "forecast" && data.lowerBound && data.upperBound && (
+            <p className="text-xs text-gray-500">
+              Диапазон: {Math.round(data.lowerBound)} - {Math.round(data.upperBound)}
+            </p>
+          )}
+          {data.tooltip && (
+            <p className="text-xs text-gray-500">{data.tooltip}</p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const data = getViewData();
 
   return (
     <div className="space-y-6">
@@ -192,58 +281,141 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Прогноз продаж на 3 месяца: {productName}
+              Прогноз продаж: {productName}
             </CardTitle>
-            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
-              <TabsList>
-                <TabsTrigger value="daily">По дням</TabsTrigger>
-                <TabsTrigger value="weekly">По неделям</TabsTrigger>
-                <TabsTrigger value="monthly">По месяцам</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                <Button size="sm" variant="outline" onClick={handleZoomIn}>
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleZoomOut}>
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleResetZoom}>
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </div>
+              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
+                <TabsList>
+                  <TabsTrigger value="daily">По дням</TabsTrigger>
+                  <TabsTrigger value="weekly">По неделям</TabsTrigger>
+                  <TabsTrigger value="monthly">По месяцам</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="h-96">
-          <ResponsiveLine
-            data={getViewData()}
-            margin={{ top: 20, right: 110, bottom: 50, left: 60 }}
-            xScale={{ type: "point" }}
-            yScale={{ type: "linear", min: "auto", max: "auto" }}
-            axisBottom={{
-              tickRotation: -45,
-              legend: viewMode === "daily" ? "Дата" : viewMode === "weekly" ? "Неделя" : "Месяц",
-              legendPosition: "middle",
-              legendOffset: 45
-            }}
-            axisLeft={{
-              legend: "Количество",
-              legendPosition: "middle",
-              legendOffset: -50
-            }}
-            pointSize={6}
-            pointColor={{ theme: "background" }}
-            pointBorderWidth={2}
-            pointBorderColor={{ from: "serieColor" }}
-            useMesh={true}
-            enableArea={true}
-            areaOpacity={0.1}
-            legends={[
-              {
-                anchor: "bottom-right",
-                direction: "column",
-                justify: false,
-                translateX: 100,
-                translateY: 0,
-                itemsSpacing: 0,
-                itemDirection: "left-to-right",
-                itemWidth: 80,
-                itemHeight: 20,
-                itemOpacity: 0.75,
-                symbolSize: 12,
-                symbolShape: "circle"
-              }
-            ]}
-          />
+        <CardContent>
+          <div className="h-[500px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={data}
+                margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="displayDate"
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                  interval={viewMode === "daily" ? Math.floor(data.length / 10) : 0}
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis
+                  label={{
+                    value: "Количество (ед.)",
+                    angle: -90,
+                    position: "insideLeft",
+                    style: { fontSize: 12 },
+                  }}
+                  tick={{ fontSize: 11 }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  verticalAlign="top"
+                  height={36}
+                  iconType="line"
+                  wrapperStyle={{ fontSize: "12px" }}
+                />
+
+                {/* Область неопределенности для прогноза */}
+                <defs>
+                  <linearGradient id="colorForecast" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#22C55E" stopOpacity={0.1} />
+                  </linearGradient>
+                </defs>
+
+                {/* Исторические данные */}
+                <Line
+                  type="monotone"
+                  dataKey={(item: any) => (item.type === "historical" ? item.value : null)}
+                  stroke="#6322FE"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                  name="История продаж"
+                  connectNulls={false}
+                />
+
+                {/* Прогнозные данные */}
+                <Line
+                  type="monotone"
+                  dataKey={(item: any) => (item.type === "forecast" ? item.value : null)}
+                  stroke="#22C55E"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                  name="Прогноз"
+                  connectNulls={false}
+                />
+
+                {/* Диапазон прогноза */}
+                {viewMode === "daily" && (
+                  <>
+                    <Area
+                      type="monotone"
+                      dataKey={(item: any) => (item.type === "forecast" ? item.upperBound : null)}
+                      stroke="none"
+                      fill="url(#colorForecast)"
+                      fillOpacity={0.3}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey={(item: any) => (item.type === "forecast" ? item.lowerBound : null)}
+                      stroke="none"
+                      fill="#ffffff"
+                      fillOpacity={1}
+                    />
+                  </>
+                )}
+
+                {/* Текущая дата */}
+                <ReferenceLine
+                  x={format(new Date(), "dd.MM.yyyy")}
+                  stroke="#ff0000"
+                  strokeDasharray="3 3"
+                  label={{ value: "Сегодня", position: "top" }}
+                />
+
+                {/* Интерактивная область выбора */}
+                <Brush
+                  dataKey="displayDate"
+                  height={30}
+                  stroke="#6322FE"
+                  startIndex={brushStartIndex}
+                  endIndex={brushEndIndex}
+                  onChange={(e: any) => {
+                    if (e.startIndex !== undefined && e.endIndex !== undefined) {
+                      setBrushStartIndex(e.startIndex);
+                      setBrushEndIndex(e.endIndex);
+                    }
+                  }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
 
@@ -278,6 +450,14 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
                   {analytics.sales_statistics.sale_days}
                 </span>
               </div>
+              {analytics.sales_statistics.last_sale_date && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Последняя продажа:</span>
+                  <span className="font-semibold">
+                    {format(parseISO(analytics.sales_statistics.last_sale_date), "dd.MM.yyyy")}
+                  </span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -292,28 +472,53 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
                 <div className="p-3 bg-red-50 border border-red-200 rounded-md">
                   <p className="text-sm text-red-800">
                     <strong>Критично!</strong> Текущих запасов недостаточно даже на неделю.
-                    Необходима срочная закупка минимум {Math.round(analytics.forecast_summary.next_30_days - analytics.current_inventory.total)} единиц.
+                    Необходима срочная закупка минимум{" "}
+                    {Math.round(
+                      analytics.forecast_summary.next_30_days - analytics.current_inventory.total
+                    )}{" "}
+                    единиц.
                   </p>
                 </div>
               )}
-              
-              {analytics.current_inventory.total >= analytics.forecast_summary.next_7_days && 
-               analytics.current_inventory.total < analytics.forecast_summary.next_30_days && (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <p className="text-sm text-yellow-800">
-                    <strong>Внимание!</strong> Запасов хватит на {Math.round(analytics.current_inventory.total / (analytics.forecast_summary.next_30_days / 30))} дней.
-                    Рекомендуется закупить {Math.round(analytics.forecast_summary.next_30_days - analytics.current_inventory.total)} единиц.
-                  </p>
-                </div>
-              )}
-              
+
+              {analytics.current_inventory.total >= analytics.forecast_summary.next_7_days &&
+                analytics.current_inventory.total < analytics.forecast_summary.next_30_days && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Внимание!</strong> Запасов хватит на{" "}
+                      {Math.round(
+                        analytics.current_inventory.total /
+                          (analytics.forecast_summary.next_30_days / 30)
+                      )}{" "}
+                      дней. Рекомендуется закупить{" "}
+                      {Math.round(
+                        analytics.forecast_summary.next_30_days - analytics.current_inventory.total
+                      )}{" "}
+                      единиц.
+                    </p>
+                  </div>
+                )}
+
               {analytics.current_inventory.total >= analytics.forecast_summary.next_30_days && (
                 <div className="p-3 bg-green-50 border border-green-200 rounded-md">
                   <p className="text-sm text-green-800">
-                    <strong>Хорошо!</strong> Текущих запасов достаточно на {Math.round(analytics.current_inventory.total / (analytics.forecast_summary.next_90_days / 90))} дней.
+                    <strong>Хорошо!</strong> Текущих запасов достаточно на{" "}
+                    {Math.round(
+                      analytics.current_inventory.total /
+                        (analytics.forecast_summary.next_90_days / 90)
+                    )}{" "}
+                    дней.
                   </p>
                 </div>
               )}
+
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800">
+                  <strong>Оптимальный заказ:</strong> Рекомендуется поддерживать запас на 45-60
+                  дней. Оптимальное количество для заказа:{" "}
+                  {Math.round(analytics.forecast_summary.next_30_days * 1.5)} единиц.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
