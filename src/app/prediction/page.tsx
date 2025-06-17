@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserStore } from "@/store/user-store";
 import { usePredictionStore } from "@/store/prediction-store";
 import ProductSalesChart from "@/components/prediction/product-sales-chart";
 import CategorySalesChart from "@/components/prediction/category-sales-chart";
-import { Package, TrendingUp } from "lucide-react";
+import ThreeMonthForecast from "@/components/prediction/three-month-forecast";
+import { Package, TrendingUp, BarChart3 } from "lucide-react";
 
 export default function PredictionPage() {
   const router = useRouter();
@@ -55,6 +57,8 @@ export default function PredictionPage() {
     return null;
   }
 
+  const selectedProduct = products.find(p => p.sid === selectedProductSid);
+
   return (
     <div className="space-y-6 p-8">
       <div>
@@ -62,45 +66,64 @@ export default function PredictionPage() {
           Аналитика и прогнозирование
         </h2>
         <p className="text-muted-foreground">
-          История продаж и прогнозы по товарам и категориям
+          История продаж, прогнозы и аналитика по товарам
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              История продаж по товарам
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ProductSalesChart
-              products={products}
-              selectedProductSid={selectedProductSid}
-              setSelectedProductSid={setSelectedProductSid}
-              isLoadingProducts={isLoadingProducts}
-            />
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Обзор</TabsTrigger>
+          <TabsTrigger value="forecast">Прогноз на 3 месяца</TabsTrigger>
+          <TabsTrigger value="categories">По категориям</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Аналитика по категориям
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CategorySalesChart
-              categories={categories}
-              selectedCategorySid={selectedCategorySid}
-              setSelectedCategorySid={setSelectedCategorySid}
-              isLoadingCategories={isLoadingCategories}
+        <TabsContent value="overview" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                История продаж по товарам
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ProductSalesChart
+                products={products}
+                selectedProductSid={selectedProductSid}
+                setSelectedProductSid={setSelectedProductSid}
+                isLoadingProducts={isLoadingProducts}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="forecast" className="space-y-4">
+          {selectedProduct && selectedProductSid && (
+            <ThreeMonthForecast
+              productSid={selectedProductSid}
+              productName={selectedProduct.name}
             />
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="categories" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Аналитика по категориям
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CategorySalesChart
+                categories={categories}
+                selectedCategorySid={selectedCategorySid}
+                setSelectedCategorySid={setSelectedCategorySid}
+                isLoadingCategories={isLoadingCategories}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

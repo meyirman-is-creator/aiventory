@@ -248,7 +248,17 @@ export const predictionApi = {
     const response = await api.get(`/prediction/forecast/${productSid}?${params.toString()}`);
     return response.data;
   },
+
+  generateThreeMonthForecast: async (productSid: string) => {
+    const response = await api.post('/prediction/generate-forecast', { product_sid: productSid });
+    return response.data;
+  },
+  getProductAnalytics: async (productSid: string) => {
+    const response = await api.get(`/prediction/analytics/${productSid}`);
+    return response.data;
+  },
 };
+
 export const dashboardApi = {
   getStats: async () => {
     const response = await api.get('/dashboard/stats');

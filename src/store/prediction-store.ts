@@ -10,6 +10,7 @@ interface PredictionState {
   error: string | null;
   fetchProducts: () => Promise<void>;
   fetchCategories: () => Promise<void>;
+  generateThreeMonthForecast: (productSid: string) => Promise<void>;
 }
 
 export const usePredictionStore = create<PredictionState>((set) => ({
@@ -42,6 +43,18 @@ export const usePredictionStore = create<PredictionState>((set) => ({
         error: error instanceof Error ? error.message : "Failed to fetch categories",
         isLoadingCategories: false,
       });
+    }
+  },
+
+  generateThreeMonthForecast: async (productSid: string) => {
+    set({ error: null });
+    try {
+      await predictionApi.generateThreeMonthForecast(productSid);
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : "Failed to generate forecast",
+      });
+      throw error;
     }
   },
 }));
