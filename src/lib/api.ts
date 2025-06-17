@@ -253,8 +253,16 @@ export const predictionApi = {
     const response = await api.post('/prediction/generate-forecast', { product_sid: productSid });
     return response.data;
   },
+
   getProductAnalytics: async (productSid: string) => {
     const response = await api.get(`/prediction/analytics/${productSid}`);
+    return response.data;
+  },
+
+  fetchPredictions: async (productSid: string, refresh?: boolean) => {
+    const params = new URLSearchParams();
+    if (refresh) params.append('refresh', 'true');
+    const response = await api.get(`/prediction/forecast/${productSid}?${params.toString()}`);
     return response.data;
   },
 };

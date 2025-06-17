@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -18,10 +16,59 @@ import {
   Area,
   ComposedChart,
 } from "recharts";
-import { Loader2, TrendingUp, Calendar, Package, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { Loader2, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { predictionApi } from "@/lib/api";
 import { format, parseISO } from "date-fns";
+
+interface AnalyticsData {
+  sales_history: {
+    dates: string[];
+    quantities: number[];
+  };
+  forecast_90_days: Array<{
+    date: string;
+    forecast_qty: number;
+    forecast_qty_lower: number;
+    forecast_qty_upper: number;
+  }>;
+  current_inventory: {
+    total: number;
+    warehouse: string;
+    store: string;
+  };
+  forecast_summary: {
+    next_7_days: number;
+    next_30_days: number;
+    next_90_days: number;
+  };
+  sales_statistics: {
+    total_quantity: number;
+    total_revenue: number;
+    avg_daily_quantity: number;
+    sale_days: number;
+    last_sale_date: string | null;
+  };
+}
+
+interface ChartDataPoint {
+  date: string;
+  value: number;
+  type: "historical" | "forecast" | "aggregated";
+  displayDate: string;
+  lowerBound?: number;
+  upperBound?: number;
+  tooltip?: string;
+}
+
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    payload: ChartDataPoint;
+  }>;
+  label?: string;
+}
 
 interface ThreeMonthForecastProps {
   productSid: string;
@@ -29,18 +76,13 @@ interface ThreeMonthForecastProps {
 }
 
 const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps) => {
-  const [analytics, setAnalytics] = useState<any>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"daily" | "weekly" | "monthly">("daily");
-  const [zoomDomain, setZoomDomain] = useState<{ start: number; end: number } | null>(null);
   const [brushStartIndex, setBrushStartIndex] = useState(0);
   const [brushEndIndex, setBrushEndIndex] = useState(30);
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [productSid]);
-
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await predictionApi.getProductAnalytics(productSid);
@@ -50,7 +92,11 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [productSid]);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
 
   if (isLoading) {
     return (
@@ -73,26 +119,28 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
 
   // Подготовка данных для графика
   const prepareChartData = () => {
+    if (!analytics) return [];
+
     const historicalData = analytics.sales_history.dates.map((date: string, idx: number) => ({
       date: date,
       value: analytics.sales_history.quantities[idx],
-      type: "historical",
+      type: "historical" as const,
       displayDate: format(parseISO(date), "dd.MM.yyyy"),
     }));
 
-    const forecastData = analytics.forecast_90_days.map((f: any) => ({
+    const forecastData = analytics.forecast_90_days.map((f) => ({
       date: f.date,
       value: f.forecast_qty,
       lowerBound: f.forecast_qty_lower,
       upperBound: f.forecast_qty_upper,
-      type: "forecast",
+      type: "forecast" as const,
       displayDate: format(parseISO(f.date), "dd.MM.yyyy"),
     }));
 
     return [...historicalData, ...forecastData];
   };
 
-  const aggregateByPeriod = (data: any[], period: "weekly" | "monthly") => {
+  const aggregateByPeriod = (data: ChartDataPoint[], period: "weekly" | "monthly"): ChartDataPoint[] => {
     if (period === "weekly") {
       const weeks: { [key: string]: { sum: number; count: number; dates: string[] } } = {};
       
@@ -114,7 +162,7 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
       return Object.entries(weeks).map(([weekStart, data]) => ({
         date: weekStart,
         value: Math.round(data.sum),
-        type: "aggregated",
+        type: "aggregated" as const,
         displayDate: `Неделя ${format(parseISO(weekStart), "dd.MM")}`,
         tooltip: `${data.count} дней`,
       }));
@@ -136,7 +184,7 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
       return Object.entries(months).map(([month, data]) => ({
         date: `${month}-01`,
         value: Math.round(data.sum),
-        type: "aggregated",
+        type: "aggregated" as const,
         displayDate: format(parseISO(`${month}-01`), "MMM yyyy"),
         tooltip: `${data.count} дней`,
       }));
@@ -153,37 +201,12 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
     }
   };
 
-  const handleZoomIn = () => {
-    const data = getViewData();
-    const currentRange = brushEndIndex - brushStartIndex;
-    const newRange = Math.max(7, Math.floor(currentRange * 0.7));
-    const center = Math.floor((brushStartIndex + brushEndIndex) / 2);
-    const newStart = Math.max(0, center - Math.floor(newRange / 2));
-    const newEnd = Math.min(data.length - 1, newStart + newRange);
-    
-    setBrushStartIndex(newStart);
-    setBrushEndIndex(newEnd);
+  const handleBrushChange = (newDomain: { startIndex: number; endIndex: number }) => {
+    setBrushStartIndex(newDomain.startIndex);
+    setBrushEndIndex(newDomain.endIndex);
   };
 
-  const handleZoomOut = () => {
-    const data = getViewData();
-    const currentRange = brushEndIndex - brushStartIndex;
-    const newRange = Math.min(data.length, Math.floor(currentRange * 1.5));
-    const center = Math.floor((brushStartIndex + brushEndIndex) / 2);
-    const newStart = Math.max(0, center - Math.floor(newRange / 2));
-    const newEnd = Math.min(data.length - 1, newStart + newRange);
-    
-    setBrushStartIndex(newStart);
-    setBrushEndIndex(newEnd);
-  };
-
-  const handleResetZoom = () => {
-    const data = getViewData();
-    setBrushStartIndex(0);
-    setBrushEndIndex(Math.min(30, data.length - 1));
-  };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -284,18 +307,7 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
               Прогноз продаж: {productName}
             </CardTitle>
             <div className="flex items-center gap-2">
-              <div className="flex gap-1">
-                <Button size="sm" variant="outline" onClick={handleZoomIn}>
-                  <ZoomIn className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleZoomOut}>
-                  <ZoomOut className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleResetZoom}>
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </div>
-              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)}>
+              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "daily" | "weekly" | "monthly")}>
                 <TabsList>
                   <TabsTrigger value="daily">По дням</TabsTrigger>
                   <TabsTrigger value="weekly">По неделям</TabsTrigger>
@@ -349,7 +361,7 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
                 {/* Исторические данные */}
                 <Line
                   type="monotone"
-                  dataKey={(item: any) => (item.type === "historical" ? item.value : null)}
+                  dataKey={(item: ChartDataPoint) => (item.type === "historical" ? item.value : null)}
                   stroke="#6322FE"
                   strokeWidth={2}
                   dot={{ r: 3 }}
@@ -361,7 +373,7 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
                 {/* Прогнозные данные */}
                 <Line
                   type="monotone"
-                  dataKey={(item: any) => (item.type === "forecast" ? item.value : null)}
+                  dataKey={(item: ChartDataPoint) => (item.type === "forecast" ? item.value : null)}
                   stroke="#22C55E"
                   strokeWidth={2}
                   strokeDasharray="5 5"
@@ -376,14 +388,14 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
                   <>
                     <Area
                       type="monotone"
-                      dataKey={(item: any) => (item.type === "forecast" ? item.upperBound : null)}
+                      dataKey={(item: ChartDataPoint) => (item.type === "forecast" ? item.upperBound : null)}
                       stroke="none"
                       fill="url(#colorForecast)"
                       fillOpacity={0.3}
                     />
                     <Area
                       type="monotone"
-                      dataKey={(item: any) => (item.type === "forecast" ? item.lowerBound : null)}
+                      dataKey={(item: ChartDataPoint) => (item.type === "forecast" ? item.lowerBound : null)}
                       stroke="none"
                       fill="#ffffff"
                       fillOpacity={1}
@@ -406,10 +418,9 @@ const ThreeMonthForecast = ({ productSid, productName }: ThreeMonthForecastProps
                   stroke="#6322FE"
                   startIndex={brushStartIndex}
                   endIndex={brushEndIndex}
-                  onChange={(e: any) => {
-                    if (e.startIndex !== undefined && e.endIndex !== undefined) {
-                      setBrushStartIndex(e.startIndex);
-                      setBrushEndIndex(e.endIndex);
+                  onChange={(newIndex) => {
+                    if (newIndex.startIndex !== undefined && newIndex.endIndex !== undefined) {
+                      handleBrushChange({ startIndex: newIndex.startIndex, endIndex: newIndex.endIndex });
                     }
                   }}
                 />

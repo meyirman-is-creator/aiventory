@@ -37,7 +37,7 @@ interface LossAnalyticsProps {
   isLoading: boolean;
 }
 
-const LossAnalytics = ({ data, selectedProductSid, isLoading }: LossAnalyticsProps) => {
+const LossAnalytics = ({ data, isLoading }: LossAnalyticsProps) => {
   if (isLoading) {
     return (
       <div className="h-[600px] flex items-center justify-center">
