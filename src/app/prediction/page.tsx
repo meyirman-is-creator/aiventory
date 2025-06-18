@@ -59,15 +59,15 @@ export default function PredictionPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header Section */}
-      <div className="bg-white border-b px-4 sm:px-6 lg:px-8 py-6">
-        <div className=" mx-auto">
-          <div className="flex items-center space-x-3">
-            <TrendingUp className="h-8 w-8 text-purple-600" />
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+      <div className="bg-white border-b px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6">
+        <div className="mx-auto">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-purple-600 flex-shrink-0" />
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 truncate">
                 Аналитика и прогнозирование
               </h1>
-              <p className="mt-1 text-sm sm:text-base text-gray-600">
+              <p className="mt-0.5 text-xs sm:text-sm lg:text-base text-gray-600 truncate">
                 История продаж и аналитика по товарам
               </p>
             </div>
@@ -76,31 +76,29 @@ export default function PredictionPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex-1 px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6">
         <div className="mx-auto">
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2 mx-auto lg:mx-0">
-              <TabsTrigger value="overview" className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                <span className="hidden sm:inline">Обзор</span>
-                <span className="sm:hidden">Обзор</span>
+          <Tabs defaultValue="overview" className="space-y-3 sm:space-y-4 lg:space-y-6">
+            <TabsList className="grid w-full max-w-xs sm:max-w-sm lg:max-w-md grid-cols-2 mx-auto lg:mx-0 h-8 sm:h-9 lg:h-10">
+              <TabsTrigger value="overview" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <Package className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Обзор</span>
               </TabsTrigger>
-              <TabsTrigger value="categories" className="flex items-center gap-2">
-                <Layers className="h-4 w-4" />
-                <span className="hidden sm:inline">По категориям</span>
-                <span className="sm:hidden">Категории</span>
+              <TabsTrigger value="categories" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <Layers className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Категории</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6 mt-6">
+            <TabsContent value="overview" className="space-y-3 sm:space-y-4 lg:space-y-6 mt-3 sm:mt-4 lg:mt-6">
               <Card className="shadow-sm">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
-                    <Package className="h-5 w-5 text-purple-600" />
-                    История продаж по товарам
+                <CardHeader className="pb-2 sm:pb-3 lg:pb-4 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+                  <CardTitle className="text-sm sm:text-base lg:text-lg xl:text-xl flex items-center gap-1.5 sm:gap-2">
+                    <Package className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
+                    <span className="truncate">История продаж по товарам</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
                   <ProductSalesChart
                     products={products}
                     selectedProductSid={selectedProductSid}
@@ -111,15 +109,15 @@ export default function PredictionPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="categories" className="space-y-6 mt-6">
+            <TabsContent value="categories" className="space-y-3 sm:space-y-4 lg:space-y-6 mt-3 sm:mt-4 lg:mt-6">
               <Card className="shadow-sm">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-purple-600" />
-                    Аналитика по категориям
+                <CardHeader className="pb-2 sm:pb-3 lg:pb-4 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+                  <CardTitle className="text-sm sm:text-base lg:text-lg xl:text-xl flex items-center gap-1.5 sm:gap-2">
+                    <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 flex-shrink-0" />
+                    <span className="truncate">Аналитика по категориям</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
                   <CategorySalesChart
                     categories={categories}
                     selectedCategorySid={selectedCategorySid}

@@ -148,11 +148,11 @@ export default function ProductSalesChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 border rounded-lg shadow-lg">
-          <p className="font-semibold text-sm">{format(parseISO(data.date), "dd.MM.yyyy")}</p>
+        <div className="bg-white p-2 sm:p-3 border rounded-lg shadow-lg text-xs sm:text-sm">
+          <p className="font-semibold">{format(parseISO(data.date), "dd.MM.yyyy")}</p>
           {payload.map((entry) => (
             entry.value !== null && (
-              <p key={entry.dataKey} className="text-sm mt-1" style={{ color: entry.color }}>
+              <p key={entry.dataKey} className="mt-0.5 sm:mt-1" style={{ color: entry.color }}>
                 {entry.name}: <span className="font-bold">{Math.round(entry.value)}</span> ед.
               </p>
             )
@@ -164,29 +164,31 @@ export default function ProductSalesChart({
   };
 
   if (isLoadingProducts) {
-    return <Skeleton className="h-[600px] w-full" />;
+    return <Skeleton className="h-[400px] sm:h-[500px] lg:h-[600px] w-full" />;
   }
 
   const chartData = prepareChartData();
   const selectedProduct = products.find(p => p.sid === selectedProductSid);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
       {/* Product Selector */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4">
         <Select
           value={selectedProductSid || ""}
           onValueChange={setSelectedProductSid}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full text-xs sm:text-sm">
             <SelectValue placeholder="Выберите товар" />
           </SelectTrigger>
           <SelectContent>
             {products.map((product) => (
               <SelectItem key={product.sid} value={product.sid}>
                 <div className="flex flex-col">
-                  <span className="font-medium">{product.name}</span>
-                  <span className="text-xs text-gray-500">
+                  <span className="font-medium text-xs sm:text-sm truncate max-w-[200px] sm:max-w-none">
+                    {product.name}
+                  </span>
+                  <span className="text-xs text-gray-500 truncate max-w-[200px] sm:max-w-none">
                     {product.category?.name || "Без категории"}
                   </span>
                 </div>
@@ -200,70 +202,70 @@ export default function ProductSalesChart({
           size="sm"
           onClick={handleRefresh}
           disabled={isLoadingData}
-          className="whitespace-nowrap"
+          className="whitespace-nowrap text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
         >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingData ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${isLoadingData ? 'animate-spin' : ''}`} />
           Обновить
         </Button>
       </div>
 
       {/* Stats Cards */}
       {stats && selectedProduct && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="p-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+          <Card className="p-2 sm:p-3 lg:p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600">Всего продано</p>
-              <TrendingUp className="h-4 w-4 text-gray-400" />
+              <p className="text-xs sm:text-sm text-gray-600 truncate">Всего продано</p>
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0 ml-1" />
             </div>
-            <p className="text-2xl font-bold mt-1">{Math.round(stats.total)}</p>
-            <p className="text-xs text-gray-500 mt-1">единиц</p>
+            <p className="text-lg sm:text-xl lg:text-2xl font-bold mt-0.5 sm:mt-1">{Math.round(stats.total)}</p>
+            <p className="text-xs text-gray-500 mt-0.5">единиц</p>
           </Card>
           
-          <Card className="p-4">
+          <Card className="p-2 sm:p-3 lg:p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600">Среднее в день</p>
-              <Calendar className="h-4 w-4 text-gray-400" />
+              <p className="text-xs sm:text-sm text-gray-600 truncate">Среднее/день</p>
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0 ml-1" />
             </div>
-            <p className="text-2xl font-bold mt-1">{stats.average.toFixed(1)}</p>
-            <p className="text-xs text-gray-500 mt-1">единиц</p>
+            <p className="text-lg sm:text-xl lg:text-2xl font-bold mt-0.5 sm:mt-1">{stats.average.toFixed(1)}</p>
+            <p className="text-xs text-gray-500 mt-0.5">единиц</p>
           </Card>
           
-          <Card className="p-4">
+          <Card className="p-2 sm:p-3 lg:p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600">За последний месяц</p>
-              <TrendingUp className="h-4 w-4 text-gray-400" />
+              <p className="text-xs sm:text-sm text-gray-600 truncate">За месяц</p>
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0 ml-1" />
             </div>
-            <p className="text-2xl font-bold mt-1">{Math.round(stats.lastMonth)}</p>
-            <p className="text-xs text-gray-500 mt-1">единиц</p>
+            <p className="text-lg sm:text-xl lg:text-2xl font-bold mt-0.5 sm:mt-1">{Math.round(stats.lastMonth)}</p>
+            <p className="text-xs text-gray-500 mt-0.5">единиц</p>
           </Card>
           
-          <Card className="p-4">
+          <Card className="p-2 sm:p-3 lg:p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-600">Дней с продажами</p>
-              <Calendar className="h-4 w-4 text-gray-400" />
+              <p className="text-xs sm:text-sm text-gray-600 truncate">Дней продаж</p>
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0 ml-1" />
             </div>
-            <p className="text-2xl font-bold mt-1">{stats.daysWithSales}</p>
-            <p className="text-xs text-gray-500 mt-1">из {salesData?.dates?.length || 0}</p>
+            <p className="text-lg sm:text-xl lg:text-2xl font-bold mt-0.5 sm:mt-1">{stats.daysWithSales}</p>
+            <p className="text-xs text-gray-500 mt-0.5">из {salesData?.dates?.length || 0}</p>
           </Card>
         </div>
       )}
 
       {/* Chart */}
-      <Card className="p-4">
-        <div className="h-[400px] lg:h-[500px]">
+      <Card className="p-2 sm:p-3 lg:p-4">
+        <div className="h-[300px] sm:h-[400px] lg:h-[500px]">
           {isLoadingData ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
-                <RefreshCw className="h-8 w-8 animate-spin mx-auto text-purple-600" />
-                <p className="text-sm text-gray-600 mt-2">Загрузка данных...</p>
+                <RefreshCw className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 animate-spin mx-auto text-purple-600" />
+                <p className="text-xs sm:text-sm text-gray-600 mt-1.5 sm:mt-2">Загрузка данных...</p>
               </div>
             </div>
           ) : chartData.length === 0 ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
-                <BarChart3 className="h-12 w-12 text-gray-300 mx-auto" />
-                <p className="text-gray-500 mt-4">Нет данных для отображения</p>
-                <p className="text-sm text-gray-400 mt-1">
+                <BarChart3 className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-gray-300 mx-auto" />
+                <p className="text-sm sm:text-base text-gray-500 mt-3 sm:mt-4">Нет данных для отображения</p>
+                <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1">
                   Выберите товар для просмотра статистики
                 </p>
               </div>
@@ -272,7 +274,12 @@ export default function ProductSalesChart({
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={chartData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 60 }}
+                margin={{ 
+                  top: 5, 
+                  right: 10, 
+                  left: 10, 
+                  bottom: 60 
+                }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
@@ -280,31 +287,31 @@ export default function ProductSalesChart({
                   angle={-45}
                   textAnchor="end"
                   height={60}
-                  interval={Math.floor(chartData.length / 20)}
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                  interval={Math.floor(chartData.length / (window.innerWidth < 640 ? 10 : 20))}
+                  tick={{ fontSize: window.innerWidth < 640 ? 9 : 11, fill: '#6b7280' }}
                 />
                 <YAxis 
-                  tick={{ fontSize: 11, fill: '#6b7280' }}
+                  tick={{ fontSize: window.innerWidth < 640 ? 9 : 11, fill: '#6b7280' }}
                   label={{ 
                     value: 'Количество', 
                     angle: -90, 
                     position: 'insideLeft',
-                    style: { fontSize: 12, fill: '#6b7280' }
+                    style: { fontSize: window.innerWidth < 640 ? 10 : 12, fill: '#6b7280' }
                   }}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend 
                   verticalAlign="top"
                   height={36}
-                  wrapperStyle={{ fontSize: '14px' }}
+                  wrapperStyle={{ fontSize: window.innerWidth < 640 ? '11px' : '13px' }}
                 />
                 <Line
                   type="monotone"
                   dataKey="historical"
                   stroke="#6322FE"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
+                  strokeWidth={window.innerWidth < 640 ? 1.5 : 2}
+                  dot={{ r: window.innerWidth < 640 ? 2 : 3 }}
+                  activeDot={{ r: window.innerWidth < 640 ? 4 : 5 }}
                   name="Фактические продажи"
                   connectNulls={false}
                 />
@@ -312,17 +319,17 @@ export default function ProductSalesChart({
                   type="monotone"
                   dataKey="forecast"
                   stroke="#22C55E"
-                  strokeWidth={2}
+                  strokeWidth={window.innerWidth < 640 ? 1.5 : 2}
                   strokeDasharray="5 5"
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
+                  dot={{ r: window.innerWidth < 640 ? 2 : 3 }}
+                  activeDot={{ r: window.innerWidth < 640 ? 4 : 5 }}
                   name="Прогноз"
                   connectNulls={false}
                 />
                 {chartData.length > 30 && (
                   <Brush
                     dataKey="displayDate"
-                    height={30}
+                    height={window.innerWidth < 640 ? 20 : 30}
                     stroke="#6322FE"
                     startIndex={Math.max(0, chartData.length - 30)}
                     endIndex={chartData.length - 1}
