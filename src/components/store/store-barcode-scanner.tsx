@@ -81,10 +81,32 @@ const StoreBarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
     setIsLoadingProduct(true);
     try {
       const items = await storeApi.getItems("active");
-      const matchingItem = items.find(item => item.product.barcode === barcode);
+      const matchingItems = items.filter(item => 
+        item.product.barcode === barcode && 
+        item.status === "active" && 
+        item.quantity > 0
+      );
 
-      if (matchingItem) {
-        setProductInfo(matchingItem);
+      if (matchingItems.length > 0) {
+        const sortedItems = matchingItems.sort((a, b) => {
+          if (a.days_until_expiry !== null && a.days_until_expiry !== undefined && 
+              b.days_until_expiry !== null && b.days_until_expiry !== undefined) {
+            return a.days_until_expiry - b.days_until_expiry;
+          }
+          if (a.days_until_expiry !== null && a.days_until_expiry !== undefined) return -1;
+          if (b.days_until_expiry !== null && b.days_until_expiry !== undefined) return 1;
+          
+          if (a.current_discounts.length > 0 && b.current_discounts.length === 0) return -1;
+          if (a.current_discounts.length === 0 && b.current_discounts.length > 0) return 1;
+          
+          if (a.current_discounts.length > 0 && b.current_discounts.length > 0) {
+            return b.current_discounts[0].percentage - a.current_discounts[0].percentage;
+          }
+          
+          return 0;
+        });
+        
+        setProductInfo(sortedItems[0]);
       } else {
         toast({
           title: "Товар не найден",

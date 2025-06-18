@@ -80,12 +80,40 @@ const BarcodeScanner = ({ onSuccess }: BarcodeScannerProps) => {
   const fetchProductByBarcode = async (barcode: string) => {
     setIsLoadingProduct(true);
     try {
-      const items = await warehouseApi.getItems();
-      const matchingItem = items.find((item: WarehouseItem) => item.product.barcode === barcode);
+      const response = await warehouseApi.getItems();
+      const items = response.items || response;
+      const matchingItems = items.filter((item: WarehouseItem) => 
+        item.product.barcode === barcode && 
+        item.status === "in_stock" && 
+        item.quantity > 0
+      );
 
-      if (matchingItem) {
-        setProductInfo(matchingItem);
-        setPrice(matchingItem.suggested_price || matchingItem.product.default_price || 0);
+      if (matchingItems.length > 0) {
+        const sortedItems = matchingItems.sort((a: WarehouseItem, b: WarehouseItem) => {
+          const urgencyOrder: Record<string, number> = {
+            'critical': 3,
+            'urgent': 2,
+            'normal': 1,
+          };
+          const aUrgency = urgencyOrder[a.urgency_level || 'normal'] || 0;
+          const bUrgency = urgencyOrder[b.urgency_level || 'normal'] || 0;
+          
+          if (aUrgency !== bUrgency) {
+            return bUrgency - aUrgency;
+          }
+          
+          if (a.expire_date && b.expire_date) {
+            return new Date(a.expire_date).getTime() - new Date(b.expire_date).getTime();
+          }
+          
+          if (a.expire_date && !b.expire_date) return -1;
+          if (!a.expire_date && b.expire_date) return 1;
+          
+          return b.quantity - a.quantity;
+        });
+        
+        setProductInfo(sortedItems[0]);
+        setPrice(sortedItems[0].suggested_price || sortedItems[0].product.default_price || 0);
       } else {
         toast({
           title: "Товар не найден",
